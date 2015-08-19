@@ -343,10 +343,13 @@ struct procsinfo {
 };
 int isroot = 0;
 
-#include <mntent.h>
+//#include <mntent.h>
+#include "mntent.h"
 #include <fstab.h>
 #include <sys/stat.h>
-#include <sys/statfs.h>
+//#include <sys/statfs.h>
+#include <sys/param.h>
+#include <sys/mount.h>
 #include <net/if.h>
 
 int debug =0;
@@ -4575,12 +4578,14 @@ mvwprintw(padwelcome,x+21, 3, "   h = more options                   q = Quit");
 			mvwprintw(padcpu,7, 4, "cpuinfo: %s", proc[P_CPUINFO].line[3]);
 			mvwprintw(padcpu,8, 4, "cpuinfo: %s", proc[P_CPUINFO].line[4]);
 #else /* Intel is the default */
+/*
 mvwprintw(padcpu,5, 4, "cpuinfo: %s %s", vendor_ptr, model_ptr);
 mvwprintw(padcpu,6, 4, "cpuinfo: Hz=%s bogomips=%s", mhz_ptr,bogo_ptr);
 if(processorchips || cores || hyperthreads || cpus) {
 mvwprintw(padcpu,7, 4, "cpuinfo: ProcessorChips=%d PhyscalCores=%d", processorchips, cores);
 mvwprintw(padcpu,8, 4, "cpuinfo: Hyperthreads  =%d VirtualCPUs =%d", hyperthreads, cpus);
 }
+*/
 /*
 			mvwprintw(padcpu,5, 4, "cpuinfo: %s", proc[P_CPUINFO].line[4]);
 			mvwprintw(padcpu,6, 4, "cpuinfo: %s", proc[P_CPUINFO].line[1]);
