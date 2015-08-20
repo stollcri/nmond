@@ -28,7 +28,7 @@
 #include <sys/wait.h>
 #include "nmond.h"
 
-/* #define KERNEL_2_6_18 1 */
+#define KERNEL_2_6_18 1 
 /* This adds the following to the disk stats
 	pi_num_threads,
 	pi_rt_priority,
@@ -336,7 +336,6 @@ time_t  timer;			/* used to work out the hour/min/second */
 
 /* Counts of resources */
 int	cpus = 1;  	/* number of CPUs in system (lets hope its more than zero!) */
-#ifdef X86
 int   cores          = 0;
 int   siblings       = 0;
 int   processorchips = 0;
@@ -345,7 +344,6 @@ char *vendor_ptr = "-";
 char *model_ptr  = "-";
 char *mhz_ptr    = "-";
 char *bogo_ptr   = "-";
-#endif
 int old_cpus = 1;	/* Number of CPU seen in previuos interval */
 int	max_cpus = 1;  	/* highest number of CPUs in DLPAR */
 int	networks = 0;  	/* number of networks in system  */
@@ -1051,7 +1049,7 @@ void get_cpu_cnt()	{
 		exit(44);
 	}
 }
-#ifdef X86
+
 void get_intel_spec() {
 	int i;
 	int physicalcpu[256];
@@ -1113,7 +1111,6 @@ void get_intel_spec() {
 	else
 		hyperthreads=0;
 }
-#endif
 
 int stat8 = 0; /* used to determine the number of variables on a line */
 
@@ -3651,9 +3648,9 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 		/* Determine number of active LOGICAL cpu - depends on SMT mode ! */
 		get_cpu_cnt();
 		max_cpus=old_cpus=cpus;
-#ifdef X86
+
 		get_intel_spec();
-#endif
+
 		proc_read(P_STAT);
 		proc_cpu();
 		proc_read(P_UPTIME);
@@ -3814,7 +3811,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				fprintf(fp,"AAA,snapshots,%d\n", maxloops);
 
 				fprintf(fp,"AAA,cpus,%d\n", cpus);
-#ifdef X86
 				fprintf(fp,"AAA,x86,VendorId,%s\n",       vendor_ptr);
 				fprintf(fp,"AAA,x86,ModelName,%s\n",      model_ptr);
 				fprintf(fp,"AAA,x86,MHz,%s\n",            mhz_ptr);
@@ -3823,7 +3819,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				fprintf(fp,"AAA,x86,Cores,%d\n",          cores);
 				fprintf(fp,"AAA,x86,hyperthreads,%d\n",   hyperthreads);
 				fprintf(fp,"AAA,x86,VirtualCPUs,%d\n",    cpus);
-#endif
 				fprintf(fp,"AAA,proc_stat_variables,%d\n", stat8);
 				
 				fprintf(fp,"AAA,note0, Warning - use the UNIX sort command to order this file before loading into a spreadsheet\n");
@@ -4021,7 +4016,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					mvwprintw(padwelcome,x+5, 40, "To start the same way every time");
 					mvwprintw(padwelcome,x+6, 40, " set the NMON ksh variable");
 					COLOUR wattrset(padwelcome,COLOR_PAIR(1));
-#ifdef X86
+
 					get_cpu_cnt();
 					mvwprintw(padwelcome,x+10, 3, "x86 %s %s", vendor_ptr, model_ptr);
 					mvwprintw(padwelcome,x+11, 3, "x86 MHz=%s bogomips=%s", mhz_ptr,bogo_ptr);
@@ -4029,7 +4024,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 						mvwprintw(padwelcome,x+12, 3, "x86 ProcessorChips=%d PhyscalCores=%d", processorchips, cores);
 						mvwprintw(padwelcome,x+13, 3, "x86 Hyperthreads  =%d VirtualCPUs =%d", hyperthreads, cpus);
 					}
-#endif
+
 					COLOUR wattrset(padwelcome,COLOR_PAIR(0));
 					mvwprintw(padwelcome,x+15, 3, "Use these keys to toggle statistics on/off:");
 					mvwprintw(padwelcome,x+16, 3, "   c = CPU        l = CPU Long-term   - = Faster screen updates");
