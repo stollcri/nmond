@@ -3941,9 +3941,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 #ifndef KERNEL_2_6_18
 			linux_bbbp("/proc/1/statm",    "/bin/cat /proc/1/statm 2>/dev/null", WARNING);
 #endif
-#ifdef MAINFRAME
-			linux_bbbp("/proc/sysinfo",    "/bin/cat /proc/sysinfo 2>/dev/null", WARNING);
-#endif
 			linux_bbbp("/proc/net/rpc/nfs",        "/bin/cat /proc/net/rpc/nfs 2>/dev/null", WARNING);
 			linux_bbbp("/proc/net/rpc/nfsd",        "/bin/cat /proc/net/rpc/nfsd 2>/dev/null", WARNING);
 			linux_bbbp("/proc/modules",    "/bin/cat /proc/modules 2>/dev/null", WARNING);
@@ -4095,27 +4092,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				mvwprintw(padcpu,2, 4, "Build: %s", proc[P_VERSION].line[1]);
 				mvwprintw(padcpu,3, 4, "Release  : %s", uts.release );
 				mvwprintw(padcpu,4, 4, "Version  : %s", uts.version);
-#ifdef MAINFRAME
-				mvwprintw(padcpu,5, 4, "cpuinfo: %s", proc[P_CPUINFO].line[1]);
-				mvwprintw(padcpu,6, 4, "cpuinfo: %s", proc[P_CPUINFO].line[2]);
-				mvwprintw(padcpu,7, 4, "cpuinfo: %s", proc[P_CPUINFO].line[3]);
-				mvwprintw(padcpu,8, 4, "cpuinfo: %s", proc[P_CPUINFO].line[4]);
-#else /* Intel is the default */
-				/*
-				 mvwprintw(padcpu,5, 4, "cpuinfo: %s %s", vendor_ptr, model_ptr);
-				 mvwprintw(padcpu,6, 4, "cpuinfo: Hz=%s bogomips=%s", mhz_ptr,bogo_ptr);
-				 if(processorchips || cores || hyperthreads || cpus) {
-				 mvwprintw(padcpu,7, 4, "cpuinfo: ProcessorChips=%d PhyscalCores=%d", processorchips, cores);
-				 mvwprintw(padcpu,8, 4, "cpuinfo: Hyperthreads  =%d VirtualCPUs =%d", hyperthreads, cpus);
-				 }
-				 */
-				/*
-				 mvwprintw(padcpu,5, 4, "cpuinfo: %s", proc[P_CPUINFO].line[4]);
-				 mvwprintw(padcpu,6, 4, "cpuinfo: %s", proc[P_CPUINFO].line[1]);
-				 mvwprintw(padcpu,7, 4, "cpuinfo: %s", proc[P_CPUINFO].line[6]);
-				 mvwprintw(padcpu,8, 4, "cpuinfo: %s", proc[P_CPUINFO].line[17]);
-				 */
-#endif /*MAINFRAME*/
 				mvwprintw(padcpu,9, 4, "# of CPUs: %d", cpus);
 				mvwprintw(padcpu,10, 4,"Machine  : %s", uts.machine);
 				mvwprintw(padcpu,11, 4,"Nodename : %s", uts.nodename);
