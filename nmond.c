@@ -1,36 +1,11 @@
 /*
- * nmond.c -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
- * Developer: Christopher Stoll (https://github.com/stollcri)
- *
- * forked from:
- * lmon.c -- Curses based Performance Monitor for Linux
- * Developer: Nigel Griffiths.
+ * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
+ *  Christopher Stoll (https://github.com/stollcri)
+ *  
+ *   forked from:
+ *   lmon.c -- Curses based Performance Monitor for Linux
+ *   Developer: Nigel Griffiths.
  */
-
-/*
- * Use the following Makefile (for Linux on POWER)
- CFLAGS=-g -D JFS -D GETUSER -Wall -D LARGEMEM -D POWER
- LDFLAGS=-lcurses
- nmon: lnmon.o
- * end of Makefile
- */
-/* #define POWER 1 */
-/* #define KERNEL_2_6_18 1 */
-/* This adds the following to the disk stats
-	pi_num_threads,
-	pi_rt_priority,
-	pi_policy,
-	pi_delayacct_blkio_ticks
- */
-
-#define LARGEMEM 1
-
-#define RAW(member)      (long)((long)(p->cpuN[i].member)   - (long)(q->cpuN[i].member))
-#define RAWTOTAL(member) (long)((long)(p->cpu_total.member) - (long)(q->cpu_total.member))
-
-#define VERSION "15g"
-char version[] = VERSION;
-static char *SccsId = "nmon " VERSION;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,44 +26,24 @@ static char *SccsId = "nmon " VERSION;
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
+#include "nmond.h"
 
-/* Windows moved here so they can be cleared when the screen mode changes */
-WINDOW * padwelcome = NULL;
-WINDOW * padtop = NULL;
-WINDOW * padmem = NULL;
-WINDOW * padlarge = NULL;
-WINDOW * padpage = NULL;
-WINDOW * padker = NULL;
-WINDOW * padnet = NULL;
-WINDOW * padneterr = NULL;
-WINDOW * padnfs = NULL;
-WINDOW * padcpu = NULL;
-WINDOW * padsmp = NULL;
-WINDOW * padlong = NULL;
-WINDOW * paddisk = NULL;
-WINDOW * paddg = NULL;
-WINDOW * padmap = NULL;
-WINDOW * padjfs = NULL;
-#ifdef POWER
-WINDOW * padlpar = NULL;
-#endif
-WINDOW * padverb = NULL;
-WINDOW * padhelp = NULL;
+/* #define KERNEL_2_6_18 1 */
+/* This adds the following to the disk stats
+	pi_num_threads,
+	pi_rt_priority,
+	pi_policy,
+	pi_delayacct_blkio_ticks
+ */
 
-
-/* for Disk Busy rain style output covering 100's of diskss on one screen */
-const char disk_busy_map_ch[] =
-"_____.....----------++++++++++oooooooooo0000000000OOOOOOOOOO8888888888XXXXXXXXXX##########@@@@@@@@@@*";
-/*"00000555551111111111222222222233333333334444444444555555555566666666667777777777888888888899999999991"*/
-
-int extended_disk = 0;	/* report additional data from /proc/diskstats to spreadsheet output */
-
+#define RAW(member)      (long)((long)(p->cpuN[i].member)   - (long)(q->cpuN[i].member))
+#define RAWTOTAL(member) (long)((long)(p->cpu_total.member) - (long)(q->cpu_total.member))
 #define FLIP(variable) if(variable) variable=0; else variable=1;
 
 #ifdef MALLOC_DEBUG
-#define MALLOC(argument)        mymalloc(argument,__LINE__)
-#define FREE(argument)          myfree(argument,__LINE__)
-#define REALLOC(argument1,argument2)    myrealloc(argument1,argument2,__LINE__)
+#define MALLOC(argument) mymalloc(argument,__LINE__)
+#define FREE(argument) myfree(argument,__LINE__)
+#define REALLOC(argument1,argument2) myrealloc(argument1,argument2,__LINE__)
 void *mymalloc(int size, int line)
 {
 	void * ptr;
@@ -109,22 +64,41 @@ void *myrealloc(void *oldptr, int size, int line)
 	return ptr;
 }
 #else
-#define MALLOC(argument)        malloc(argument)
-#define FREE(argument)          free(argument)
-#define REALLOC(argument1,argument2)    realloc(argument1,argument2)
-#endif /* MALLOC STUFF */
+#define MALLOC(argument) malloc(argument)
+#define FREE(argument) free(argument)
+#define REALLOC(argument1,argument2) realloc(argument1,argument2)
+#endif /* MALLOC_DEBUG */
+
+char version[] = VERSION;
+static char *SccsId = "nmon " VERSION;
+
+/* Windows moved here so they can be cleared when the screen mode changes */
+WINDOW *padwelcome = NULL;
+WINDOW *padtop = NULL;
+WINDOW *padmem = NULL;
+WINDOW *padlarge = NULL;
+WINDOW *padpage = NULL;
+WINDOW *padker = NULL;
+WINDOW *padnet = NULL;
+WINDOW *padneterr = NULL;
+WINDOW *padnfs = NULL;
+WINDOW *padcpu = NULL;
+WINDOW *padsmp = NULL;
+WINDOW *padlong = NULL;
+WINDOW *paddisk = NULL;
+WINDOW *paddg = NULL;
+WINDOW *padmap = NULL;
+WINDOW *padjfs = NULL;
+WINDOW *padverb = NULL;
+WINDOW *padhelp = NULL;
 
 
-#define P_CPUINFO	0
-#define P_STAT		1
-#define P_VERSION	2
-#define P_MEMINFO   	3
-#define P_UPTIME   	4
-#define P_LOADAVG   	5
-#define P_NFS   	6
-#define P_NFSD   	7
-#define P_VMSTAT	8 /* new in 13h */
-#define P_NUMBER	9 /* one more than the max */
+/* for Disk Busy rain style output covering 100's of diskss on one screen */
+const char disk_busy_map_ch[] =
+"_____.....----------++++++++++oooooooooo0000000000OOOOOOOOOO8888888888XXXXXXXXXX##########@@@@@@@@@@*";
+/*"00000555551111111111222222222233333333334444444444555555555566666666667777777777888888888899999999991"*/
+
+int extended_disk = 0;	/* report additional data from /proc/diskstats to spreadsheet output */
 
 char *month[12] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
 	"JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
@@ -881,306 +855,6 @@ struct part_stat {
 	unsigned long part_aveq;
 };
 #endif /*PARTITIONS*/
-
-
-#ifdef POWER
-
-#define VM_UNKNOWN 0
-#define VM_POWERVM 1
-#define VM_POWERKVM_GUEST 2
-#define VM_POWERKVM_HOST 3
-#define VM_NATIVE 4
-int power_vm_type = VM_UNKNOWN;
-
-char endian[15] = "Unknown Endian";
-
-void get_endian()
-{
-	FILE *pop;
-	char tmpstr[64];
-	
-	pop = popen("/usr/bin/lscpu | grep Byte", "r");
-	if(pop != NULL) {
-		if(fgets(tmpstr, 63, pop) != NULL) {
-			tmpstr[strlen(tmpstr)-1]=0; /* remove newline */
-			endian[0]=0;
-			strncpy(endian,&tmpstr[23],14);
-		}
-		pclose(pop);
-	}
-}
-
-/* XXXXXXX need to test if rewind() worked or not for lparcfg */
-int lparcfg_reread=1;
-/* Reset at end of each interval so LPAR cfg is only read once each interval
- * even if proc_lparcfg() is called multiple times
- * Note: lparcfg is not read via proc_read() !
- */
-int lparcfg_processed=0;
-
-struct {
-	char version_string[16];		/*lparcfg 1.3 */
-	int version;
-	char serial_number[16];			/*HAL,0210033EA*/
-	char system_type[64];			/*HAL,9124-720*/
-	/* new record is "IBM pSeries (emulated by qemu)" instead of "IBM 9119-MME" */
-	int  partition_id;			/*11*/
-	/*
-	 R4=0x14
-	 R5=0x0
-	 R6=0x800b0000
-	 R7=0x1000000040004
-	 */
-	int BoundThrds;				/*=1*/
-	int CapInc;				/*=1*/
-	long long DisWheRotPer;			/*=2070000*/
-	int MinEntCap;				/*=10*/
-	int MinEntCapPerVP;			/*=10*/
-	int MinMem;				/*=2048*/
-	int DesMem;				/*=4096*/
-	int MinProcs;				/*=1*/
-	int partition_max_entitled_capacity;	/*=400*/
-	int system_potential_processors;	/*=4*/
-	/**/
-	int partition_entitled_capacity;	/*=20*/
-	int system_active_processors;		/*=4*/
-	int pool_capacity;			/*=4*/
-	int unallocated_capacity_weight;	/*=0*/
-	int capacity_weight;			/*=0*/
-	int capped;				/*=1*/
-	int unallocated_capacity;		/*=0*/
-	long long pool_idle_time;		/*=0*/
-	long long pool_idle_saved;
-	long long pool_idle_diff;
-	int pool_num_procs;			/*=0*/
-	long long purr;				/*=0*/
-	long long purr_saved;
-	long long purr_diff;
-	long long timebase;
-	int partition_active_processors;	/*=1*/
-	int partition_potential_processors;	/*=40*/
-	int shared_processor_mode;		/*=1*/
-	int smt_mode;				/* 1: off, 2: SMT-2, 4: SMT-4 */
-	int cmo_enabled;			/* 1 means AMS is Active */
-	int entitled_memory_pool_number; 	/*  pool number = 0 */
-	int entitled_memory_weight;		/* 0 to 255 */
-	long cmo_faults;			/* Hypervisor Page-in faults = big number */
-	long cmo_faults_save;			/* above saved */
-	long cmo_faults_diff;			/* delta */
-	long cmo_fault_time_usec;		/* Hypervisor time in micro seconds = big */
-	long cmo_fault_time_usec_save;		/* above saved */
-	long cmo_fault_time_usec_diff;		/* delta */
-	long backing_memory;		/* AIX pmem in bytes */
-	long cmo_page_size;		/* AMS page size in bytes */
-	long entitled_memory_pool_size;	/* AMS whole pool size in bytes */
-	long entitled_memory_loan_request;	/* AMS requesting more memory loaning */
-	
-#ifdef EXPERIMENTAL
-	/* new data in SLES11 for POWER 2.6.27 (may be a little earlier too) */
-	long DesEntCap;
-	long DesProcs;
-	long DesVarCapWt;
-	long DedDonMode;
-	long group;
-	long pool;
-	long entitled_memory;
-	long entitled_memory_group_number;
-	long unallocated_entitled_memory_weight;
-	long unallocated_io_mapping_entitlement;
-	/* new data in SLES11 for POWER 2.6.27 */
-#endif /* EXPERIMENTAL */
-	
-} lparcfg;
-
-int lpar_count=0;
-
-#define LPAR_LINE_MAX   50
-#define LPAR_LINE_WIDTH 80
-char lpar_buffer[LPAR_LINE_MAX][LPAR_LINE_WIDTH];
-
-int lpar_sanity=55;
-
-char *locate(char *s)
-{
-	int i;
-	int len;
-	len=strlen(s);
-	for(i=0;i<lpar_count;i++)
-		if( !strncmp(s,lpar_buffer[i],len))
-			return lpar_buffer[i];
-	return "";
-}
-
-#define NUMBER_NOT_VALID -999
-
-long long read_longlong(char *s)
-{
-	long long x;
-	int ret;
-	int len;
-	int i;
-	char *str;
-	str = locate(s);
-	len=strlen(str);
-	if(len == 0) {
-		return NUMBER_NOT_VALID;
-	}
-	for(i=0;i<len;i++) {
-		if(str[i] == '=') {
-			ret = sscanf(&str[i+1], "%lld", &x);
-			if(ret != 1) {
-				fprintf(stderr,"sscanf for %s failed returned = %d line=%s\n", s, ret, str);
-				return -1;
-			}
-			/* fprintf(fp,"DEBUG read %s value %lld\n",s,x);*/
-			return x;
-		}
-	}
-	fprintf(stderr,"read_long_long failed returned line=%s\n", str);
-	return -2;
-}
-
-
-/* Return of 0 means data not available */
-int proc_lparcfg()
-{
-	static FILE *fp = (FILE *)-1;
-	/* Only try to read /proc/ppc64/lparcfg once - remember if it's readable */
-	static int lparinfo_not_available=0;
-	int i;
-	char *str;
-	/* If we already read and processed /proc/lparcfg in this interval - just return */
-	if( lparcfg_processed == 1)
-		return 1;
-	
-	if( lparinfo_not_available == 1)
-		return 0;
-	
-	if( fp == (FILE *)-1) {
-		if( (fp = fopen("/proc/ppc64/lparcfg","r")) == NULL) {
-			error("failed to open - /proc/ppc64/lparcfg");
-			fp = (FILE *)-1;
-			lparinfo_not_available = 1;
-			if(power_vm_type == VM_UNKNOWN) {
-				/*  Heuristics for spotting PowerKVM Host
-				 a) inside ifdef POWER so can't be x86
-				 b) /proc/ppc64/lparcfg is missing
-				 c) /etc/ *ease files have hints
-				 Confirmed true for IBM_POWERKVM 2.1
-				 */
-				if(strncmp( easy[1], "IBM_PowerKVM", 12) == 0)
-					power_vm_type = VM_POWERKVM_HOST;
-				else
-					power_vm_type = VM_NATIVE;
-			}
-			return 0;
-		}
-	}
-	
-	for(lpar_count=0;lpar_count<LPAR_LINE_MAX-1;lpar_count++) {
-		if(fgets(lpar_buffer[lpar_count],LPAR_LINE_WIDTH-1,fp) == NULL)
-			break;
-	}
-	if(lparcfg_reread) { /* XXXX  unclear if close+open is necessary   - unfortunately this requires version many of Linux on POWER install to test early releases */
-		fclose(fp);
-		fp = (FILE *)-1;
-	} else rewind(fp);
-	
-	str=locate("lparcfg");  	sscanf(str, "lparcfg %s", lparcfg.version_string);
-	str=locate("serial_number");	sscanf(str, "serial_number=%s", lparcfg.serial_number);
-	str=locate("system_type");
-	for(i=0;i<strlen(str);i++) /* Remove new spaces in massive string meaning PowerKVM Guest !!*/
-		if(str[i] == ' ')
-			str[i] = '-';
-	sscanf(str, "system_type=%s", lparcfg.system_type);
-	if(power_vm_type == VM_UNKNOWN) {
-		/*  Heuristics for spotting PowerKVM Guest
-		 a) inside ifdef POWER so can't be x86
-		 b) we have a /proc/ppc64/lparcfg - probably mostly missing (1.9)
-		 c) system type string includes "qemu"
-		 Confirmed true for SLES11.3 RHEL6.5 and Ubuntu 14.4.1
-		 */
-		if(strstr( lparcfg.system_type, "(emulated-by-qemu)") == 0)
-			power_vm_type = VM_POWERVM; /* not found */
-		else
-			power_vm_type = VM_POWERKVM_GUEST;
-	}
-	
-#define GETDATA(variable) lparcfg.variable = read_longlong( __STRING(variable) );
-	
-	GETDATA(partition_id);
-	GETDATA(BoundThrds);
-	GETDATA(CapInc);
-	GETDATA(DisWheRotPer);
-	GETDATA(MinEntCap);
-	GETDATA(MinEntCapPerVP);
-	GETDATA(MinMem);
-	GETDATA(DesMem);
-	GETDATA(MinProcs);
-	GETDATA(partition_max_entitled_capacity);
-	GETDATA(system_potential_processors);
-	GETDATA(partition_entitled_capacity);
-	GETDATA(system_active_processors);
-	GETDATA(pool_capacity);
-	GETDATA(unallocated_capacity_weight);
-	GETDATA(capacity_weight);
-	GETDATA(capped);
-	GETDATA(unallocated_capacity);
-	lparcfg.pool_idle_saved = lparcfg.pool_idle_time;
-	GETDATA(pool_idle_time);
-	lparcfg.pool_idle_diff = lparcfg.pool_idle_time - lparcfg.pool_idle_saved;
-	GETDATA(pool_num_procs);
-	lparcfg.purr_saved = lparcfg.purr;
-	GETDATA(purr);
-	lparcfg.purr_diff = lparcfg.purr - lparcfg.purr_saved;
-	GETDATA(partition_active_processors);
-	GETDATA(partition_potential_processors);
-	GETDATA(shared_processor_mode);
-	/* Brute force, may provide temporary incorrect data during
-	 * dynamic reconfiguraiton envents
-	 */
-	lparcfg.smt_mode=cpus / lparcfg.partition_active_processors;
-	
-	/* AMS additions */
-	GETDATA(cmo_enabled);
-	if( lparcfg.cmo_enabled == NUMBER_NOT_VALID )	{
-		lparcfg.cmo_enabled = 0;
-	}
-	if( lparcfg.cmo_enabled ) {
-		GETDATA(entitled_memory_pool_number); 	/*  pool number = 0 */
-		GETDATA(entitled_memory_weight);	/* 0 to 255 */
-		
-		lparcfg.cmo_faults_save = lparcfg.cmo_faults;
-		GETDATA(cmo_faults);			/* Hypervisor Page-in faults = big number */
-		lparcfg.cmo_faults_diff = lparcfg.cmo_faults - lparcfg.cmo_faults_save;
-		
-		lparcfg.cmo_fault_time_usec_save = lparcfg.cmo_fault_time_usec;
-		GETDATA(cmo_fault_time_usec);		/* Hypervisor time in micro seconds = big number */
-		lparcfg.cmo_fault_time_usec_diff = lparcfg.cmo_fault_time_usec - lparcfg.cmo_fault_time_usec_save;
-		
-		GETDATA(backing_memory);		/* AIX pmem in bytes */
-		GETDATA(cmo_page_size);			/* AMS page size in bytes */
-		GETDATA(entitled_memory_pool_size);	/* AMS whole pool size in bytes */
-		GETDATA(entitled_memory_loan_request);	/* AMS requesting more memory loaning */
-		
-	}
-#ifdef EXPERIMENTAL
-	GETDATA(DesEntCap);
-	GETDATA(DesProcs);
-	GETDATA(DesVarCapWt);
-	GETDATA(DedDonMode);
-	GETDATA(group);
-	GETDATA(pool);
-	GETDATA(entitled_memory);
-	GETDATA(entitled_memory_group_number);
-	GETDATA(unallocated_entitled_memory_weight);
-	GETDATA(unallocated_io_mapping_entitlement);
-#endif /* EXPERIMENTAL */
-	
-	lparcfg_processed=1;
-	return 1;
-}
-#endif /*POWER*/
 
 
 #define DISKMIN 256
@@ -2282,11 +1956,6 @@ void plot_smp(WINDOW *pad, int cpu_no, int row, double user, double kernel, doub
 		}
 		COLOUR wattrset(pad,COLOR_PAIR(0));
 		for (i = 0; i <= (int)(idle   / 2); i++) {  /* added "=" to try to conteract missing halves */
-#ifdef POWER
-			if( lparcfg.smt_mode > 1 && ((cpu_no -1) % lparcfg.smt_mode) == 0 && (i % 2))
-				wprintw(pad,".");
-			else
-#endif
 				wprintw(pad," ");
 		}
 		for (i = 0; i < (int)((steal+1)  / 2); i++) {
@@ -2409,9 +2078,6 @@ void switcher(void)
 	for(i=0;i<P_NUMBER;i++) {
 		proc[i].read_this_interval = 0;
 	}
-#ifdef POWER
-	lparcfg_processed=0;
-#endif
 }
 
 
@@ -2816,9 +2482,6 @@ void help(void)
 #ifdef PARTITIONS
 	printf("\tP   = Partitions Disk I/O Stats\n");
 #endif
-#ifdef POWER
-	printf("\tp   = Logical Partitions Stats\n");
-#endif
 	printf("\tb   = black and white mode (or use -b option)\n");
 	printf("\t.   = minimum mode i.e. only busy disks and processes\n");
 	printf("\n");
@@ -3038,12 +2701,6 @@ int checkinput(void)
 						FLIP (show_longterm);
 						wclear(padlong);
 						break;
-#ifdef POWER
-					case 'p':
-						FLIP(show_lpar);
-						wclear(padlpar);
-						break;
-#endif
 					case 'V':
 						FLIP(show_vm);
 						wclear(padpage);
@@ -3678,9 +3335,6 @@ int proc_procsinfo(int pid, int index)
 		int	nfs_first_time =1;
 		int	vm_first_time =1;
 		int bbbr_line=0;
-#ifdef POWER
-		int	lpar_first_time =1;
-#endif /* POWER */
 		int	smp_first_time =1;
 		int	proc_first_time =1;
 		int	first_key_pressed = 0;
@@ -4055,10 +3709,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			/* Get Memory info */
 			proc_mem();
 			
-#ifdef POWER
-			/* Get LPAR Stats */
-			proc_lparcfg();
-#endif
 		}
 		/* Set the pointer ready for the next round */
 		switcher();
@@ -4080,9 +3730,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			COLOUR start_color();
 			COLOUR init_pairs();
 			clear();
-#ifdef POWER
-			padlpar = newpad(11,MAXCOLS);
-#endif
 			padwelcome = newpad(24,MAXCOLS);
 			padmap = newpad(24,MAXCOLS);
 			padhelp = newpad(24,MAXCOLS);
@@ -4165,12 +3812,8 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				fprintf(fp,"AAA,date,%02d-%3s-%02d\n", tim->tm_mday, month[tim->tm_mon-1], tim->tm_year+2000);
 				fprintf(fp,"AAA,interval,%d\n", seconds);
 				fprintf(fp,"AAA,snapshots,%d\n", maxloops);
-#ifdef POWER
-				fprintf(fp,"AAA,cpus,%d,%d\n", cpus/lparcfg.smt_mode,cpus);	/* physical CPU, logical CPU */
-				fprintf(fp,"AAA,CPU ID length,3\n");	/* Give analyzer a chance to easily find length of CPU number - 3 digits here! */
-#else
+
 				fprintf(fp,"AAA,cpus,%d\n", cpus);
-#endif
 #ifdef X86
 				fprintf(fp,"AAA,x86,VendorId,%s\n",       vendor_ptr);
 				fprintf(fp,"AAA,x86,ModelName,%s\n",      model_ptr);
@@ -4193,16 +3836,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				fprintf(fp,"CPU%03d,CPU %d %s,User%%,Sys%%,Wait%%,Idle%%,Steal%%\n", i, i, run_name);
 			fprintf(fp,"CPU_ALL,CPU Total %s,User%%,Sys%%,Wait%%,Idle%%,Steal%%,Busy,CPUs\n", run_name);
 			fprintf(fp,"MEM,Memory MB %s,memtotal,hightotal,lowtotal,swaptotal,memfree,highfree,lowfree,swapfree,memshared,cached,active,bigfree,buffers,swapcached,inactive\n", run_name);
-			
-#ifdef POWER
-			proc_lparcfg();
-			if(lparcfg.cmo_enabled)
-				fprintf(fp,"MEMAMS,AMS %s,Poolid,Weight,Hypervisor-Page-in/s,HypervisorTime(seconds),not_available_1,not_available_2,not_available_3,Physical-Memory(MB),Page-Size(KB),Pool-Size(MB),Loan-Request(KB)\n", run_name);
-			
-#ifdef EXPERIMENTAL
-			fprintf(fp,"MEMEXPERIMENTAL,New lparcfg numbers %s,DesEntCap,DesProcs,DesVarCapWt,DedDonMode,group,pool,entitled_memory,entitled_memory_group_number,unallocated_entitled_memory_weight,unallocated_io_mapping_entitlement\n", run_name);
-#endif /* EXPERIMENTAL */
-#endif /* POWER */
 			
 			fprintf(fp,"PROC,Processes %s,Runnable,Blocked,pswitch,syscall,read,write,fork,exec,sem,msg\n", run_name);
 			/*
@@ -4279,12 +3912,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			}
 			fprintf(fp,"\n");
 			jfs_load(UNLOAD);
-#ifdef POWER
-			if( proc_lparcfg() && lparcfg.shared_processor_mode != 0 && power_vm_type == VM_POWERVM) {
-				fprintf(fp,"LPAR,Shared CPU LPAR Stats %s,PhysicalCPU,capped,shared_processor_mode,system_potential_processors,system_active_processors,pool_capacity,MinEntCap,partition_entitled_capacity,partition_max_entitled_capacity,MinProcs,Logical CPU,partition_active_processors,partition_potential_processors,capacity_weight,unallocated_capacity_weight,BoundThrds,MinMem,unallocated_capacity,pool_idle_time,smt_mode\n",hostname);
-				
-			}
-#endif /*POWER*/
+
 			if(show_top){
 				fprintf(fp,"TOP,%%CPU Utilisation\n");
 #ifndef KERNEL_2_6_18
@@ -4304,28 +3932,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			linux_bbbp("/proc/stat",       "/bin/cat /proc/stat 2>/dev/null", WARNING);
 			linux_bbbp("/proc/version",    "/bin/cat /proc/version 2>/dev/null", WARNING);
 			linux_bbbp("/proc/net/dev",    "/bin/cat /proc/net/dev 2>/dev/null", WARNING);
-#ifdef POWER
-			linux_bbbp("ppc64_utils - lscfg",   	"/usr/sbin/lscfg 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_utils - ls-vdev",   	"/usr/sbin/ls-vdev 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_utils - ls-veth",   	"/usr/sbin/ls-veth 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_utils - ls-vscsi",   	"/usr/sbin/ls-vscsi 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_utils - lsmcode",   	"/usr/sbin/lsmcode 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_cpu - smt",   	"/usr/sbin/ppc64_cpu --smt 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_cpu - cores",   	"/usr/sbin/ppc64_cpu --cores-present 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_cpu - DSCR",   	"/usr/sbin/ppc64_cpu --dscr 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_cpu - snooze",   	"/usr/sbin/ppc64_cpu --smt-snooze-delay 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_cpu - run-mode",   	"/usr/sbin/ppc64_cpu --run-mode 2>/dev/null", WARNING);
-			linux_bbbp("ppc64_cpu - frequency",   	"/usr/sbin/ppc64_cpu --frequency 2>/dev/null", WARNING);
-			
-			linux_bbbp("bootlist -m nmonal -o",   	"/usr/sbin/bootlist -m normal -o 2>/dev/null", WARNING);
-			linux_bbbp("lsslot",            	"/usr/sbin/lsslot      2>/dev/null", WARNING);
-			linux_bbbp("lparstat -i",            	"/usr/sbin/lparstat -i 2>/dev/null", WARNING);
-			linux_bbbp("lsdevinfo",            	"/usr/sbin/lsdevinfo 2>/dev/null", WARNING);
-			linux_bbbp("ls-vdev",            	"/usr/sbin/ls-vdev  2>/dev/null", WARNING);
-			linux_bbbp("ls-veth",            	"/usr/sbin/ls-veth  2>/dev/null", WARNING);
-			linux_bbbp("ls-vscsi",            	"/usr/sbin/ls-vscsi 2>/dev/null", WARNING);
-			
-#endif
 			linux_bbbp("/proc/diskinfo",   "/bin/cat /proc/diskinfo 2>/dev/null", WARNING);
 			linux_bbbp("/proc/diskstats",   "/bin/cat /proc/diskstats 2>/dev/null", WARNING);
 			
@@ -4354,10 +3960,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			linux_bbbp("uptime",    "/usr/bin/uptime  2>/dev/null", WARNING);
 			linux_bbbp("getconf PAGESIZE",    "/usr/bin/getconf PAGESIZE  2>/dev/null", WARNING);
 			
-#ifdef POWER
-			linux_bbbp("/proc/ppc64/lparcfg",    "/bin/cat /proc/ppc64/lparcfg 2>/dev/null", WARNING);
-			linux_bbbp("lscfg-v",    "/usr/sbin/lscfg -v 2>/dev/null", WARNING);
-#endif
 			sleep(1); /* to get the first stats to cover this one second and avoids divide by zero issues */
 		}
 		/* To get the pointers setup */
@@ -4365,9 +3967,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 		/*checkinput();*/
 		clear();
 		fflush(NULL);
-#ifdef POWER
-		lparcfg.timebase = -1;
-#endif
 		
 		/* Main loop of the code */
 		for(loop=1; ; loop++) {
@@ -4384,13 +3983,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			 */
 			old_cpus = cpus;
 			get_cpu_cnt();
-#ifdef POWER
-			/* Always get lpar info as well so we can report physical CPU usage
-			 * to make data more meaningful. Return value is ignored here, but
-			 * remembered in proc_lparcfg() !
-			 */
-			proc_lparcfg();
-#endif
 			
 			if(loop <= 3) /* This stops the nmon causing the cpu peak at startup */
 				for(i=0;i < max_cpus+1;i++)
@@ -4429,53 +4021,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					mvwprintw(padwelcome,x+5, 40, "To start the same way every time");
 					mvwprintw(padwelcome,x+6, 40, " set the NMON ksh variable");
 					COLOUR wattrset(padwelcome,COLOR_PAIR(1));
-#ifdef POWER
-					get_cpu_cnt();
-					proc_read(P_CPUINFO);
-					
-					get_endian();
-					
-					switch(power_vm_type) {
-						case VM_POWERKVM_GUEST:
-							get_cpu_cnt();
-#ifdef RHEL7
-							mvwprintw(padwelcome,x+ 9, 3, "%s %s", easy[0], easy[1]);
-#else
-#ifdef SLES113
-							mvwprintw(x+ 9, 3, "%s", easy[2]);
-#else
-							mvwprintw(x+ 9, 3, "%s", easy[3]);
-#endif /* SLES113 */
-#endif /* RHEL7 */
-							mvwprintw(padwelcome,x+10, 3, "PowerKVM Guest %s", &proc[P_CPUINFO].line[1][7]);
-							mvwprintw(padwelcome,x+11, 3, "PowerKVM Guest VirtualCPUs=%d LogicalCPUs=%d", (int)lparcfg.partition_active_processors, cpus);
-							mvwprintw(padwelcome,x+12, 3, "PowerKVM Guest SMT=%d", lparcfg.smt_mode);
-							break;
-						case VM_POWERKVM_HOST:
-							mvwprintw(padwelcome,x+ 9, 3, "%s", easy[0]);
-							mvwprintw(padwelcome,x+10, 3, "PowerKVM Host %s", &proc[P_CPUINFO].line[1][7]);
-							mvwprintw(padwelcome,x+11, 3, "PowerKVM Host owns all %d CPUs & SMT=off in the Hosting OS", cpus);
-							mvwprintw(padwelcome,x+12, 3, "PowerKVM Host %s", proc[P_CPUINFO].line[proc[P_CPUINFO].lines-2]);
-							break;
-						case VM_NATIVE:
-							mvwprintw(padwelcome,x+ 9, 3, "%s", easy[0]);
-							mvwprintw(padwelcome,x+10, 3, "Native %s", &proc[P_CPUINFO].line[1][7]);
-							mvwprintw(padwelcome,x+11, 3, "Native owns all %d CPUs & SMT=off in the Hosting OS", cpus);
-							mvwprintw(padwelcome,x+12, 3, "Native %s", proc[P_CPUINFO].line[proc[P_CPUINFO].lines-2]);
-							break;
-						default:
-						case VM_POWERVM:
-							mvwprintw(padwelcome,x+ 9, 3, "%s", easy[3]);
-							mvwprintw(padwelcome,x+10, 3, "PowerVM %s %s", &proc[P_CPUINFO].line[1][7], &proc[P_CPUINFO].line[proc[P_CPUINFO].lines-1][11]);
-							mvwprintw(padwelcome,x+11, 3, "PowerVM Entitlement=%-6.2f VirtualCPUs=%d LogicalCPUs=%d",
-									  (double)lparcfg.partition_entitled_capacity/100.0, (int)lparcfg.partition_active_processors, cpus);
-							mvwprintw(padwelcome,x+12, 3, "PowerVM SMT=%d Capped=%d", lparcfg.smt_mode, lparcfg.capped);
-							break;
-					}
-					
-					mvwprintw(padwelcome,x+13, 3, "Processor Clock=%s             %s", &proc[P_CPUINFO].line[2][9], endian);
-					
-#endif
 #ifdef X86
 					get_cpu_cnt();
 					mvwprintw(padwelcome,x+10, 3, "x86 %s %s", vendor_ptr, model_ptr);
@@ -4555,28 +4100,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				mvwprintw(padcpu,2, 4, "Build: %s", proc[P_VERSION].line[1]);
 				mvwprintw(padcpu,3, 4, "Release  : %s", uts.release );
 				mvwprintw(padcpu,4, 4, "Version  : %s", uts.version);
-#ifdef POWER
-				mvwprintw(padcpu,5, 4, "cpuinfo: %s", proc[P_CPUINFO].line[1]);
-				mvwprintw(padcpu,6, 4, "cpuinfo: %s", proc[P_CPUINFO].line[2]);
-				mvwprintw(padcpu,7, 4, "cpuinfo: %s", proc[P_CPUINFO].line[3]);
-				mvwprintw(padcpu,8, 4, "cpuinfo: %s", proc[P_CPUINFO].line[proc[P_CPUINFO].lines-1]);
-				/* needs lparcfg to be already processed */
-				proc_lparcfg();
-				switch ( power_vm_type) {
-					case VM_POWERKVM_GUEST:
-						mvwprintw(padcpu,9, 4, "PowerKVM Guest Physcal CPU:%d & Virtual CPU (SMT):%d  %s", lparcfg.partition_active_processors, cpus, endian);
-						break;
-					case VM_POWERKVM_HOST:
-						mvwprintw(padcpu,9, 4, "PowerKVM Host Physical CPU:%d  %s", cpus, endian);
-						break;
-					case VM_POWERVM:
-						mvwprintw(padcpu,9, 4, "PowerVM Physcal CPU:%d & Logical CPU:%d  %s", lparcfg.partition_active_processors, cpus, endian);
-						break;
-					case VM_NATIVE:
-						mvwprintw(padcpu,9, 4, "Native Mode Physical CPU:%d  %s", cpus, endian);
-						break;
-				}
-#else
 #ifdef MAINFRAME
 				mvwprintw(padcpu,5, 4, "cpuinfo: %s", proc[P_CPUINFO].line[1]);
 				mvwprintw(padcpu,6, 4, "cpuinfo: %s", proc[P_CPUINFO].line[2]);
@@ -4599,7 +4122,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				 */
 #endif /*MAINFRAME*/
 				mvwprintw(padcpu,9, 4, "# of CPUs: %d", cpus);
-#endif /*POWER*/
 				mvwprintw(padcpu,10, 4,"Machine  : %s", uts.machine);
 				mvwprintw(padcpu,11, 4,"Nodename : %s", uts.nodename);
 				mvwprintw(padcpu,12, 4,"/etc/*ease[1]: %s", easy[0]);
@@ -4684,36 +4206,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					}	/* if (show_smp) AND if(cursed) */
 					proc_read(P_STAT);
 					proc_cpu();
-#ifdef POWER
-					/* Always get lpar info as well so we can report physical CPU usage
-					 * to make data more meaningful
-					 * This assumes that LPAR info is available in q and p !
-					 */
-					if( proc_lparcfg() > 0 )	{
-						if( lparcfg.shared_processor_mode == 1)	{
-							if(lparcfg.timebase == -1) {
-								lparcfg.timebase=0;
-								proc_read(P_CPUINFO);
-								for(i=0;i<proc[P_CPUINFO].lines-1;i++) {
-									if(!strncmp("timebase",proc[P_CPUINFO].line[i],8)) {
-										sscanf(proc[P_CPUINFO].line[i],"timebase : %lld",&lparcfg.timebase);
-										break;
-									}
-								}
-							}
-							else {
-								/* PowerKVM Host or Guest or Native have not Entitlement stats */
-								if(power_vm_type == VM_POWERVM)
-									mvwprintw(padsmp,1,30,"EntitledCPU=% 6.3f",
-											  (double)lparcfg.partition_entitled_capacity/100.0);
-								/* Only if the calculation is working */
-								if(lparcfg.purr_diff != 0 )
-									mvwprintw(padsmp,1,50,"PhysicalCPUused=% 7.3f",
-											  (double)lparcfg.purr_diff/(double)lparcfg.timebase/elapsed);
-							}
-						}
-					}
-#endif
 					for (i = 0; i < cpus; i++) {
 						cpu_user = p->cpuN[i].user - q->cpuN[i].user;
 						cpu_sys  = p->cpuN[i].sys  - q->cpuN[i].sys;
@@ -4732,13 +4224,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 								mvwprintw(padsmp,3 + i, 27, "|");
 							mvwprintw(padsmp,3 + i, 77, "|");
 						} else {
-#ifdef POWER
-							/* lparcfg gathered above */
-							if( lparcfg.smt_mode > 1 &&  i % lparcfg.smt_mode == 0) {
-								mvwprintw(padsmp,3 + i, 27, "*");
-								mvwprintw(padsmp,3 + i, 77, "*");
-							}
-#endif
 							if(!show_raw)
 								plot_smp(padsmp,i+1, 3 + i,
 										 (double)cpu_user / (double)cpu_sum * 100.0,
@@ -4756,13 +4241,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 										 RAW(irq),
 										 RAW(softirq),
 										 RAW(steal));
-#ifdef POWER
-							/* lparcfg gathered above */
-							if( lparcfg.smt_mode > 1 &&  i % lparcfg.smt_mode == 0) {
-								mvwprintw(padsmp,3 + i, 27, "*");
-								mvwprintw(padsmp,3 + i, 77, "*");
-							}
-#endif
 							
 							RRD fprintf(fp,"rrdtool update cpu%02d.rrd %s:%.1f:%.1f:%.1f:%.1f\n",i,LOOP,
 										(double)cpu_user / (double)cpu_sum * 100.0,
@@ -4772,33 +4250,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 						}
 					}	/* for (i = 0; i < cpus; i++) */
 					CURSE mvwprintw(padsmp,i + 3, 0, cpu_line);
-#ifdef POWER
-					/* proc_lparcfg called above in previous ifdef
-					 */
-					if( lparcfg.shared_processor_mode == 1)	{
-						if(lparcfg.timebase == -1) {
-							lparcfg.timebase=0;
-							proc_read(P_CPUINFO);
-							for(i=0;i<proc[P_CPUINFO].lines-1;i++) {
-								if(!strncmp("timebase",proc[P_CPUINFO].line[i],8)) {
-									sscanf(proc[P_CPUINFO].line[i],"timebase : %lld",&lparcfg.timebase);
-									break;
-								}
-							}
-						}
-						else {
-							mvwprintw(padsmp,i+3,29,"%s", lparcfg.shared_processor_mode ? "Shared": "Dedicsted");
-							mvwprintw(padsmp,i+3,39,"|");
-							/* PowerKVM has no Capped concept */
-							if(power_vm_type == VM_POWERVM)
-								mvwprintw(padsmp,i+3,41,"%s", lparcfg.capped ? "--Capped": "Uncapped");
-							mvwprintw(padsmp,i+3,51,"|");
-							mvwprintw(padsmp,i+3,54,"SMT=%d", lparcfg.smt_mode);
-							mvwprintw(padsmp,i+3,64,"|");
-							mvwprintw(padsmp,i+3,67,"VP=%.0f", (float)lparcfg.partition_active_processors);
-						}
-					}
-#endif
 					cpu_user = p->cpu_total.user - q->cpu_total.user;
 					cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
 					cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
@@ -4869,104 +4320,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					COLOUR wattrset(padverb,COLOR_PAIR(0));
 				}	/* if(show_verbose && cursed) */
 			}	/* if (show_smp || show_verbose) */
-#ifdef POWER
-			if (show_lpar) {
-				if(lparcfg.timebase == -1) {
-					lparcfg.timebase=0;
-					proc_read(P_CPUINFO);
-					for(i=0;i<proc[P_CPUINFO].lines-1;i++) {
-						if(!strncmp("timebase",proc[P_CPUINFO].line[i],8)) {
-							sscanf(proc[P_CPUINFO].line[i],"timebase : %lld",&lparcfg.timebase);
-							break;
-						}
-					}
-				}
-				ret = proc_lparcfg();
-				if(cursed) {
-					BANNER(padlpar,"LPAR Stats");
-					if(ret == 0) {
-						mvwprintw(padlpar,2, 0, "Reading data from /proc/ppc64/lparcfg failed");
-						mvwprintw(padlpar,3, 0, "This is probably a Native Virtual Machine");
-					} else
-						if(power_vm_type == VM_POWERKVM_HOST || power_vm_type == VM_POWERKVM_GUEST) {
-							mvwprintw(padlpar,2, 0, "Reading data from /proc/ppc64/lparcfg mostly failed");
-							mvwprintw(padlpar,3, 0, "PowerKVM does not many of these stats");
-						} else {
-							mvwprintw(padlpar,1, 0, "LPAR=%d  SerialNumber=%s  Type=%s",
-									  lparcfg.partition_id, lparcfg.serial_number, lparcfg.system_type);
-							mvwprintw(padlpar,2, 0, "Flags:      Shared-CPU=%-5s  Capped=%-5s   SMT-mode=%d",
-									  lparcfg.shared_processor_mode?"true":"false",
-									  lparcfg.capped?"true":"false",
-									  lparcfg.smt_mode);
-							mvwprintw(padlpar,3, 0, "Systems CPU Pool=%8.2f          Active=%8.2f    Total=%8.2f",
-									  (float)lparcfg.pool_capacity,
-									  (float)lparcfg.system_active_processors,
-									  (float)lparcfg.system_potential_processors);
-							mvwprintw(padlpar,4, 0, "LPARs CPU    Min=%8.2f     Entitlement=%8.2f      Max=%8.2f",
-									  lparcfg.MinEntCap/100.0,
-									  lparcfg.partition_entitled_capacity/100.0,
-									  lparcfg.partition_max_entitled_capacity/100.0);
-							mvwprintw(padlpar,5, 0, "Virtual CPU  Min=%8.2f          VP Now=%8.2f      Max=%8.2f",
-									  (float)lparcfg.MinProcs,
-									  (float)lparcfg.partition_active_processors,
-									  (float)lparcfg.partition_potential_processors);
-							mvwprintw(padlpar,6, 0, "Memory       Min= unknown             Now=%8.2f      Max=%8.2f",
-									  (float)lparcfg.MinMem,
-									  (float)lparcfg.DesMem);
-							mvwprintw(padlpar,7, 0, "Other     Weight=%8.2f   UnallocWeight=%8.2f Capacity=%8.2f",
-									  (float)lparcfg.capacity_weight,
-									  (float)lparcfg.unallocated_capacity_weight,
-									  (float)lparcfg.CapInc/100.0);
-							
-							mvwprintw(padlpar,8, 0, "      BoundThrds=%8.2f UnallocCapacity=%8.2f  Increment",
-									  (float)lparcfg.BoundThrds,
-									  (float)lparcfg.unallocated_capacity);
-							if(lparcfg.purr_diff == 0 || lparcfg.timebase <1) {
-								mvwprintw(padlpar,9, 0, "lparcfg: purr field always zero, upgrade to SLES9+sp1 or RHEL4+u1");
-							} else {
-								if(lpar_first_time) {
-									mvwprintw(padlpar,9, 0, "Please wait gathering data");
-									
-									lpar_first_time=0;
-								} else {
-									mvwprintw(padlpar,9, 0, "Physical CPU use=%8.3f ",
-											  (double)lparcfg.purr_diff/(double)lparcfg.timebase/elapsed);
-									if( lparcfg.pool_idle_time != NUMBER_NOT_VALID && lparcfg.pool_idle_saved != 0)
-										mvwprintw(padlpar,9, 29, "PoolIdleTime=%8.2f",
-												  (double)lparcfg.pool_idle_diff/(double)lparcfg.timebase/elapsed);
-									mvwprintw(padlpar,9, 54, "[timebase=%lld]", lparcfg.timebase);
-								}
-							}
-						}
-					DISPLAY(padlpar,10);
-				} else {
-					/* Only print LPAR info to spreadsheet if in shared processor mode */
-					if(ret != 0 && lparcfg.shared_processor_mode > 0 && power_vm_type == VM_POWERVM )
-						fprintf(fp,"LPAR,%s,%9.6f,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%.2f,%d\n",
-								LOOP,
-								(double)lparcfg.purr_diff/(double)lparcfg.timebase/elapsed,
-								lparcfg.capped,
-								lparcfg.shared_processor_mode,
-								lparcfg.system_potential_processors,
-								lparcfg.system_active_processors,
-								lparcfg.pool_capacity,
-								lparcfg.MinEntCap/100.0,
-								lparcfg.partition_entitled_capacity/100.0,
-								lparcfg.partition_max_entitled_capacity/100.0,
-								lparcfg.MinProcs,
-								cpus, 		/* report logical CPU here so analyser graph CPU% vs VPs reports correctly */
-								lparcfg.partition_active_processors,
-								lparcfg.partition_potential_processors,
-								lparcfg.capacity_weight,
-								lparcfg.unallocated_capacity_weight,
-								lparcfg.BoundThrds,
-								lparcfg.MinMem,
-								lparcfg.unallocated_capacity,
-								(double)lparcfg.pool_idle_diff/(double)lparcfg.timebase/elapsed,
-								lparcfg.smt_mode);
-				}
-			}
-#endif /*POWER*/
 			if (show_memory) {
 				proc_read(P_MEMINFO);
 				proc_mem();
@@ -5017,25 +4370,8 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 							  p->mem.slab/1024.0,
 							  p->mem.committed_as/1024.0,
 							  p->mem.pagetables/1024.0);
-#ifdef POWER
-					if(!show_lpar) /* check if already called above */
-						proc_lparcfg();
-					if(lparcfg.cmo_enabled == 0)
-						mvwprintw(padmem,10, 1, "AMS is not active");
-					else
-						mvwprintw(padmem,10, 1, "AMS id=%d Weight=%-3d pmem=%ldMB hpi=%.1f/s hpit=%.1f(sec) Pool=%ldMB Loan=%ldKB     ",
-								  (int)lparcfg.entitled_memory_pool_number,
-								  (int)lparcfg.entitled_memory_weight,
-								  (long)(lparcfg.backing_memory)/1024/1024,
-								  (double)(lparcfg.cmo_faults_diff)/elapsed,
-								  (double)(lparcfg.cmo_fault_time_usec_diff)/1000/1000/elapsed,
-								  (long)lparcfg.entitled_memory_pool_size/1024/1024,
-								  (long)lparcfg.entitled_memory_loan_request/1024);
-					
-					DISPLAY(padmem,11);
-#else /* POWER */
+
 					DISPLAY(padmem,10);
-#endif /* POWER */
 				} else {
 					
 					if(show_rrd)
@@ -5063,35 +4399,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 							p->mem.buffers/1024.0,
 							p->mem.swapcached/1024.0,
 							p->mem.inactive/1024.0);
-#ifdef POWER
-					if(lparcfg.cmo_enabled != 0) {
-						if(!show_rrd)fprintf(fp,"MEMAMS,%s,%d,%d,%.1f,%.3lf,0,0,0,%.1f,%ld,%ld,%ld\n",
-											 LOOP,
-											 (int)lparcfg.entitled_memory_pool_number,
-											 (int)lparcfg.entitled_memory_weight,
-											 (float)(lparcfg.cmo_faults_diff)/elapsed,
-											 (float)(lparcfg.cmo_fault_time_usec_diff)/1000/1000/elapsed,
-											 /* three zeros here */
-											 (float)(lparcfg.backing_memory)/1024/1024,
-											 lparcfg.cmo_page_size/1024,
-											 lparcfg.entitled_memory_pool_size/1024/1024,
-											 lparcfg.entitled_memory_loan_request/1024);
-					}
-#ifdef EXPERIMENTAL
-					if(!show_rrd)fprintf(fp,"MEMEXPERIMENTAL,%s,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld\n",
-										 LOOP,
-										 (long)lparcfg.DesEntCap,
-										 (long)lparcfg.DesProcs,
-										 (long)lparcfg.DesVarCapWt,
-										 (long)lparcfg.DedDonMode,
-										 (long)lparcfg.group,
-										 (long)lparcfg.pool,
-										 (long)lparcfg.entitled_memory,
-										 (long)lparcfg.entitled_memory_group_number,
-										 (long)lparcfg.unallocated_entitled_memory_weight,
-										 (long)lparcfg.unallocated_io_mapping_entitlement);
-#endif /* EXPERIMENTAL */
-#endif /* POWER */
 				}
 				/* for testing large page
 				 p->mem.hugefree = 250;
