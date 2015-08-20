@@ -182,15 +182,15 @@ struct {
 
 void proc_init()
 {
-	proc[P_CPUINFO].filename = "/Users/stollcri/Documents/code/c/nmon/dbg/cpuinfo"; //"/proc/cpuinfo";
-	proc[P_STAT].filename    = "/Users/stollcri/Documents/code/c/nmon/dbg/stat"; //"/proc/stat";
-	proc[P_VERSION].filename = "/Users/stollcri/Documents/code/c/nmon/dbg/version"; //"/proc/version";
-	proc[P_MEMINFO].filename = "/Users/stollcri/Documents/code/c/nmon/dbg/meminfo"; //"/proc/meminfo";
-	proc[P_UPTIME].filename  = "/Users/stollcri/Documents/code/c/nmon/dbg/uptime"; //"/proc/uptime";
-	proc[P_LOADAVG].filename = "/Users/stollcri/Documents/code/c/nmon/dbg/loadavg"; //"/proc/loadavg";
-	proc[P_NFS].filename     = "/Users/stollcri/Documents/code/c/nmon/dbg/net/rpc/nfs"; //"/proc/net/rpc/nfs";
-	proc[P_NFSD].filename    = "/Users/stollcri/Documents/code/c/nmon/dbg/net/rpc/nfsd"; //"/proc/net/rpc/nfsd";
-	proc[P_VMSTAT].filename	 = "/Users/stollcri/Documents/code/c/nmon/dbg/vmstat"; //"/proc/vmstat";
+	proc[P_CPUINFO].filename = "/Users/stollcri/Documents/code/c/nmond/dbg/cpuinfo"; //"/proc/cpuinfo";
+	proc[P_STAT].filename    = "/Users/stollcri/Documents/code/c/nmond/dbg/stat"; //"/proc/stat";
+	proc[P_VERSION].filename = "/Users/stollcri/Documents/code/c/nmond/dbg/version"; //"/proc/version";
+	proc[P_MEMINFO].filename = "/Users/stollcri/Documents/code/c/nmond/dbg/meminfo"; //"/proc/meminfo";
+	proc[P_UPTIME].filename  = "/Users/stollcri/Documents/code/c/nmond/dbg/uptime"; //"/proc/uptime";
+	proc[P_LOADAVG].filename = "/Users/stollcri/Documents/code/c/nmond/dbg/loadavg"; //"/proc/loadavg";
+	proc[P_NFS].filename     = "/Users/stollcri/Documents/code/c/nmond/dbg/net/rpc/nfs"; //"/proc/net/rpc/nfs";
+	proc[P_NFSD].filename    = "/Users/stollcri/Documents/code/c/nmond/dbg/net/rpc/nfsd"; //"/proc/net/rpc/nfsd";
+	proc[P_VMSTAT].filename	 = "/Users/stollcri/Documents/code/c/nmond/dbg/vmstat"; //"/proc/vmstat";
 }
 
 void proc_read(int num)
@@ -1814,9 +1814,9 @@ void proc_diskstats(double elapsed)
 	int ret;
 	
 	if( fp == (FILE *)-1) {
-		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmon/dbg/diskstats","r")) == NULL) {
+		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmond/dbg/diskstats","r")) == NULL) {
 			/* DEBUG if( (fp = fopen("diskstats","r")) == NULL) { */
-			error("failed to open - /Users/stollcri/Documents/code/c/nmon/dbg/diskstats");
+			error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/diskstats");
 			disks=0;
 			return;
 		}
@@ -1932,8 +1932,8 @@ void proc_partitions(double elapsed)
 	int ret;
 	
 	if( fp == (FILE *)-1) {
-		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmon/dbg/partitions","r")) == NULL) {
-			error("failed to open - /Users/stollcri/Documents/code/c/nmon/dbg/partitions");
+		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmond/dbg/partitions","r")) == NULL) {
+			error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/partitions");
 			partitions=0;
 			return;
 		}
@@ -2003,11 +2003,11 @@ void proc_disk(double elapsed)
 	struct stat buf;
 	int ret;
 	if(disk_mode == 0) {
-		ret = stat("/Users/stollcri/Documents/code/c/nmon/dbg/diskstats", &buf);
+		ret = stat("/Users/stollcri/Documents/code/c/nmond/dbg/diskstats", &buf);
 		if(ret == 0) {
 			disk_mode=DISK_MODE_DISKSTATS;
 		} else {
-			ret = stat("/Users/stollcri/Documents/code/c/nmon/dbg/partitions", &buf);
+			ret = stat("/Users/stollcri/Documents/code/c/nmond/dbg/partitions", &buf);
 			if(ret == 0) {
 				disk_mode=DISK_MODE_PARTITIONS;
 			} else {
@@ -3256,8 +3256,8 @@ void proc_net()
 	unsigned long junk;
 	
 	if( fp == (FILE *)-1) {
-		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmon/dbg/net/dev","r")) == NULL) {
-			error("failed to open - /Users/stollcri/Documents/code/c/nmon/dbg/net/dev");
+		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmond/dbg/net/dev","r")) == NULL) {
+			error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/net/dev");
 			networks=0;
 			return;
 		}
@@ -3317,7 +3317,7 @@ int proc_procsinfo(int pid, int index)
 	int count=0;
 	int i;
 	
-	sprintf(filename,"/Users/stollcri/Documents/code/c/nmon/dbg/%d/stat",pid);
+	sprintf(filename,"/Users/stollcri/Documents/code/c/nmond/dbg/%d/stat",pid);
 	if( (fp = fopen(filename,"r")) == NULL) {
 		sprintf(buf,"failed to open file %s",filename);
 		error(buf);
@@ -3416,7 +3416,7 @@ int proc_procsinfo(int pid, int index)
 			return 0;
 		}
 		
-		sprintf(filename,"/Users/stollcri/Documents/code/c/nmon/dbg/%d/statm",pid);
+		sprintf(filename,"/Users/stollcri/Documents/code/c/nmond/dbg/%d/statm",pid);
 		if( (fp = fopen(filename,"r")) == NULL) {
 			sprintf(buf,"failed to open file %s",filename);
 			error(buf);
@@ -3447,7 +3447,7 @@ int proc_procsinfo(int pid, int index)
 		if(isroot) {
 			p->procs[index].read_io = 0;
 			p->procs[index].write_io = 0;
-			sprintf(filename,"/Users/stollcri/Documents/code/c/nmon/dbg/%d/io",pid);
+			sprintf(filename,"/Users/stollcri/Documents/code/c/nmond/dbg/%d/io",pid);
 			if( (fp = fopen(filename,"r")) != NULL) {
 				for(i=0;i<6;i++) {
 					if(fgets(buf,1024,fp) == NULL) {
@@ -3538,8 +3538,8 @@ int proc_procsinfo(int pid, int index)
 		DIR *procdir;
 		int count =0;
 		
-		if((char *)(procdir = opendir("/Users/stollcri/Documents/code/c/nmon/dbg")) == NULL) {
-			printf("opendir(/Users/stollcri/Documents/code/c/nmon/dbg) failed");
+		if((char *)(procdir = opendir("/Users/stollcri/Documents/code/c/nmond/dbg")) == NULL) {
+			printf("opendir(/Users/stollcri/Documents/code/c/nmond/dbg) failed");
 			return 0;
 		}
 		while( (char *)(dent = readdir(procdir)) != NULL ) {
@@ -4269,7 +4269,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			jfs_load(LOAD);
 			fprintf(fp,"JFSFILE,JFS Filespace %%Used %s", hostname);
 			for (k = 0; k < jfses; k++) {
-				if(jfs[k].mounted && strncmp(jfs[k].name,"/Users/stollcri/Documents/code/c/nmon/dbg",5)
+				if(jfs[k].mounted && strncmp(jfs[k].name,"/Users/stollcri/Documents/code/c/nmond/dbg",5)
 				   && strncmp(jfs[k].name,"/sys",4)
 				   && strncmp(jfs[k].name,"/run/",5)
 				   && strncmp(jfs[k].name,"/dev/",5)
@@ -4414,18 +4414,18 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				if(welcome && getenv("NMON") == 0) {
 					
 					COLOUR wattrset(padwelcome,COLOR_PAIR(2));
-					mvwprintw(padwelcome,x+1, 3, "------------------------------");
-					mvwprintw(padwelcome,x+2, 3, "#    #  #    #   ####   #    #");
-					mvwprintw(padwelcome,x+3, 3, "##   #  ##  ##  #    #  ##   #");
-					mvwprintw(padwelcome,x+4, 3, "# #  #  # ## #  #    #  # #  #");
-					mvwprintw(padwelcome,x+5, 3, "#  # #  #    #  #    #  #  # #");
-					mvwprintw(padwelcome,x+6, 3, "#   ##  #    #  #    #  #   ##");
-					mvwprintw(padwelcome,x+7, 3, "#    #  #    #   ####   #    #");
-					mvwprintw(padwelcome,x+8, 3, "------------------------------");
+					mvwprintw(padwelcome,x+1, 1, "--------------------------------------");
+					mvwprintw(padwelcome,x+2, 1, "#    #  #    #   ####   #    #  ##### ");
+					mvwprintw(padwelcome,x+3, 1, "##   #  ##  ##  #    #  ##   #  #    #");
+					mvwprintw(padwelcome,x+4, 1, "# #  #  # ## #  #    #  # #  #  #    #");
+					mvwprintw(padwelcome,x+5, 1, "#  # #  #    #  #    #  #  # #  #    #");
+					mvwprintw(padwelcome,x+6, 1, "#   ##  #    #  #    #  #   ##  #    #");
+					mvwprintw(padwelcome,x+7, 1, "#    #  #    #   ####   #    #  ##### ");
+					mvwprintw(padwelcome,x+8, 1, "--------------------------------------");
 					COLOUR wattrset(padwelcome,COLOR_PAIR(0));
 					mvwprintw(padwelcome,x+1, 40, "For help type H or ...");
-					mvwprintw(padwelcome,x+2, 40, " nmon -?  - hint");
-					mvwprintw(padwelcome,x+3, 40, " nmon -h  - full");
+					mvwprintw(padwelcome,x+2, 40, " nmond -?  - hint");
+					mvwprintw(padwelcome,x+3, 40, " nmond -h  - full");
 					mvwprintw(padwelcome,x+5, 40, "To start the same way every time");
 					mvwprintw(padwelcome,x+6, 40, " set the NMON ksh variable");
 					COLOUR wattrset(padwelcome,COLOR_PAIR(1));
@@ -5652,7 +5652,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 						fs_free=0;
 						fs_size_used=100.0;
 						if(jfs[k].mounted) {
-							if(!strncmp(jfs[k].name,"/Users/stollcri/Documents/code/c/nmon/dbg/",6)       /* sub directorys have to be fake too */
+							if(!strncmp(jfs[k].name,"/Users/stollcri/Documents/code/c/nmond/dbg/",6)       /* sub directorys have to be fake too */
 							   || !strncmp(jfs[k].name,"/sys/",5)
 							   || !strncmp(jfs[k].name,"/dev/",5)
 							   || !strncmp(jfs[k].name,"/proc",6) /* one more than the string to ensure the NULL */
@@ -5728,7 +5728,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					jfs_load(LOAD);
 					fprintf(fp,show_rrd ? "rrdtool update jfsfile.rrd %s" : "JFSFILE,%s", LOOP);
 					for (k = 0; k < jfses; k++) {
-						if(jfs[k].mounted && strncmp(jfs[k].name,"/Users/stollcri/Documents/code/c/nmon/dbg",5)
+						if(jfs[k].mounted && strncmp(jfs[k].name,"/Users/stollcri/Documents/code/c/nmond/dbg",5)
 						   && strncmp(jfs[k].name,"/sys",4)
 						   && strncmp(jfs[k].name,"/dev/",5)
 						   && strncmp(jfs[k].name,"/run/",5)
@@ -5833,9 +5833,9 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					if(show_disk) {
 						BANNER(paddisk,"Disk I/O");
 						switch(disk_mode) {
-							case DISK_MODE_PARTITIONS: mvwprintw(paddisk, 0, 12, "/Users/stollcri/Documents/code/c/nmon/dbg/partitions");break;
-							case DISK_MODE_DISKSTATS:  mvwprintw(paddisk, 0, 12, "/Users/stollcri/Documents/code/c/nmon/dbg/diskstats");break;
-							case DISK_MODE_IO:         mvwprintw(paddisk, 0, 12, "/Users/stollcri/Documents/code/c/nmon/dbg/stat+disk_io");break;
+							case DISK_MODE_PARTITIONS: mvwprintw(paddisk, 0, 12, "/Users/stollcri/Documents/code/c/nmond/dbg/partitions");break;
+							case DISK_MODE_DISKSTATS:  mvwprintw(paddisk, 0, 12, "/Users/stollcri/Documents/code/c/nmond/dbg/diskstats");break;
+							case DISK_MODE_IO:         mvwprintw(paddisk, 0, 12, "/Users/stollcri/Documents/code/c/nmond/dbg/stat+disk_io");break;
 						}
 						mvwprintw(paddisk,0, 31, "mostly in KB/s");
 						mvwprintw(paddisk,0, 50, "Warning:contains duplicates");
