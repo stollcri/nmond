@@ -34,6 +34,7 @@
  */
 
 /* most of this was ripped from the mount(3) source */
+/* and then ripped from the glusterfs source */
 
 //#ifdef GF_DARWIN_HOST_OS
 #include <stdlib.h>

@@ -1,3 +1,4 @@
 .DS_Store
 
-nmon.dSYM
+dbg
+bin/nmon.dSYM
