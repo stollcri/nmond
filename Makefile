@@ -3,17 +3,17 @@ CC = cc
 CFLAGS = -Wall -O3 -D JFS -D LARGEMEM
 # CFLAGS = -Weverything -O3 -D JFS -D LARGEMEM
 LDFLAGS = -l ncurses -g
-FILES = nmon.c mntent.c
+FILES = nmond.c mntent.c
 
-default: nmon
-test: nmon run
+default: nmond
+test: nmond run
 
-nmon:
+nmond:
 	@mkdir -p ./bin/
-	${CC} ${CFLAGS} ${LDFLAGS} -o ./bin/nmon ${FILES}
+	${CC} ${CFLAGS} ${LDFLAGS} -o ./bin/nmond ${FILES}
 
 run:
-	bin/nmon
+	bin/nmond
 
 clean:
 	rm -r bin/*
