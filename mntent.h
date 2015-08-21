@@ -1,7 +1,6 @@
 #ifndef _MNTENT_H
 #define _MNTENT_H
 
-//#ifdef GF_DARWIN_HOST_OS
 #include <stdio.h>
 
 struct mntent {
@@ -21,5 +20,4 @@ char * hasmntopt (const struct mntent *mnt, const char *option);
 //Dummy
 #define _PATH_MOUNTED "/etc/mtab"
 
-//#endif /* GF_DARWIN_HOST_OS */
 #endif /* _MNTENT_H */

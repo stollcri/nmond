@@ -1,11 +1,13 @@
 /*
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
- *  Christopher Stoll (https://github.com/stollcri)
+ *  Christopher Stoll (https://github.com/stollcri), 2015
  *  
  *   forked from:
  *   lmon.c -- Curses based Performance Monitor for Linux
  *   Developer: Nigel Griffiths.
  */
+
+#include "nmond.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,19 +28,21 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
-#include "nmond.h"
+#include <dirent.h>
+#include <fstab.h>
+#include <sys/stat.h>
+#include <sys/param.h>
+#include <sys/mount.h>
+#include <net/if.h>
 
-#define KERNEL_2_6_18 1 
-/* This adds the following to the disk stats
-	pi_num_threads,
-	pi_rt_priority,
-	pi_policy,
-	pi_delayacct_blkio_ticks
- */
+#include "mntent.h"
+
+#include "sysinfo.h"
 
 #define RAW(member)      (long)((long)(p->cpuN[i].member)   - (long)(q->cpuN[i].member))
 #define RAWTOTAL(member) (long)((long)(p->cpu_total.member) - (long)(q->cpu_total.member))
 #define FLIP(variable) if(variable) variable=0; else variable=1;
+#define GETVM(variable) p->vm.variable = get_vm_value(__STRING(variable) );
 
 #ifdef MALLOC_DEBUG
 #define MALLOC(argument) mymalloc(argument,__LINE__)
@@ -134,25 +138,10 @@ void error(char *err)
 	strncpy(errorstr,err,69);
 }
 
-/* Maximum number of lines in /proc files */
-/* Intel already has 26 (so here 30) per Hypterthread CPU (max 128*2 CPUs here) */
-/* POWER has only 6 to 7 lines but gets  1536 SMT threads soon */
-/* Erring on the saf side below */
-#define PROC_MAXLINES (16*1024) /*MAGIC COOKIE WARNING */
-
 
 int proc_cpu_done = 0;	/* Flag if we have run function proc_cpu() already in this interval */
 
 int reread =0;
-struct {
-	FILE *fp;
-	char *filename;
-	int size;
-	int lines;
-	char *line[PROC_MAXLINES];
-	char *buf;
-	int read_this_interval; /* track updates for each update to stop  double data collection */
-} proc[P_NUMBER];
 
 void proc_init()
 {
@@ -257,79 +246,7 @@ void proc_read(int num)
 	proc[num].read_this_interval = 1;
 }
 
-#include <dirent.h>
-
-struct procsinfo {
-	int pi_pid;
-	char pi_comm[64];
-	char pi_state;
-	int pi_ppid;
-	int pi_pgrp;
-	int pi_session;
-	int pi_tty_nr;
-	int pi_tty_pgrp;
-	unsigned long pi_flags;
-	unsigned long pi_minflt;
-	unsigned long pi_cmin_flt;
-	unsigned long pi_majflt;
-	unsigned long pi_cmaj_flt;
-	unsigned long pi_utime;
-	unsigned long pi_stime;
-	long pi_cutime;
-	long pi_cstime;
-	long pi_pri;
-	long pi_nice;
-#ifndef KERNEL_2_6_18
-	long junk /* removed */;
-#else
-	long pi_num_threads;
-#endif
-	long pi_it_real_value;
-	unsigned long pi_start_time;
-	unsigned long pi_vsize;
-	long pi_rss; /* - 3 */
-	unsigned long pi_rlim_cur;
-	unsigned long pi_start_code;
-	unsigned long pi_end_code;
-	unsigned long pi_start_stack;
-	unsigned long pi_esp;
-	unsigned long pi_eip;
-	/* The signal information here is obsolete. */
-	unsigned long pi_pending_signal;
-	unsigned long pi_blocked_sig;
-	unsigned long pi_sigign;
-	unsigned long pi_sigcatch;
-	unsigned long pi_wchan;
-	unsigned long pi_nswap;
-	unsigned long pi_cnswap;
-	int pi_exit_signal;
-	int pi_cpu;
-#ifdef KERNEL_2_6_18
-	unsigned long pi_rt_priority;
-	unsigned long pi_policy;
-	unsigned long long pi_delayacct_blkio_ticks;
-#endif
-	unsigned long statm_size;       /* total program size */
-	unsigned long statm_resident;   /* resident set size */
-	unsigned long statm_share;      /* shared pages */
-	unsigned long statm_trs;        /* text (code) */
-	unsigned long statm_drs;        /* data/stack */
-	unsigned long statm_lrs;        /* library */
-	unsigned long statm_dt;         /* dirty pages */
-	
-	unsigned long long read_io;     /* storage read bytes */
-	unsigned long long write_io;    /* storage write bytes */
-};
 int isroot = 0;
-
-//#include <mntent.h>
-#include "mntent.h"
-#include <fstab.h>
-#include <sys/stat.h>
-//#include <sys/statfs.h>
-#include <sys/param.h>
-#include <sys/mount.h>
-#include <net/if.h>
 
 int debug =0;
 time_t  timer;			/* used to work out the hour/min/second */
@@ -473,15 +390,7 @@ void find_release()
 
 
 
-/* Full Args Mode stuff here */
 
-#define ARGSMAX 1024*8
-#define CMDLEN 4096
-
-struct {
-	int pid;
-	char *args;
-} arglist[ARGSMAX];
 
 void args_output(int pid, int loop, char *progname)
 {
@@ -629,144 +538,23 @@ void   linux_bbbp(char *name, char *cmd, char *err)
 /* Global name of programme for printing it */
 char	*progname;
 
-/* Main data structure for collected stats.
- * Two versions are previous and current data.
- * Often its the difference that is printed.
- * The pointers are swaped i.e. current becomes the previous
- * and the previous over written rather than moving data around.
- */
-struct cpu_stat {
-	long long user;
-	long long sys;
-	long long wait;
-	long long idle;
-	long long irq;
-	long long softirq;
-	long long steal;
-	long long nice;
-	long long intr;
-	long long ctxt;
-	long long btime;
-	long long procs;
-	long long running;
-	long long blocked;
-	float uptime;
-	float idletime;
-	float mins1;
-	float mins5;
-	float mins15;
-};
-
-#define ulong unsigned long
-struct dsk_stat {
-	char	dk_name[32];
-	int	dk_major;
-	int	dk_minor;
-	long	dk_noinfo;
-	ulong	dk_reads;
-	ulong	dk_rmerge;
-	ulong	dk_rmsec;
-	ulong	dk_rkb;
-	ulong	dk_writes;
-	ulong	dk_wmerge;
-	ulong	dk_wmsec;
-	ulong	dk_wkb;
-	ulong	dk_xfers;
-	ulong	dk_bsize;
-	ulong	dk_time;
-	ulong	dk_inflight;
-	ulong	dk_backlog;
-	ulong	dk_partition;
-	ulong	dk_blocks; /* in /proc/partitions only */
-	ulong	dk_use;
-	ulong	dk_aveq;
-};
-
-struct mem_stat {
-	long memtotal;
-	long memfree;
-	long memshared;
-	long buffers;
-	long cached;
-	long swapcached;
-	long active;
-	long inactive;
-	long hightotal;
-	long highfree;
-	long lowtotal;
-	long lowfree;
-	long swaptotal;
-	long swapfree;
-#ifdef LARGEMEM
-	long dirty;
-	long writeback;
-	long mapped;
-	long slab;
-	long committed_as;
-	long pagetables;
-	long hugetotal;
-	long hugefree;
-	long hugesize;
-#else
-	long bigfree;
-#endif /*LARGEMEM*/
-};
-
-struct vm_stat {
-	long long nr_dirty;
-	long long nr_writeback;
-	long long nr_unstable;
-	long long nr_page_table_pages;
-	long long nr_mapped;
-	long long nr_slab;
-	long long pgpgin;
-	long long pgpgout;
-	long long pswpin;
-	long long pswpout;
-	long long pgalloc_high;
-	long long pgalloc_normal;
-	long long pgalloc_dma;
-	long long pgfree;
-	long long pgactivate;
-	long long pgdeactivate;
-	long long pgfault;
-	long long pgmajfault;
-	long long pgrefill_high;
-	long long pgrefill_normal;
-	long long pgrefill_dma;
-	long long pgsteal_high;
-	long long pgsteal_normal;
-	long long pgsteal_dma;
-	long long pgscan_kswapd_high;
-	long long pgscan_kswapd_normal;
-	long long pgscan_kswapd_dma;
-	long long pgscan_direct_high;
-	long long pgscan_direct_normal;
-	long long pgscan_direct_dma;
-	long long pginodesteal;
-	long long slabs_scanned;
-	long long kswapd_steal;
-	long long kswapd_inodesteal;
-	long long pageoutrun;
-	long long allocstall;
-	long long pgrotated;
-};
 
 
-#define NFS_V2_NAMES_COUNT 18
+
+
 char *nfs_v2_names[NFS_V2_NAMES_COUNT] = {
 	"null", "getattr", "setattr", "root", "lookup", "readlink",
 	"read", "wrcache", "write", "create", "remove", "rename",
 	"link", "symlink", "mkdir", "rmdir", "readdir", "fsstat"};
 
-#define NFS_V3_NAMES_COUNT 22
+
 char *nfs_v3_names[22] ={
 	"null", "getattr", "setattr", "lookup", "access", "readlink",
 	"read", "write", "create", "mkdir", "symlink", "mknod",
 	"remove", "rmdir", "rename", "link", "readdir", "readdirplus",
 	"fsstat", "fsinfo", "pathconf", "commit"};
 
-#define NFS_V4S_NAMES_COUNT 72
+
 int nfs_v4s_names_count=NFS_V4S_NAMES_COUNT;
 char *nfs_v4s_names[NFS_V4S_NAMES_COUNT] = {  /* get these names from nfsstat as they are NOT documented */
 	"op0-unused",   "op1-unused",   "op2-future",   "access",       "close",        "commit",       /* 1 - 6 */
@@ -783,7 +571,7 @@ char *nfs_v4s_names[NFS_V4S_NAMES_COUNT] = {  /* get these names from nfsstat as
 	"stat67",	"stat68",	"stat69",	"stat70",	"stat71",	"stat72"	/* 67 - 72 */
 };
 
-#define NFS_V4C_NAMES_COUNT 60
+
 int nfs_v4c_names_count=NFS_V4C_NAMES_COUNT;
 char *nfs_v4c_names[NFS_V4C_NAMES_COUNT] = {  /* get these names from nfsstat as they are NOT documented */
 	"null",         "read",         "write",        "commit",       "open",         "open_conf",    /* 1 - 6 */
@@ -807,80 +595,12 @@ int nfs_v4c_found=0;
 int nfs_v4s_found=0;
 int nfs_clear=0;
 
-struct nfs_stat {
-	long v2c[NFS_V2_NAMES_COUNT];	/* verison 2 client */
-	long v3c[NFS_V3_NAMES_COUNT];	/* verison 3 client */
-	long v4c[NFS_V4C_NAMES_COUNT];	/* verison 4 client */
-	long v2s[NFS_V2_NAMES_COUNT];	/* verison 2 SERVER */
-	long v3s[NFS_V3_NAMES_COUNT];	/* verison 3 SERVER */
-	long v4s[NFS_V4S_NAMES_COUNT];	/* verison 4 SERVER */
-};
-
-#define NETMAX 32
-struct net_stat {
-	unsigned long if_name[17];
-	unsigned long long if_ibytes;
-	unsigned long long if_obytes;
-	unsigned long long if_ipackets;
-	unsigned long long if_opackets;
-	unsigned long if_ierrs;
-	unsigned long if_oerrs;
-	unsigned long if_idrop;
-	unsigned long if_ififo;
-	unsigned long if_iframe;
-	unsigned long if_odrop;
-	unsigned long if_ofifo;
-	unsigned long if_ocarrier;
-	unsigned long if_ocolls;
-} ;
-#ifdef PARTITIONS
-#define PARTMAX 256
-struct part_stat {
-	int part_major;
-	int part_minor;
-	unsigned long part_blocks;
-	char part_name[16];
-	unsigned long part_rio;
-	unsigned long part_rmerge;
-	unsigned long part_rsect;
-	unsigned long part_ruse;
-	unsigned long part_wio;
-	unsigned long part_wmerge;
-	unsigned long part_wsect;
-	unsigned long part_wuse;
-	unsigned long part_run;
-	unsigned long part_use;
-	unsigned long part_aveq;
-};
-#endif /*PARTITIONS*/
 
 
-#define DISKMIN 256
-#define DISKMAX diskmax
+
 int diskmax = DISKMIN;
 
-/* Supports up to 780, but not POWER6 595 follow-up with POWER7 */
-/* XXXX needs rework to cope to with fairly rare but interesting higher numbers of CPU machines */
-#define CPUMAX (192 * 8) /* MAGIC COOKIE WARNING */
 
-struct data {
-	struct dsk_stat *dk;
-	struct cpu_stat cpu_total;
-	struct cpu_stat cpuN[CPUMAX];
-	struct mem_stat mem;
-	struct vm_stat vm;
-	struct nfs_stat nfs;
-	struct net_stat ifnets[NETMAX];
-#ifdef PARTITIONS
-	struct part_stat parts[PARTMAX];
-#endif /*PARTITIONS*/
-	
-	struct timeval tv;
-	double time;
-	struct procsinfo *procs;
-	
-	int    nprocs;
-} database[2], *p, *q;
 
 
 long long get_vm_value( char *s)	{
@@ -912,7 +632,7 @@ long long get_vm_value( char *s)	{
 	return -1;
 }
 
-#define GETVM(variable) p->vm.variable = get_vm_value(__STRING(variable) );
+
 
 int read_vmstat()
 {
@@ -1110,6 +830,12 @@ void get_intel_spec() {
 		hyperthreads=siblings/cores;
 	else
 		hyperthreads=0;
+
+
+	struct sys thissys = getsysinfo();
+	vendor_ptr = thissys.machine;
+	model_ptr = thissys.model;
+	sprintf(mhz_ptr, "%d", thissys.cpufrequency);
 }
 
 int stat8 = 0; /* used to determine the number of variables on a line */
@@ -1748,20 +1474,12 @@ void proc_mem()
 #endif /*LARGEMEM*/
 }
 
-#define MAX_SNAPS 72
-#define MAX_SNAP_ROWS 20
-#define SNAP_OFFSET 6
+
 
 int next_cpu_snap = 0;
 int cpu_snap_all = 0;
 
-struct {
-	double user;
-	double kernel;
-	double iowait;
-	double idle;
-	double steal;
-} cpu_snap[MAX_SNAPS];
+
 
 int snap_average()
 {
@@ -2517,20 +2235,6 @@ void help(void)
 	exit(0);
 }
 
-#define JFSMAX 128
-#define LOAD 1
-#define UNLOAD 0
-#define JFSNAMELEN 64
-#define JFSTYPELEN 8
-
-struct jfs {
-	char name[JFSNAMELEN];
-	char device[JFSNAMELEN];
-	char type[JFSNAMELEN];
-	int  fd;
-	int  mounted;
-} jfs[JFSMAX];
-
 int jfses =0;
 void jfs_load(int load)
 {
@@ -2579,21 +2283,6 @@ void jfs_load(int load)
 		/* do nothing */ ;
 	}
 }
-
-/* We order this array rather than the actual process tables
- * the index is the position in the process table and
- * the size is the memory used  in bytes
- * the io is the storge I/O performed in the the last period in bytes
- * the time is the CPU used in the last period in seconds
- */
-struct topper {
-	int	index;
-	int	other;
-	double	size;
-	double	io;
-	int	time;
-} *topper;
-int	topper_size = 200;
 
 /* Routine used by qsort to order the processes by CPU usage */
 int	cpu_compare(const void *a, const void *b)

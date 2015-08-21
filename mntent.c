@@ -3,6 +3,8 @@
  *      The Regents of the University of California.  All rights reserved.
  * Copyright (c) 2001
  *      David Rufino <daverufino@btinternet.com>
+ * Copyright (c) 2015
+ *      Christopher Stoll (https://github.com/stollcri)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -36,7 +38,6 @@
 /* most of this was ripped from the mount(3) source */
 /* and then ripped from the glusterfs source */
 
-//#ifdef GF_DARWIN_HOST_OS
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
@@ -101,13 +102,6 @@ flags2opts (int flags)
         if (flags & MNT_NODEV)          res = concatopt(res, "nodev");
         if (flags & MNT_UNION)          res = concatopt(res, "union");
         if (flags & MNT_ASYNC)          res = concatopt(res, "async");
-// #if !defined(GF_DARWIN_HOST_OS)
-//         if (flags & MNT_NOATIME)        res = concatopt(res, "noatime");
-//         if (flags & MNT_NOCLUSTERR)     res = concatopt(res, "noclusterr");
-//         if (flags & MNT_NOCLUSTERW)     res = concatopt(res, "noclusterw");
-//         if (flags & MNT_NOSYMFOLLOW)    res = concatopt(res, "nosymfollow");
-//         if (flags & MNT_SUIDDIR)        res = concatopt(res, "suiddir");
-// #endif
         return res;
 }
 
@@ -156,4 +150,3 @@ FILE *setmntent(const char *filename, const char *type) {
 int endmntent (FILE *fp) {
         return 1;
 }
-//#endif /* GF_DARWIN_HOST_OS */

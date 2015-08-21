@@ -1,19 +1,30 @@
 CC = cc
-# CFLAGS = -g -O3 -D JFS -D GETUSER -Wall -D LARGEMEM -lm
-CFLAGS = -Wall -O3 -D JFS -D LARGEMEM
-# CFLAGS = -Weverything -O3 -D JFS -D LARGEMEM
-LDFLAGS = -l ncurses -g
-FILES = nmond.c mntent.c
+
+CFLAGS = -Oz -Wall
+LFLAGS = -l ncurses
+AOFILE = ./bin/nmond
+CFILES = nmond.c mntent.c sysinfo.c
+
+CFLAGS_DBG = -O0 -g -Weverything
+LFLAGS_DBG = -l ncurses
+AOFILE_DBG = ./bin/nmond
+CFILES_DBG = $(CFILES)
 
 default: nmond
-test: nmond run
+test: debug run
+
+debug:
+	@mkdir -p ./bin/
+	$(CC) $(CFLAGS_DBG) $(LFLAGS_DBG) -o $(AOFILE_DBG) $(CFILES_DBG)
 
 nmond:
 	@mkdir -p ./bin/
-	${CC} ${CFLAGS} ${LDFLAGS} -o ./bin/nmond ${FILES}
+	$(CC) $(CFLAGS) $(LFLAGS) -o $(AOFILE) $(CFILES)
 
 run:
 	bin/nmond
 
 clean:
 	rm -r bin/*
+
+.PHONY: default, test, debug, nmond, run, clean
