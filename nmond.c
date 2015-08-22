@@ -832,10 +832,12 @@ void get_intel_spec() {
 		hyperthreads=0;
 
 
-	struct sys thissys = getsysinfo();
-	vendor_ptr = thissys.machine;
-	model_ptr = thissys.model;
-	sprintf(mhz_ptr, "%d", thissys.cpufrequency);
+	struct syshw thissys = getsyshwinfo();
+	vendor_ptr = thissys.model;
+	model_ptr = thissys.machine;
+	sprintf(mhz_ptr, "%d", (thissys.cpufrequency / 1000000));
+	//sprintf(bogo_ptr, "%d", thissys.architecture);
+	bogo_ptr = thissys.architecture;
 }
 
 int stat8 = 0; /* used to determine the number of variables on a line */
