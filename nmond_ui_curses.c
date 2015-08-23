@@ -1,6 +1,7 @@
 /**
  * nmond_ui_curses.c -- Ncurses user interface elements of nmond
  *  Christopher Stoll (https://github.com/stollcri), 2015
+ *   (for license, see included LICENSE file)
  */
 
 #include "nmond_ui_curses.h"
@@ -8,14 +9,14 @@
 
 #define COLOUR if(usecolor) /* Only use this for single line color curses calls */
 
-inline void uiheader(int x, int usecolor, int useflash, char *version, char *hostname, double elapsed, time_t timer)
+inline void uiheader(int x, int usecolor, int useblink, char *version, char *hostname, double elapsed, time_t timer)
 {
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr,0,0);
 	mvprintw(x, 1, "nmond");
 	mvprintw(x, 7, "%s", version);
-	if(useflash) mvprintw(x,15,"[H for help]");
+	if(useblink) mvprintw(x,15,"[H for help]");
 	mvprintw(x, 30, "Hostname=%s", hostname);
 	mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);

@@ -1,16 +1,21 @@
 /**
  * sysinfo.c -- Gather system information from *BSD* based systems
  *  Christopher Stoll (https://github.com/stollcri), 2015
+ *   (for license, see included LICENSE file)
  *
  *   huge shout-out to: man 3 sysctl
  */
 
 #include "sysinfo.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sysctl.h>
 
-static inline char *stringFromSysctl(int mib0, int mib1)
+/*
+ * Get a character string from sysctl (level 2)
+ */
+static char *stringFromSysctl(int mib0, int mib1)
 {
 	char *result = NULL;
 
@@ -18,26 +23,95 @@ static inline char *stringFromSysctl(int mib0, int mib1)
 	mib[0] = mib0;
 	mib[1] = mib1;
 	size_t length = 0;
-	sysctl(mib, 2, NULL, &length, NULL, 0);
-	result = malloc(length);
-	sysctl(mib, 2, result, &length, NULL, 0);
+	int complete = 0;
+	int error = 0;
+
+	// catch memory errors (ENOMEM),
+	// assert to catch program errors
+	while(!complete && !error) {
+		assert(result == NULL);
+		length = 0;
+
+		// get the expected length of the result
+		error = sysctl(mib, 2, NULL, &length, NULL, 0);
+
+		// allocate memory for the result
+		if(!error) {
+			result = malloc(length);
+			if (result == NULL) {
+				error = 1;
+			}
+		}
+
+		// get the result
+		if(!error) {
+			error = sysctl(mib, 2, result, &length, NULL, 0);
+			if(!error) {
+				complete = 1;
+			} else {
+				assert(result != NULL);
+				free(result);
+				result = NULL;
+				
+				complete = 0;
+				error = 0;
+			}
+		}
+	}
 
 	return result;
 }
 
-static inline char *stringFromSysctlByName(char *name)
+/*
+ * Get a character string from sysctlbyname
+ */
+static char *stringFromSysctlByName(char *name)
 {
 	char *result = NULL;
-
 	size_t length = 0;
-	sysctlbyname(name, NULL, &length, NULL, 0);
-	result = malloc(length);
-	sysctlbyname(name, result, &length, NULL, 0);
+	int complete = 0;
+	int error = 0;
+
+	// catch memory errors (ENOMEM),
+	// assert to catch program errors
+	while(!complete && !error) {
+		assert(result == NULL);
+		length = 0;
+
+		// get the expected length of the result
+		error = sysctlbyname(name, NULL, &length, NULL, 0);
+
+		// allocate memory for the result
+		if(!error) {
+			result = malloc(length);
+			if(result == NULL) {
+				error = 1;
+			}
+		}
+
+		// get the result
+		if(!error) {
+			error = sysctlbyname(name, result, &length, NULL, 0);
+			if(!error) {
+				complete = 1;
+			} else {
+				assert(result != NULL);
+				free(result);
+				result = NULL;
+
+				complete = 0;
+				error = 0;
+			}
+		}
+	}
 
 	return result;
 }
 
-static inline unsigned int intFromSysctl(int mib0, int mib1)
+/*
+ * Get an integer from sysctl (level 2)
+ */
+static unsigned int intFromSysctl(int mib0, int mib1)
 {
 	unsigned int result = 0;
 
@@ -50,7 +124,10 @@ static inline unsigned int intFromSysctl(int mib0, int mib1)
 	return result;
 }
 
-static inline unsigned int intFromSysctlByName(char *name)
+/*
+ * Get an integer from sysctlbyname
+ */
+static unsigned int intFromSysctlByName(char *name)
 {
 	unsigned int result = 0;
 
@@ -60,6 +137,9 @@ static inline unsigned int intFromSysctlByName(char *name)
 	return result;
 }
 
+/*
+ * Get all hardware information from sysctl
+ */
 struct syshw getsyshwinfo()
 {
 	struct syshw thissys = SYSHW_INIT;
@@ -87,6 +167,9 @@ struct syshw getsyshwinfo()
 	return thissys;
 }
 
+/*
+ * Get all hernel information from sysctl
+ */
 struct syskern getsyskerninfo()
 {
 	struct syskern thissys = SYSKERN_INIT;
@@ -117,19 +200,77 @@ struct syskern getsyskerninfo()
 	return thissys;
 }
 
+/*
+ * Convert kinfo_proc data structure into a simple sysproc data structure
+ */
+struct sysproc *sysprocfromkinfoproc(struct kinfo_proc **processes, int count)
+{
+	struct sysproc *result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
+	
+	for (int i = 0; i < count; ++i) {
+		struct kinfo_proc currentprocess = *processes[i];
+		struct sysproc currentresult = result[i];
+
+
+	}
+
+	return result;
+}
+
+/*
+ * Get all process information from sysctl
+ */
 struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length)
 {
 	struct sysproc *result = NULL;
+	struct kinfo_proc **processlist = NULL;
 
 	int mib[4];
 	mib[0] = CTL_KERN;
 	mib[1] = KERN_PROC;
 	mib[2] = processinfotype;
 	mib[3] = criteria;
-	sysctl(mib, 2, NULL, length, NULL, 0);
-	result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)length);
-	sysctl(mib, 2, result, length, NULL, 0);
+	size_t templength = 0;
+	int processcount = 0;
+	int complete = 0;
+	int error = 0;
 
+	// catch memory errors (ENOMEM),
+	// assert to catch program errors
+	while(!complete && !error) {
+		assert(processlist == NULL);
+		templength = 0;
+
+		// get the expected length of the result
+		error = sysctl(mib, 4, NULL, &templength, NULL, 0);
+
+		// allocate memory for the result
+		if(!error) {
+			processlist = malloc(templength);
+			if(processlist == NULL) {
+				error = 1;
+			}
+		}
+
+		// get the result
+		if(!error) {
+			error = sysctl(mib, 4, processlist, &templength, NULL, 0);
+		}
+
+		if(!error) {
+			processcount = templength / sizeof(struct kinfo_proc);
+			result = sysprocfromkinfoproc(processlist, processcount);
+		} else {
+			assert(processlist != NULL);
+			free(processlist);
+			processlist = NULL;
+
+			complete = 0;
+			error = 0;
+		}
+	}
+
+	*length = (size_t)processcount;
 	return result;
 }
 

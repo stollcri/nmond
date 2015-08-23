@@ -7,6 +7,7 @@
 /**
  * nmond_ui_curses.h -- Ncurses user interface elements of nmond
  *  Christopher Stoll (https://github.com/stollcri), 2015
+ *   (for license, see included LICENSE file)
  */
 
 #define MAXROWS 256

@@ -3627,16 +3627,6 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			y = x = 0;
 			
 			if (cursed) { /* Top line */
-				// box(stdscr,0,0);
-				// mvprintw(x, 1, "nmon");
-				// mvprintw(x, 6, "%s", VERSION);
-				// if(flash_on) mvprintw(x,15,"[H for help]");
-				// mvprintw(x, 30, "Hostname=%s", hostname);
-				// mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
-				// mvprintw(x, 70, "%02d:%02d.%02d",
-				// 		 tim->tm_hour, tim->tm_min, tim->tm_sec);
-				// wnoutrefresh(stdscr);
-				// stollcri, 2015-08-22
 				uiheader(x, colour, flash_on, VERSION, hostname, elapsed, timer);
 				x = x + 1;
 				

@@ -4,6 +4,7 @@
 /**
  * sysinfo.h -- Gather system information from *BSD* based systems
  *  Christopher Stoll (https://github.com/stollcri), 2015
+ *   (for license, see included LICENSE file)
  */
 
 #include <stdlib.h>

@@ -1,10 +1,19 @@
+
+LANG = en
+
+ifeq ($(LANG),en)
+	LANGFILES = nmond_ui_curses.c
+else ifeq ($(LANG),de)
+	LANGFILES = nmond_ui_curses.c
+endif
+
 CC = cc
 
 # TODO: Does Oz remove inlines to get size smaller, maybe use O2 or O3?
-CFLAGS = -Oz -Wall
+CFLAGS = -Oz -Wall -D NDEBUG
 LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
-CFILES = nmond.c mntent.c sysinfo.c nmond_ui_curses.c
+CFILES = nmond.c mntent.c sysinfo.c $(LANGFILES)
 
 CFLAGS_DBG = -O0 -g -Weverything
 LFLAGS_DBG = -l ncurses
