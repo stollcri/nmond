@@ -1,6 +1,15 @@
 #ifndef SYSINFO_H
 #define SYSINFO_H
 
+/**
+ * sysinfo.h -- Gather system information from *BSD* based systems
+ *  Christopher Stoll (https://github.com/stollcri), 2015
+ */
+
+#include <stdlib.h>
+
+#define STR_INIT "-"
+
 //
 // Hardware based information
 // 
@@ -16,11 +25,13 @@ struct syshw { // CTL_HW
 	unsigned int physicalcpumax; // hw.physicalcpu_max
 	unsigned int logicalcpucount; // hw.logicalcpu
 	unsigned int logicalcpumax; // hw.logicalcpu_max
+	unsigned int hyperthreads;
 	char *machine; // HW_MACHINE ("x86_64")
 	char *model; // HW_MODEL ("MacbookAir6,2")
 	char *architecture; // HW_MACHINE_ARCH
+	char *cpubrand; // machdep.cpu.brand_string
 };
-#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, "-", "-", "-" };
+#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
 
 extern struct syshw getsyshwinfo(void);
 
@@ -50,6 +61,7 @@ struct syskern { // CTL_KERN
 	char *domainname; // KERN_NISDOMAINNAME
 	char *osrelease; // KERN_OSRELEASE
 	char *ostype; // KERN_OSTYPE
+	char *osversion; // KERN_OSVERSION
 	char *version; // KERN_VERSION
 	//struct timeval boottime; // KERN_BOOTTIME
 	//struct clockinfo clockrate; // KERN_CLOCKRATE
@@ -58,9 +70,22 @@ struct syskern { // CTL_KERN
 	// KERN_PROC
 	// KERN_PROF
 };
-#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "-", "-", "-", "-", "-", "-" }
+#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
 extern struct syskern getsyskerninfo(void);
-extern struct sysproc *getsysprocinfo(void);
+
+// Processes information
+
+struct sysproc {
+	int dummy;
+};
+#define SYSPROC_INIT { 0 }
+
+extern struct sysproc *getsysprocinfoall(size_t);
+extern struct sysproc *getsysprocinfobypid(int, size_t);
+extern struct sysproc *getsysprocinfobypgrp(int, size_t);
+extern struct sysproc *getsysprocinfobytty(int, size_t);
+extern struct sysproc *getsysprocinfobyuid(int, size_t);
+extern struct sysproc *getsysprocinfobyruid(int, size_t);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef NMOND_H
 #define NMOND_H
 
-/*
+/**
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  Christopher Stoll (https://github.com/stollcri), 2015
  *  
@@ -13,7 +13,7 @@
 #include <stdio.h> // FILE
 #include <sys/time.h> // timeval
 
-#define VERSION "15g"
+#define VERSION "0.0"
 
 #define LARGEMEM 1
 #define KERNEL_2_6_18 1 

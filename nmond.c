@@ -1,4 +1,4 @@
-/*
+/**
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  Christopher Stoll (https://github.com/stollcri), 2015
  *  
@@ -38,6 +38,7 @@
 #include "mntent.h"
 
 #include "sysinfo.h"
+#include "nmond_ui_curses.h"
 
 #define RAW(member)      (long)((long)(p->cpuN[i].member)   - (long)(q->cpuN[i].member))
 #define RAWTOTAL(member) (long)((long)(p->cpu_total.member) - (long)(q->cpu_total.member))
@@ -259,7 +260,7 @@ int   processorchips = 0;
 int   hyperthreads   = 0;
 char *vendor_ptr = "-";
 char *model_ptr  = "-";
-char *mhz_ptr    = "-";
+char *mhz_ptr    = "00000000000";
 char *bogo_ptr   = "-";
 int old_cpus = 1;	/* Number of CPU seen in previuos interval */
 int	max_cpus = 1;  	/* highest number of CPUs in DLPAR */
@@ -751,93 +752,44 @@ double	doubletime(void)
 	return((double)p->tv.tv_sec + p->tv.tv_usec * 1.0e-6);
 }
 
+/*
+ * Check that CPU count is less than max supported (changed for sysctl)
+ * (used to actually determine the cpu count)
+ */
 void get_cpu_cnt()	{
-	int i;
-	
-	/* Get CPU info from /proc/stat and populate proc[P_STAT] */
-	proc_read(P_STAT);
-	
-	/* Start with index [1] as [0] contains overall CPU statistics */
-	for(i=1; i<proc[P_STAT].lines; i++) {
-		if(strncmp("cpu",proc[P_STAT].line[i],3) == 0)
-			cpus=i;
-		else
-			break;
-	}
 	if(cpus >=CPUMAX) {
 		printf("This nmon supports only %d CPU threads (Logical CPUs) and the machine appears to have %d.\nnmon stopping as its unsafe to continue.\n", CPUMAX, cpus);
 		exit(44);
 	}
 }
 
+/*
+ * Get Intel processor details (modified to use sysctl)
+ *  stollcri, 2015-08-22
+ */
 void get_intel_spec() {
-	int i;
-	int physicalcpu[256];
-	int id;
-	
-	/* Get CPU info from /proc/stat and populate proc[P_STAT] */
-	proc_read(P_CPUINFO);
-	
-	for(i=0; i<256;i++)
-		physicalcpu[i]=0;
-	
-	for(i=0; i<proc[P_CPUINFO].lines; i++) {
-		if(strncmp("vendor_id",proc[P_CPUINFO].line[i],9) == 0) {
-			vendor_ptr = &proc[P_CPUINFO].line[i][12];
-		}
-	}
-	for(i=0; i<proc[P_CPUINFO].lines; i++) {
-		if(strncmp("model name",proc[P_CPUINFO].line[i],10) == 0) {
-			model_ptr = &proc[P_CPUINFO].line[i][13];
-		}
-	}
-	for(i=0; i<proc[P_CPUINFO].lines; i++) {
-		if(strncmp("cpu MHz",proc[P_CPUINFO].line[i],7) == 0) {
-			mhz_ptr = &proc[P_CPUINFO].line[i][11];
-		}
-	}
-	for(i=0; i<proc[P_CPUINFO].lines; i++) {
-		if(strncmp("bogomips",proc[P_CPUINFO].line[i],8) == 0) {
-			bogo_ptr = &proc[P_CPUINFO].line[i][11];
-		}
-	}
-	
-	for(i=0; i<proc[P_CPUINFO].lines; i++) {
-		if(strncmp("physical id",proc[P_CPUINFO].line[i],11) == 0) {
-			id = atoi(&proc[P_CPUINFO].line[i][15]);
-			if(id<256)
-				physicalcpu[id] = 1;
-		}
-	}
-	for(i=0; i<256;i++)
-		if(physicalcpu[i] == 1)
-			processorchips++;
-	
-	/* Start with index [1] as [0] contains overall CPU statistics */
-	for(i=0; i<proc[P_CPUINFO].lines; i++) {
-		if(strncmp("siblings",proc[P_CPUINFO].line[i],8) == 0) {
-			siblings = atoi(&proc[P_CPUINFO].line[i][11]);
-			break;
-		}
-	}
-	for(i=0; i<proc[P_CPUINFO].lines; i++) {
-		if(strncmp("cpu cores",proc[P_CPUINFO].line[i],9) == 0) {
-			cores = atoi(&proc[P_CPUINFO].line[i][12]);
-			break;
-		}
-	}
+	struct syshw thissys = getsyshwinfo();
+
+	vendor_ptr = thissys.cpubrand;
+	model_ptr = thissys.machine;
+	mhz_ptr = (char *)malloc(sizeof(int));
+	sprintf(mhz_ptr, "%d", (thissys.cpufrequency / 1000000));
+	bogo_ptr = 0; // TODO: remove all references to this made up number
+	processorchips = 1; // TODO: should not always be 1, find actual value
+	cores = thissys.physicalcpucount;
+	siblings = thissys.logicalcpucount;
+
 	if(siblings>cores)
 		hyperthreads=siblings/cores;
 	else
 		hyperthreads=0;
 
+	cpus = siblings;
 
-	struct syshw thissys = getsyshwinfo();
-	vendor_ptr = thissys.model;
-	model_ptr = thissys.machine;
-	sprintf(mhz_ptr, "%d", (thissys.cpufrequency / 1000000));
-	//sprintf(bogo_ptr, "%d", thissys.architecture);
-	bogo_ptr = thissys.architecture;
+	// // DEBUG
+	// struct syskern thissys2 = getsyskerninfo();
+	// vendor_ptr = thissys2.osrelease;
+	// model_ptr = thissys2.osversion;
 }
 
 int stat8 = 0; /* used to determine the number of variables on a line */
@@ -3675,54 +3627,23 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			y = x = 0;
 			
 			if (cursed) { /* Top line */
-				box(stdscr,0,0);
-				mvprintw(x, 1, "nmon");
-				mvprintw(x, 6, "%s", VERSION);
-				if(flash_on) mvprintw(x,15,"[H for help]");
-				mvprintw(x, 30, "Hostname=%s", hostname);
-				mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
-				mvprintw(x, 70, "%02d:%02d.%02d",
-						 tim->tm_hour, tim->tm_min, tim->tm_sec);
-				wnoutrefresh(stdscr);
+				// box(stdscr,0,0);
+				// mvprintw(x, 1, "nmon");
+				// mvprintw(x, 6, "%s", VERSION);
+				// if(flash_on) mvprintw(x,15,"[H for help]");
+				// mvprintw(x, 30, "Hostname=%s", hostname);
+				// mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
+				// mvprintw(x, 70, "%02d:%02d.%02d",
+				// 		 tim->tm_hour, tim->tm_min, tim->tm_sec);
+				// wnoutrefresh(stdscr);
+				// stollcri, 2015-08-22
+				uiheader(x, colour, flash_on, VERSION, hostname, elapsed, timer);
 				x = x + 1;
 				
 				if(welcome && getenv("NMON") == 0) {
-					
-					COLOUR wattrset(padwelcome,COLOR_PAIR(2));
-					mvwprintw(padwelcome,x+1, 1, "--------------------------------------");
-					mvwprintw(padwelcome,x+2, 1, "#    #  #    #   ####   #    #  ##### ");
-					mvwprintw(padwelcome,x+3, 1, "##   #  ##  ##  #    #  ##   #  #    #");
-					mvwprintw(padwelcome,x+4, 1, "# #  #  # ## #  #    #  # #  #  #    #");
-					mvwprintw(padwelcome,x+5, 1, "#  # #  #    #  #    #  #  # #  #    #");
-					mvwprintw(padwelcome,x+6, 1, "#   ##  #    #  #    #  #   ##  #    #");
-					mvwprintw(padwelcome,x+7, 1, "#    #  #    #   ####   #    #  ##### ");
-					mvwprintw(padwelcome,x+8, 1, "--------------------------------------");
-					COLOUR wattrset(padwelcome,COLOR_PAIR(0));
-					mvwprintw(padwelcome,x+1, 40, "For help type H or ...");
-					mvwprintw(padwelcome,x+2, 40, " nmond -?  - hint");
-					mvwprintw(padwelcome,x+3, 40, " nmond -h  - full");
-					mvwprintw(padwelcome,x+5, 40, "To start the same way every time");
-					mvwprintw(padwelcome,x+6, 40, " set the NMON ksh variable");
-					COLOUR wattrset(padwelcome,COLOR_PAIR(1));
-
-					get_cpu_cnt();
-					mvwprintw(padwelcome,x+10, 3, "x86 %s %s", vendor_ptr, model_ptr);
-					mvwprintw(padwelcome,x+11, 3, "x86 MHz=%s bogomips=%s", mhz_ptr,bogo_ptr);
-					if(processorchips || cores || hyperthreads || cpus) {
-						mvwprintw(padwelcome,x+12, 3, "x86 ProcessorChips=%d PhyscalCores=%d", processorchips, cores);
-						mvwprintw(padwelcome,x+13, 3, "x86 Hyperthreads  =%d VirtualCPUs =%d", hyperthreads, cpus);
-					}
-
-					COLOUR wattrset(padwelcome,COLOR_PAIR(0));
-					mvwprintw(padwelcome,x+15, 3, "Use these keys to toggle statistics on/off:");
-					mvwprintw(padwelcome,x+16, 3, "   c = CPU        l = CPU Long-term   - = Faster screen updates");
-					mvwprintw(padwelcome,x+17, 3, "   m = Memory     j = Filesystems     + = Slower screen updates");
-					mvwprintw(padwelcome,x+18, 3, "   d = Disks      n = Network         V = Virtual Memory");
-					mvwprintw(padwelcome,x+19, 3, "   r = Resource   N = NFS             v = Verbose hints");
-					mvwprintw(padwelcome,x+20, 3, "   k = kernel     t = Top-processes   . = only busy disks/procs");
-					mvwprintw(padwelcome,x+21, 3, "   h = more options                   q = Quit");
-					pnoutrefresh(padwelcome, 0,0,x,1,LINES-2,COLS-2);
-					wnoutrefresh(stdscr);
+					// stollcri, 2015-08-22
+					struct syshw thissys = getsyshwinfo();
+					uiwelcome(x, colour, thissys);
 					x = x + 22;
 				}
 			} else {

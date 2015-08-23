@@ -1,4 +1,4 @@
-/*
+/**
  * sysinfo.c -- Gather system information from *BSD* based systems
  *  Christopher Stoll (https://github.com/stollcri), 2015
  *
@@ -17,11 +17,22 @@ static inline char *stringFromSysctl(int mib0, int mib1)
 	int mib[2];
 	mib[0] = mib0;
 	mib[1] = mib1;
-	size_t len = 0;
+	size_t length = 0;
+	sysctl(mib, 2, NULL, &length, NULL, 0);
+	result = malloc(length);
+	sysctl(mib, 2, result, &length, NULL, 0);
 
-	sysctl(mib, 2, NULL, &len, NULL, 0);
-	result = malloc(len);
-	sysctl(mib, 2, result, &len, NULL, 0);
+	return result;
+}
+
+static inline char *stringFromSysctlByName(char *name)
+{
+	char *result = NULL;
+
+	size_t length = 0;
+	sysctlbyname(name, NULL, &length, NULL, 0);
+	result = malloc(length);
+	sysctlbyname(name, result, &length, NULL, 0);
 
 	return result;
 }
@@ -33,9 +44,8 @@ static inline unsigned int intFromSysctl(int mib0, int mib1)
 	int mib[2];
 	mib[0] = mib0;
 	mib[1] = mib1;
-	size_t len = sizeof(result);
-
-	sysctl(mib, 2, &result, &len, NULL, 0);
+	size_t length = sizeof(result);
+	sysctl(mib, 2, &result, &length, NULL, 0);
 
 	return result;
 }
@@ -44,9 +54,8 @@ static inline unsigned int intFromSysctlByName(char *name)
 {
 	unsigned int result = 0;
 
-	int count;
-	size_t len = sizeof(result);
-	sysctlbyname(name, &count, &len, NULL, 0);
+	size_t length = sizeof(result);
+	sysctlbyname(name, &result, &length, NULL, 0);
 
 	return result;
 }
@@ -68,6 +77,12 @@ struct syshw getsyshwinfo()
 	thissys.physicalcpumax = intFromSysctlByName("hw.physicalcpu_max");
 	thissys.logicalcpucount = intFromSysctlByName("hw.logicalcpu");
 	thissys.logicalcpumax = intFromSysctlByName("hw.logicalcpu_max");
+	thissys.cpubrand = stringFromSysctlByName("machdep.cpu.brand_string");
+
+	if(thissys.logicalcpucount>thissys.physicalcpucount)
+		thissys.hyperthreads=thissys.logicalcpucount/thissys.physicalcpucount;
+	else
+		thissys.hyperthreads=0;
 
 	return thissys;
 }
@@ -97,11 +112,53 @@ struct syskern getsyskerninfo()
 	thissys.securitylevel = intFromSysctl(CTL_KERN, KERN_SECURELVL);
 	thissys.updateinterval = intFromSysctl(CTL_KERN, KERN_UPDATEINTERVAL);
 	thissys.version = stringFromSysctl(CTL_KERN, KERN_VERSION);
+	thissys.osversion = stringFromSysctl(CTL_KERN, KERN_OSVERSION);
 
 	return thissys;
 }
 
-struct sysproc *getsysprocinfo()
+struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length)
 {
-	//
+	struct sysproc *result = NULL;
+
+	int mib[4];
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = processinfotype;
+	mib[3] = criteria;
+	sysctl(mib, 2, NULL, length, NULL, 0);
+	result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)length);
+	sysctl(mib, 2, result, length, NULL, 0);
+
+	return result;
+}
+
+struct sysproc *getsysprocinfoall(size_t length)
+{
+	return getsysprocinfo(KERN_PROC_ALL, 0, &length);
+}
+
+struct sysproc *getsysprocinfobypid(int processid, size_t length)
+{
+	return getsysprocinfo(KERN_PROC_PID, processid, &length);
+}
+
+struct sysproc *getsysprocinfobypgrp(int processgroupid, size_t length)
+{
+	return getsysprocinfo(KERN_PROC_PGRP, processgroupid, &length);
+}
+
+struct sysproc *getsysprocinfobytty(int tty, size_t length)
+{
+	return getsysprocinfo(KERN_PROC_TTY, tty, &length);
+}
+
+struct sysproc *getsysprocinfobyuid(int userid, size_t length)
+{
+	return getsysprocinfo(KERN_PROC_UID, userid, &length);
+}
+
+struct sysproc *getsysprocinfobyruid(int realuserid, size_t length)
+{
+	return getsysprocinfo(KERN_PROC_RUID, realuserid, &length);
 }

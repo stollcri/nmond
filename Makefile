@@ -1,9 +1,10 @@
 CC = cc
 
+# TODO: Does Oz remove inlines to get size smaller, maybe use O2 or O3?
 CFLAGS = -Oz -Wall
 LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
-CFILES = nmond.c mntent.c sysinfo.c
+CFILES = nmond.c mntent.c sysinfo.c nmond_ui_curses.c
 
 CFLAGS_DBG = -O0 -g -Weverything
 LFLAGS_DBG = -l ncurses
