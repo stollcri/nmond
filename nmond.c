@@ -1,6 +1,6 @@
 /**
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
- *  Christopher Stoll (https://github.com/stollcri), 2015
+ *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
  *  
  *   forked from:
  *   lmon.c -- Curses based Performance Monitor for Linux
@@ -2951,6 +2951,11 @@ int proc_procsinfo(int pid, int index)
 	
 	int main(int argc, char **argv)
 	{
+		// DEBUG -- stollcri
+		size_t tmplen = 0;
+		getsysprocinfoall(tmplen);
+		exit(15);
+
 		int secs;
 		int cpu_idle;
 		int cpu_user;

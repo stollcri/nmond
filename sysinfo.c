@@ -1,6 +1,6 @@
 /**
  * sysinfo.c -- Gather system information from *BSD* based systems
- *  Christopher Stoll (https://github.com/stollcri), 2015
+ *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
  *   (for license, see included LICENSE file)
  *
  *   huge shout-out to: man 3 sysctl
@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sysctl.h>
+
+#include <time.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 /*
  * Get a character string from sysctl (level 2)
@@ -203,16 +207,87 @@ struct syskern getsyskerninfo()
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-struct sysproc *sysprocfromkinfoproc(struct kinfo_proc **processes, int count)
+struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 {
 	struct sysproc *result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
 	
+	// debug
+	char *status;
+	// 
+	struct tm *nowtm;
+	char tmbuf[64];
+	time_t nowtime;
+
 	for (int i = 0; i < count; ++i) {
-		struct kinfo_proc currentprocess = *processes[i];
+		struct kinfo_proc currentprocess = processes[i];
 		struct sysproc currentresult = result[i];
 
+		// struct proc currentproc = currentprocess.kp_proc;
+		// struct eproc currenteproc = currentprocess.kp_eproc;
 
+		// currentresult.loginname = currenteproc.e_login;
+		
+		printf("***** %3d ****************************** \n", i);
+		// P_* flags.
+		printf("* kp_proc.p_flag = %d\n", processes[i].kp_proc.p_flag);
+		// S* process status
+		switch(processes[i].kp_proc.p_stat){
+			case SIDL:
+				status = "IDLE";
+				break;
+			case SRUN:
+				status = "RUN";
+				break;
+			case SSLEEP:
+				status = "SLEEP";
+				break;
+			case SSTOP:
+				status = "STOP";
+				break;
+			case SZOMB:
+				status = "ZOMBIE";
+				break;
+		}
+		printf("* kp_proc.p_stat = %d (%s)\n", processes[i].kp_proc.p_stat, status);
+		// Process identifier.
+		printf("* kp_proc.pid = %d |\n", processes[i].kp_proc.p_pid);
+		// Process priority.
+		printf("* kp_proc.p_priority = %d |\n", processes[i].kp_proc.p_priority);
+		// Process priority.
+		printf("* kp_proc.p_nice = %d |\n", processes[i].kp_proc.p_nice);
+
+		// P_* flags.
+		printf("* kp_proc.p_usrpri = %c |\n", processes[i].kp_proc.p_usrpri);
+		
+		//
+		// nowtime = processes[i].kp_proc.p_rtime.tv_sec;
+		// nowtm = localtime(&nowtime);
+		// strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+		// printf("* kp_proc.p_pctcpu = (%d) %s|\n", nowtime, tmbuf);
+
+		struct proc *procinfo = processes[i].kp_eproc.e_paddr;
+		printf("* kp_eproc.e_paddr = %d |\n", procinfo->p_pid);
+
+		// parent process id
+		printf("* kp_eproc.e_ppid = %d |\n", processes[i].kp_eproc.e_ppid);
+		// controlling tty dev
+		printf("* kp_eproc.e_tdev = %d |\n", processes[i].kp_eproc.e_tdev);
+
+		// process credentials, real user id
+		printf("* kp_eproc.e_pcred.p_ruid = %d |\n", processes[i].kp_eproc.e_pcred.p_ruid);
+
+		// current credentials, effective user id
+		printf("* kp_eproc.e_ucred.cr_uid = %d |\n", processes[i].kp_eproc.e_ucred.cr_uid);
+
+		// struct proc *tmproc = processes[i].kp_eproc.e_paddr;
+		// printf(" kp_eproc.e_tdev = %d |\n", tmproc->p_stat);
+
+		// nowtime = processes[i].kp_eproc.e_paddr->p_starttime.tv_sec;
+		// nowtm = localtime(&nowtime);
+		// strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+		// printf(" p_starttime=%s|\n", tmbuf);
 	}
+	printf("***** ***** ***** ***** ***** \n");
 
 	return result;
 }
@@ -223,7 +298,7 @@ struct sysproc *sysprocfromkinfoproc(struct kinfo_proc **processes, int count)
 struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length)
 {
 	struct sysproc *result = NULL;
-	struct kinfo_proc **processlist = NULL;
+	struct kinfo_proc *processlist = NULL;
 
 	int mib[4];
 	mib[0] = CTL_KERN;
@@ -257,9 +332,11 @@ struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length
 			error = sysctl(mib, 4, processlist, &templength, NULL, 0);
 		}
 
+		// fill the sysproc struct from the returned information
 		if(!error) {
 			processcount = templength / sizeof(struct kinfo_proc);
 			result = sysprocfromkinfoproc(processlist, processcount);
+			complete = 1;
 		} else {
 			assert(processlist != NULL);
 			free(processlist);

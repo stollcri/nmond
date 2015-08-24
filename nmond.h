@@ -3,7 +3,7 @@
 
 /**
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
- *  Christopher Stoll (https://github.com/stollcri), 2015
+ *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
  *  
  *   forked from:
  *   lmon.c -- Curses based Performance Monitor for Linux

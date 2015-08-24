@@ -3,7 +3,7 @@
 
 /**
  * sysinfo.h -- Gather system information from *BSD* based systems
- *  Christopher Stoll (https://github.com/stollcri), 2015
+ *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
  *   (for license, see included LICENSE file)
  */
 
@@ -75,12 +75,14 @@ struct syskern { // CTL_KERN
 
 extern struct syskern getsyskerninfo(void);
 
+//
 // Processes information
+//
 
 struct sysproc {
-	int dummy;
+	char *loginname;
 };
-#define SYSPROC_INIT { 0 }
+#define SYSPROC_INIT { STR_INIT }
 
 extern struct sysproc *getsysprocinfoall(size_t);
 extern struct sysproc *getsysprocinfobypid(int, size_t);

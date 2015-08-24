@@ -6,7 +6,7 @@
 
 /**
  * nmond_ui_curses.h -- Ncurses user interface elements of nmond
- *  Christopher Stoll (https://github.com/stollcri), 2015
+ *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
  *   (for license, see included LICENSE file)
  */
 
