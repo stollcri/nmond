@@ -8,6 +8,7 @@
 
 #include "sysinfo.h"
 #include <assert.h>
+#include <libproc.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -158,6 +159,11 @@ struct syshw getsyshwinfo()
 	//thissys.floatingpoint = intFromSysctl(CTL_HW, HW_FLOATINGPOINT);
 	thissys.architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
 	thissys.cpufrequency = intFromSysctl(CTL_HW, HW_CPU_FREQ);
+	thissys.cpufrequency = intFromSysctlByName("hw.cpufrequency");
+	thissys.cpufrequencymin = intFromSysctlByName("hw.cpufrequency_min");
+	thissys.cpufrequencymax = intFromSysctlByName("hw.cpufrequency_max");
+	thissys.cpucount = intFromSysctlByName("hw.ncpu");
+	thissys.cpuactive = intFromSysctlByName("hw.activecpu");
 	thissys.physicalcpucount = intFromSysctlByName("hw.physicalcpu");
 	thissys.physicalcpumax = intFromSysctlByName("hw.physicalcpu_max");
 	thissys.logicalcpucount = intFromSysctlByName("hw.logicalcpu");
@@ -212,23 +218,9 @@ struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 {
 	struct sysproc *result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
 	
-	// debug
-	char *status;
-	// 
-	struct tm *nowtm;
-	char tmbuf[64];
-	time_t nowtime;
-
 	for (int i = 0; i < count; ++i) {
-		struct kinfo_proc currentprocess = processes[i];
 		struct sysproc currentresult = result[i];
-
-		// struct proc currentproc = currentprocess.kp_proc;
-		// struct eproc currenteproc = currentprocess.kp_eproc;
-
-		// currentresult.loginname = currenteproc.e_login;
 		
-		printf("***** %3d ****************************** \n", i);
 		// S* process status
 		currentresult.status = processes[i].kp_proc.p_stat;
 		switch(currentresult.status){
@@ -247,57 +239,30 @@ struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 			case SZOMB:
 				currentresult.statustext = "ZOMB";
 				break;
-		}
-		printf("* kp_proc.p_stat = %d (%s)\n", currentresult.status, currentresult.statustext);
-		
+		}		
 		// Process identifier.
 		currentresult.pid = processes[i].kp_proc.p_pid;
-		printf("* kp_proc.pid = %d |\n", processes[i].kp_proc.p_pid);
-		
-		// Process identifier.
+		// Process name
 		currentresult.name = processes[i].kp_proc.p_comm;
-		printf("* kp_proc.p_comm = %s |\n", currentresult.name);
-		
+		// process path
+		char path[PROC_PIDPATHINFO_MAXSIZE];
+		proc_pidpath(currentresult.pid, path, sizeof(path));
+		currentresult.path = path;
 		// Process priority.
 		currentresult.priority = processes[i].kp_proc.p_priority;
-		printf("* kp_proc.p_priority = %d |\n", currentresult.priority);
-		
-		//
-		// nowtime = processes[i].kp_proc.p_rtime.tv_sec;
-		// nowtm = localtime(&nowtime);
-		// strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
-		// printf("* kp_proc.p_pctcpu = (%d) %s|\n", nowtime, tmbuf);
-
 		// parent process id
 		currentresult.parentpid = processes[i].kp_eproc.e_ppid;
-		printf("* kp_eproc.e_ppid = %d |\n", currentresult.parentpid);
-
 		// controlling tty dev
 		currentresult.ttydev = processes[i].kp_eproc.e_tdev;
-		printf("* kp_eproc.e_tdev = %d |\n", currentresult.ttydev);
-
 		// process credentials, real user id
 		currentresult.realuid = processes[i].kp_eproc.e_pcred.p_ruid;
 		struct passwd *realuser = getpwuid(currentresult.realuid);
 		currentresult.realusername = realuser->pw_name;
-		printf("* kp_eproc.e_pcred.p_ruid = %d (%s)\n", currentresult.realuid, currentresult.realusername);
-
 		// current credentials, effective user id
 		currentresult.effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
 		struct passwd *effectiveuser = getpwuid(currentresult.effectiveuid);
 		currentresult.effectiveusername = effectiveuser->pw_name;
-		printf("* kp_eproc.e_ucred.cr_uid = %d (%s)\n", currentresult.effectiveuid, currentresult.effectiveusername);
-
-
-		// struct proc *tmproc = processes[i].kp_eproc.e_paddr;
-		// printf(" kp_eproc.e_tdev = %d |\n", tmproc->p_stat);
-
-		// nowtime = processes[i].kp_eproc.e_paddr->p_starttime.tv_sec;
-		// nowtm = localtime(&nowtime);
-		// strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
-		// printf(" p_starttime=%s|\n", tmbuf);
 	}
-	printf("***** ***** ***** ***** ***** \n");
 
 	return result;
 }

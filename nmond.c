@@ -2952,9 +2952,9 @@ int proc_procsinfo(int pid, int index)
 	int main(int argc, char **argv)
 	{
 		// DEBUG -- stollcri
-		size_t tmplen = 0;
-		getsysprocinfoall(tmplen);
-		exit(15);
+		// size_t tmplen = 0;
+		// getsysprocinfoall(tmplen);
+		// exit(15);
 
 		int secs;
 		int cpu_idle;
@@ -3065,7 +3065,7 @@ else \
 pnoutrefresh(pad, 0,0,x,1,x+rows+1,COLS-2); \
 x=x+(rows);     \
 if(x+4>LINES) { \
-mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
+mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 }               \
 }
 		
@@ -3096,7 +3096,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 		if ((nmon_tmp = getenv("NMON_ONE_IN")) != NULL) {
 			nmon_one_in = atoi(nmon_tmp);
 			if( errno != 0 ) {
-				fprintf(stderr,"ERROR nmon: invalid NMON_ONE_IN shell variable\n");
+				fprintf(stderr, MSG_ERR_BAD_SHELL);
 				nmon_one_in = 1;
 			}
 		}
@@ -3170,8 +3170,8 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					break;
 				case 'm':
 					if(chdir(optarg) == -1) {
-						perror("changing directory failed");
-						printf("Directory attempted was:%s\n",optarg);
+						perror(MSG_ERR_CD_FAILED);
+						printf(MSG_ERR_FAILEDDIR, optarg);
 						exit(993);
 					}
 					break;
@@ -3181,7 +3181,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				case 'd':
 					diskmax = atoi(optarg);
 					if(diskmax < DISKMIN) {
-						printf("nmon: ignoring -d %d option as the minimum is %d\n", diskmax, DISKMIN);
+						printf(MSG_WRN_OVER_MIND, diskmax, DISKMIN);
 						diskmax = DISKMIN;
 					}
 					break;
@@ -3251,7 +3251,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					}
 					break;
 				case 'V': /* nmon version */
-					printf("nmon verion %s\n",VERSION);
+					printf(MSG_VERSION, VERSION);
 					exit(0);
 					break;
 				case 'g': /* disk groups */
@@ -3260,12 +3260,12 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 					dgroup_filename = optarg;
 					if( strncmp("auto",dgroup_filename,5) == 0) {
 						auto_dgroup++;
-						printf("Generating disk group file from lsblk output to file: \"auto\"\n");
+						printf(MSG_INF_GEN_DISKG);
 						ret = system("lsblk --nodeps --output NAME,TYPE --raw | grep disk | awk 'BEGIN {printf \"# This file created by: nmon -g auto\\n# It is an automatically generated disk-group file which excluses disk paritions\\n\" } { printf \"%s %s\\n\", $1, $1 }' >auto");
 						if(ret != 0 ) {
-							printf("Create auto file command was: %s\n",
+							printf(MSG_INF_AUTOF_CMD,
 								   "lsblk --nodeps --output NAME,TYPE --raw | grep disk | awk '{ printf \"%s %s\\n\", $1, $1 }' >auto");
-							printf("Creating auto file returned a status of %d\n", ret );
+							printf(MSG_INF_AUTOFSTAT, ret );
 						}
 					}
 					break;
@@ -3281,7 +3281,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 		
 		/* -D need -g filename */
 		if(extended_disk == 1 && show_dgroup == 0) {
-			printf("nmon: ignoring -D (extended disk stats) as -g filename is missing\n");
+			printf(MSG_INF_IGNORINGD);
 			extended_disk=0;
 		}
 		/* To get the pointers setup */
@@ -3414,8 +3414,8 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 						tim->tm_hour,
 						tim->tm_min);
 			if((fp = fopen(str,"w")) ==0 ) {
-				perror("nmon: failed to open output file");
-				printf("nmon: output filename=%s\n",str);
+				perror(MSG_ERR_NOPENFILE);
+				printf(MSG_INF_OUTFILENM,str);
 				exit(42);
 			}
 			/* disconnect from terminal */
@@ -3661,27 +3661,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 				x=x+6;
 			}
 			if (show_help && cursed) {
-				BANNER(padhelp, "HELP");
-				mvwprintw(padhelp, 1, 5, "key  --- statistics which toggle on/off ---");
-				mvwprintw(padhelp, 2, 5, "h = This help information");
-				mvwprintw(padhelp, 3, 5, "r = RS6000/pSeries CPU/cache/OS/kernel/hostname details + LPAR");
-				mvwprintw(padhelp, 4, 5, "t = Top Process Stats 1=basic 3=CPU");
-				mvwprintw(padhelp, 5, 5, "    u = shows command arguments (hit twice to refresh)");
-				mvwprintw(padhelp, 6, 5, "c = CPU by processor             l = longer term CPU averages");
-				mvwprintw(padhelp, 7, 5, "m = Memory & Swap stats L=Huge   j = JFS Usage Stats");
-				mvwprintw(padhelp, 8, 5, "n = Network stats                N = NFS");
-				mvwprintw(padhelp, 9, 5, "d = Disk I/O Graphs D=Stats      o = Disks %%Busy Map");
-				mvwprintw(padhelp,10, 5, "k = Kernel stats & loadavg       V = Virtual Memory");
-				mvwprintw(padhelp,11, 5, "g = User Defined Disk Groups [start nmon with -g <filename>]");
-				mvwprintw(padhelp,12, 5, "v = Verbose Simple Checks - OK/Warnings/Danger");
-				mvwprintw(padhelp,13, 5, "b = black & white mode");
-				mvwprintw(padhelp,14, 5, "--- controls ---");
-				mvwprintw(padhelp,15, 5, "+ and - = double or half the screen refresh time");
-				mvwprintw(padhelp,16, 5, "q = quit                     space = refresh screen now");
-				mvwprintw(padhelp,17, 5, ". = Minimum Mode =display only busy disks and processes");
-				mvwprintw(padhelp,18, 5, "0 = reset peak counts to zero (peak = \">\")");
-				mvwprintw(padhelp,19, 5, "Developer Nigel Griffiths see http://nmon.sourceforge.net");
-				DISPLAY(padhelp,20);
+				uihelp(x, LINES);
 				
 			}
 			/* for debugging use only
@@ -3693,24 +3673,7 @@ mvwprintw(stdscr,LINES-1,10,"Warning: Some Statistics may not shown"); \
 			if (show_cpu && cursed) {
 				proc_read(P_CPUINFO);
 				proc_read(P_VERSION);
-				
-				BANNER(padcpu,"Linux and Processor Details");
-				mvwprintw(padcpu,1, 4, "Linux: %s", proc[P_VERSION].line[0]);
-				mvwprintw(padcpu,2, 4, "Build: %s", proc[P_VERSION].line[1]);
-				mvwprintw(padcpu,3, 4, "Release  : %s", uts.release );
-				mvwprintw(padcpu,4, 4, "Version  : %s", uts.version);
-				mvwprintw(padcpu,9, 4, "# of CPUs: %d", cpus);
-				mvwprintw(padcpu,10, 4,"Machine  : %s", uts.machine);
-				mvwprintw(padcpu,11, 4,"Nodename : %s", uts.nodename);
-				mvwprintw(padcpu,12, 4,"/etc/*ease[1]: %s", easy[0]);
-				mvwprintw(padcpu,13, 4,"/etc/*ease[2]: %s", easy[1]);
-				mvwprintw(padcpu,14, 4,"/etc/*ease[3]: %s", easy[2]);
-				mvwprintw(padcpu,15, 4,"/etc/*ease[4]: %s", easy[3]);
-				mvwprintw(padcpu,16, 4,"lsb_release: %s", lsb_release[0]);
-				mvwprintw(padcpu,17, 4,"lsb_release: %s", lsb_release[1]);
-				mvwprintw(padcpu,18, 4,"lsb_release: %s", lsb_release[2]);
-				mvwprintw(padcpu,19, 4,"lsb_release: %s", lsb_release[3]);
-				DISPLAY(padcpu,20);
+				uicpu(x, LINES);
 			}
 			if (show_longterm ) {
 				proc_read(P_STAT);

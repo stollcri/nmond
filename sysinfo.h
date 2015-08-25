@@ -21,7 +21,11 @@ struct syshw { // CTL_HW
 	unsigned int usermemory; // HW_USERMEM (non-kernel memory)
 	unsigned int pagesize; // HW_PAGESIZE
 	//int floatingpoint; // HW_FLOATINGPOINT (hardware support)
-	unsigned int cpufrequency; // HW_CPU_FREQ
+	unsigned int cpufrequency; // hw.cpufrequency
+	unsigned int cpufrequencymin; // hw.cpufrequency_min
+	unsigned int cpufrequencymax; // hw.cpufrequency_max
+	unsigned int cpucount; // hw.ncpu
+	unsigned int cpuactive; // hw.activecpu
 	unsigned int physicalcpucount; // hw.physicalcpu
 	unsigned int physicalcpumax; // hw.physicalcpu_max
 	unsigned int logicalcpucount; // hw.logicalcpu
@@ -32,7 +36,7 @@ struct syshw { // CTL_HW
 	char *architecture; // HW_MACHINE_ARCH
 	char *cpubrand; // machdep.cpu.brand_string
 };
-#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
+#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
 
 extern struct syshw getsyshwinfo(void);
 
@@ -57,13 +61,13 @@ struct syskern { // CTL_KERN
 	// int savedids; // KERN_SAVED_IDS
 	unsigned int securitylevel; // KERN_SECURELVL
 	unsigned int updateinterval; // KERN_UPDATEINTERVAL
+	char *ostype; // KERN_OSTYPE
+	char *osrelease; // KERN_OSRELEASE
+	char *osversion; // KERN_OSVERSION
+	char *version; // KERN_VERSION
 	char *bootfile; // KERN_BOOTFILE
 	char *hostname; // KERN_HOSTNAME
 	char *domainname; // KERN_NISDOMAINNAME
-	char *osrelease; // KERN_OSRELEASE
-	char *ostype; // KERN_OSTYPE
-	char *osversion; // KERN_OSVERSION
-	char *version; // KERN_VERSION
 	//struct timeval boottime; // KERN_BOOTTIME
 	//struct clockinfo clockrate; // KERN_CLOCKRATE
 	//struct file filetable; // KERN_FILE
@@ -88,11 +92,12 @@ struct sysproc {
 	int realuid;
 	int effectiveuid;
 	char *name;
+	char *path;
 	char *statustext;
 	char *realusername;
 	char *effectiveusername;
 };
-#define SYSPROC_INIT { 0, STR_INIT }
+#define SYSPROC_INIT { 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
 extern struct sysproc *getsysprocinfoall(size_t);
 extern struct sysproc *getsysprocinfobypid(int, size_t);
