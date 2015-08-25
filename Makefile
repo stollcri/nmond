@@ -9,13 +9,9 @@ endif
 
 CC = cc
 
-WHOAMI = $(shell whoami)
-XNUPATH = /Users/$(WHOAMI)/Documents/code/opensource-apple/xnu
-XNUUSRINC = $(XNUPATH)/BUILD/dst/usr/include
-
 # TODO: Does Oz remove inlines to get size smaller, maybe use O2 or O3?
 CFLAGS = -Oz -Wall -D NDEBUG
-LFLAGS = -l ncurses -I/usr/include -I$(XNUUSRINC)
+LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
 CFILES = nmond.c mntent.c sysinfo.c $(LANGFILES)
 
@@ -40,5 +36,6 @@ run:
 
 clean:
 	rm -r bin/*
+	rm -r dbg
 
 .PHONY: default, test, debug, nmond, run, clean

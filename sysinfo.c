@@ -8,6 +8,7 @@
 
 #include "sysinfo.h"
 #include <assert.h>
+#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sysctl.h>
@@ -228,36 +229,38 @@ struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 		// currentresult.loginname = currenteproc.e_login;
 		
 		printf("***** %3d ****************************** \n", i);
-		// P_* flags.
-		printf("* kp_proc.p_flag = %d\n", processes[i].kp_proc.p_flag);
 		// S* process status
-		switch(processes[i].kp_proc.p_stat){
+		currentresult.status = processes[i].kp_proc.p_stat;
+		switch(currentresult.status){
 			case SIDL:
-				status = "IDLE";
+				currentresult.statustext = "IDLE";
 				break;
 			case SRUN:
-				status = "RUN";
+				currentresult.statustext = "RUN";
 				break;
 			case SSLEEP:
-				status = "SLEEP";
+				currentresult.statustext = "SLEEP";
 				break;
 			case SSTOP:
-				status = "STOP";
+				currentresult.statustext = "STOP";
 				break;
 			case SZOMB:
-				status = "ZOMBIE";
+				currentresult.statustext = "ZOMB";
 				break;
 		}
-		printf("* kp_proc.p_stat = %d (%s)\n", processes[i].kp_proc.p_stat, status);
+		printf("* kp_proc.p_stat = %d (%s)\n", currentresult.status, currentresult.statustext);
+		
 		// Process identifier.
+		currentresult.pid = processes[i].kp_proc.p_pid;
 		printf("* kp_proc.pid = %d |\n", processes[i].kp_proc.p_pid);
+		
+		// Process identifier.
+		currentresult.name = processes[i].kp_proc.p_comm;
+		printf("* kp_proc.p_comm = %s |\n", currentresult.name);
+		
 		// Process priority.
-		printf("* kp_proc.p_priority = %d |\n", processes[i].kp_proc.p_priority);
-		// Process priority.
-		printf("* kp_proc.p_nice = %d |\n", processes[i].kp_proc.p_nice);
-
-		// P_* flags.
-		printf("* kp_proc.p_usrpri = %c |\n", processes[i].kp_proc.p_usrpri);
+		currentresult.priority = processes[i].kp_proc.p_priority;
+		printf("* kp_proc.p_priority = %d |\n", currentresult.priority);
 		
 		//
 		// nowtime = processes[i].kp_proc.p_rtime.tv_sec;
@@ -265,19 +268,26 @@ struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 		// strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
 		// printf("* kp_proc.p_pctcpu = (%d) %s|\n", nowtime, tmbuf);
 
-		struct proc *procinfo = processes[i].kp_eproc.e_paddr;
-		printf("* kp_eproc.e_paddr = %d |\n", procinfo->p_pid);
-
 		// parent process id
-		printf("* kp_eproc.e_ppid = %d |\n", processes[i].kp_eproc.e_ppid);
+		currentresult.parentpid = processes[i].kp_eproc.e_ppid;
+		printf("* kp_eproc.e_ppid = %d |\n", currentresult.parentpid);
+
 		// controlling tty dev
-		printf("* kp_eproc.e_tdev = %d |\n", processes[i].kp_eproc.e_tdev);
+		currentresult.ttydev = processes[i].kp_eproc.e_tdev;
+		printf("* kp_eproc.e_tdev = %d |\n", currentresult.ttydev);
 
 		// process credentials, real user id
-		printf("* kp_eproc.e_pcred.p_ruid = %d |\n", processes[i].kp_eproc.e_pcred.p_ruid);
+		currentresult.realuid = processes[i].kp_eproc.e_pcred.p_ruid;
+		struct passwd *realuser = getpwuid(currentresult.realuid);
+		currentresult.realusername = realuser->pw_name;
+		printf("* kp_eproc.e_pcred.p_ruid = %d (%s)\n", currentresult.realuid, currentresult.realusername);
 
 		// current credentials, effective user id
-		printf("* kp_eproc.e_ucred.cr_uid = %d |\n", processes[i].kp_eproc.e_ucred.cr_uid);
+		currentresult.effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
+		struct passwd *effectiveuser = getpwuid(currentresult.effectiveuid);
+		currentresult.effectiveusername = effectiveuser->pw_name;
+		printf("* kp_eproc.e_ucred.cr_uid = %d (%s)\n", currentresult.effectiveuid, currentresult.effectiveusername);
+
 
 		// struct proc *tmproc = processes[i].kp_eproc.e_paddr;
 		// printf(" kp_eproc.e_tdev = %d |\n", tmproc->p_stat);

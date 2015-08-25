@@ -80,9 +80,19 @@ extern struct syskern getsyskerninfo(void);
 //
 
 struct sysproc {
-	char *loginname;
+	int pid;
+	int parentpid;
+	int status;
+	int ttydev;
+	int priority;
+	int realuid;
+	int effectiveuid;
+	char *name;
+	char *statustext;
+	char *realusername;
+	char *effectiveusername;
 };
-#define SYSPROC_INIT { STR_INIT }
+#define SYSPROC_INIT { 0, STR_INIT }
 
 extern struct sysproc *getsysprocinfoall(size_t);
 extern struct sysproc *getsysprocinfobypid(int, size_t);
