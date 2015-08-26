@@ -7,10 +7,13 @@
 ## Phase 2
 - Update UI (layout, text, and color; see: http://elmon.sourceforge.net)
 - Change cursor location
+- Add GPU load stats
+- Read HDD/CPU/GPU temperature
 ## Phase 3
-- Pipe logged data in to stdin for replay
 - For long-term CPU: use box-drawing characters (UTF-8 or VT100) for border instead of text characters (default option)
 - For long-term CPU: drop top-bar down (show gap) when cpu speed is decreased
+- Full logging system: automatically roll up data for different intervals (hour/day/week/month)
+- Pipe logged data in to stdin for replay (and generate averages at different intervals)
 ## Phase 4
 - Use ncurses progress bars for vertical bars
 - For long-term CPU: follow processes, show their usage in the graph
@@ -27,6 +30,10 @@
 	- `echo -e "\033(0 ( abcdef | ghijklm | nopqrst | uvwxyz ) \033(B"`
 
 # Data Fields
+
+## GPU stats
+Is it possible to get any GPU stats?
+
 ## top
 - PID
 - USER
@@ -179,60 +186,3 @@ Each options shows the same output, the srot order is just changed
 
 #### V -- Virtual Memory
 (TODO: complete)
-
-# New Logos
-
-rectangles
-```
-                     _ 
- ___ _____ ___ ___ _| |
-|   |     | . |   | . |
-|_|_|_|_|_|___|_|_|___|
-```
-slant
-```
-                                    __
-   ____  ____ ___  ____  ____  ____/ /
-  / __ \/ __ `__ \/ __ \/ __ \/ __  / 
- / / / / / / / / / /_/ / / / / /_/ /  
-/_/ /_/_/ /_/ /_/\____/_/ /_/\__,_/   
-```
-small slant
-```
-                           __
-  ___  __ _  ___  ___  ___/ /
- / _ \/  ' \/ _ \/ _ \/ _  / 
-/_//_/_/_/_/\___/_//_/\_,_/  
-```
-soft
-```
-                                    ,--. 
-,--,--, ,--,--,--. ,---. ,--,--,  ,-|  | 
-|      \|        || .-. ||      \' .-. | 
-|  ||  ||  |  |  |' '-' '|  ||  |\ `-' | 
-`--''--'`--`--`--' `---' `--''--' `---' 
-```
-standard
-```
-                                  _ 
-  _ __  _ __ ___   ___  _ __   __| |
- | '_ \| '_ ` _ \ / _ \| '_ \ / _` |
- | | | | | | | | | (_) | | | | (_| |
- |_| |_|_| |_| |_|\___/|_| |_|\__,_|
- ```
- ANSI shadow
- ```
- ███╗   ██╗███╗   ███╗ ██████╗ ███╗   ██╗██████╗ 
-████╗  ██║████╗ ████║██╔═══██╗████╗  ██║██╔══██╗
-██╔██╗ ██║██╔████╔██║██║   ██║██╔██╗ ██║██║  ██║
-██║╚██╗██║██║╚██╔╝██║██║   ██║██║╚██╗██║██║  ██║
-██║ ╚████║██║ ╚═╝ ██║╚██████╔╝██║ ╚████║██████╔╝
-╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═════╝ 
-```
-
-JS Block Letters
-```
- __  _  __  __  ____  __  _  ____ 
-|  \| ||  \/  |/ () \|  \| || _) \
-|_|\__||_|\/|_|\____/|_|\__||____/
-```

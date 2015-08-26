@@ -13,10 +13,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sysctl.h>
+#include <sys/types.h>
 
 #include <time.h>
 #include <stdio.h>
 #include <sys/time.h>
+
+//
+// Sysctl helper functions
+// 
 
 /*
  * Get a character string from sysctl (level 2)
@@ -143,6 +148,10 @@ static unsigned int intFromSysctlByName(char *name)
 	return result;
 }
 
+//
+// Hardware based information
+// 
+
 /*
  * Get all hardware information from sysctl
  */
@@ -175,8 +184,22 @@ struct syshw getsyshwinfo()
 	else
 		thissys.hyperthreads=0;
 
+	thissys.cpucount = thissys.cpucount / thissys.logicalcpucount;
+	// TODO: set to two for development purposes only
+	thissys.cpucount = 2;
+
+	// TODO: this is legacy code
+	if(thissys.cpucount >= CPUMAX) {
+		printf("This nmon supports only %d CPU threads (Logical CPUs) and the machine appears to have %d.\nnmon stopping as its unsafe to continue.\n", CPUMAX, thissys.cpucount);
+		exit(44);
+	}
+
 	return thissys;
 }
+
+//
+// Kernel based information
+// 
 
 /*
  * Get all hernel information from sysctl
@@ -211,10 +234,14 @@ struct syskern getsyskerninfo()
 	return thissys;
 }
 
+//
+// Processes information
+//
+
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
+static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 {
 	struct sysproc *result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
 	
@@ -260,7 +287,7 @@ struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 		currentresult.realusername = realuser->pw_name;
 		// current credentials, effective user id
 		currentresult.effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
-		struct passwd *effectiveuser = getpwuid(currentresult.effectiveuid);
+		struct passwd *effectiveuser = getpwuid(processes[i].kp_eproc.e_ucred.cr_uid);
 		currentresult.effectiveusername = effectiveuser->pw_name;
 	}
 
@@ -270,7 +297,7 @@ struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
 /*
  * Get all process information from sysctl
  */
-struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length)
+static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length)
 {
 	struct sysproc *result = NULL;
 	struct kinfo_proc *processlist = NULL;
@@ -309,7 +336,7 @@ struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length
 
 		// fill the sysproc struct from the returned information
 		if(!error) {
-			processcount = templength / sizeof(struct kinfo_proc);
+			processcount = (unsigned int)templength / sizeof(struct kinfo_proc);
 			result = sysprocfromkinfoproc(processlist, processcount);
 			complete = 1;
 		} else {
@@ -354,4 +381,34 @@ struct sysproc *getsysprocinfobyuid(int userid, size_t length)
 struct sysproc *getsysprocinfobyruid(int realuserid, size_t length)
 {
 	return getsysprocinfo(KERN_PROC_RUID, realuserid, &length);
+}
+
+//
+// CPU Utlization information
+// 
+
+extern struct syscpu getsyscpuinfo(void)
+{
+	struct syscpu thiscpu = SYSCPU_INIT;
+
+	int mib[2];
+	mib[0] = CTL_VM;
+	mib[1] = VM_LOADAVG;
+	int error = 0;
+
+	struct loadavg thisload;
+	size_t length = sizeof(thisload);
+	error = sysctl(mib, 2, &thisload, &length, NULL, 0);
+
+	if(!error) {
+		thiscpu.user = thisload.ldavg[0];
+		thiscpu.sys = thisload.ldavg[1];
+		thiscpu.wait = thisload.ldavg[2];
+		thiscpu.idle = 0;
+		thiscpu.steal = 0;
+		thiscpu.scale = thisload.fscale;
+		thiscpu.busy= (thisload.ldavg[0] + thisload.ldavg[1]) / thisload.fscale;
+	}
+
+	return thiscpu;
 }

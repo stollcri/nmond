@@ -15,6 +15,11 @@
 // Hardware based information
 // 
 
+// TODO: this is legacy code
+/* Supports up to 780, but not POWER6 595 follow-up with POWER7 */
+/* XXXX needs rework to cope to with fairly rare but interesting higher numbers of CPU machines */
+#define CPUMAX (192 * 8) /* MAGIC COOKIE WARNING */
+
 struct syshw { // CTL_HW
 	unsigned int byteorder; // HW_BYTEORDER
 	unsigned int memorysize; // HW_MEMSIZE (total memory, 64bit int)
@@ -89,8 +94,8 @@ struct sysproc {
 	int status;
 	int ttydev;
 	int priority;
-	int realuid;
-	int effectiveuid;
+	unsigned int realuid;
+	unsigned int effectiveuid;
 	char *name;
 	char *path;
 	char *statustext;
@@ -105,5 +110,22 @@ extern struct sysproc *getsysprocinfobypgrp(int, size_t);
 extern struct sysproc *getsysprocinfobytty(int, size_t);
 extern struct sysproc *getsysprocinfobyuid(int, size_t);
 extern struct sysproc *getsysprocinfobyruid(int, size_t);
+
+//
+// CPU Utlization information
+// 
+
+struct syscpu {
+	double user;
+	double sys;
+	double wait;
+	double idle;
+	double steal;
+	double scale;
+	double busy;
+};
+#define SYSCPU_INIT { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+
+extern struct syscpu getsyscpuinfo(void);
 
 #endif

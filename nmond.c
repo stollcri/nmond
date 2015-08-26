@@ -83,11 +83,11 @@ WINDOW *padtop = NULL;
 WINDOW *padmem = NULL;
 WINDOW *padlarge = NULL;
 WINDOW *padpage = NULL;
-WINDOW *padker = NULL;
+WINDOW *padkstat = NULL;
 WINDOW *padnet = NULL;
 WINDOW *padneterr = NULL;
 WINDOW *padnfs = NULL;
-WINDOW *padcpu = NULL;
+WINDOW *padkern = NULL;
 WINDOW *padsmp = NULL;
 WINDOW *padlong = NULL;
 WINDOW *paddisk = NULL;
@@ -757,10 +757,7 @@ double	doubletime(void)
  * (used to actually determine the cpu count)
  */
 void get_cpu_cnt()	{
-	if(cpus >=CPUMAX) {
-		printf("This nmon supports only %d CPU threads (Logical CPUs) and the machine appears to have %d.\nnmon stopping as its unsafe to continue.\n", CPUMAX, cpus);
-		exit(44);
-	}
+	// TODO: delete me (stollcri)
 }
 
 /*
@@ -774,17 +771,14 @@ void get_intel_spec() {
 	model_ptr = thissys.machine;
 	mhz_ptr = (char *)malloc(sizeof(int));
 	sprintf(mhz_ptr, "%d", (thissys.cpufrequency / 1000000));
-	bogo_ptr = 0; // TODO: remove all references to this made up number
-	processorchips = 1; // TODO: should not always be 1, find actual value
+	
 	cores = thissys.physicalcpucount;
 	siblings = thissys.logicalcpucount;
+	hyperthreads=thissys.hyperthreads;
+	cpus = thissys.cpucount;
 
-	if(siblings>cores)
-		hyperthreads=siblings/cores;
-	else
-		hyperthreads=0;
-
-	cpus = siblings;
+	bogo_ptr = 0; // TODO: remove all references to this made up number
+	processorchips = 1; // TODO: should not always be 1, find actual value
 
 	// // DEBUG
 	// struct syskern thissys2 = getsyskerninfo();
@@ -2354,7 +2348,7 @@ int checkinput(void)
 					case 'k':
 					case 'K':
 						FLIP(show_kernel);
-						wclear(padker);
+						wclear(padkstat);
 						break;
 					case 'm':
 					case 'M':
@@ -2428,7 +2422,7 @@ int checkinput(void)
 					case 'r':
 					case 'R':
 						FLIP(show_cpu);
-						wclear(padcpu);
+						wclear(padkern);
 						break;
 					case 't':
 						show_topmode = 3; /* Fall Through */
@@ -3381,7 +3375,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			padmem = newpad(20,MAXCOLS);
 			padlarge = newpad(20,MAXCOLS);
 			padpage = newpad(20,MAXCOLS);
-			padcpu = newpad(20,MAXCOLS);
+			padkern = newpad(20,MAXCOLS);
 			padsmp = newpad(MAXROWS,MAXCOLS);
 			padlong = newpad(MAXROWS,MAXCOLS);
 			padnet = newpad(MAXROWS,MAXCOLS);
@@ -3389,7 +3383,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			paddisk = newpad(MAXROWS,MAXCOLS);
 			paddg = newpad(MAXROWS,MAXCOLS);
 			padjfs = newpad(MAXROWS,MAXCOLS);
-			padker = newpad(5,MAXCOLS);
+			padkstat = newpad(5,MAXCOLS);
 			padverb = newpad(8,MAXCOLS);
 			padnfs = newpad(25,MAXCOLS);
 			padtop = newpad(MAXROWS,MAXCOLS*2);
@@ -3632,14 +3626,12 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			y = x = 0;
 			
 			if (cursed) { /* Top line */
-				uiheader(x, colour, flash_on, VERSION, hostname, elapsed, timer);
-				x = x + 1;
+				uiheader(&x, colour, flash_on, VERSION, hostname, elapsed, timer);
 				
 				if(welcome && getenv("NMON") == 0) {
 					// stollcri, 2015-08-22
 					struct syshw thissys = getsyshwinfo();
 					uiwelcome(&padwelcome, &x, COLS, LINES, colour, thissys);
-					x = x + 22;
 				}
 			} else {
 				if (!cursed && nmon_snap && (loop % nmon_one_in) == 0 ) {
@@ -3654,11 +3646,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				fflush(NULL);
 			}
 			if (show_verbose && cursed) {
-				BANNER(padverb, "Verbose Mode");
-				mvwprintw(padverb,1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
-				/*	DISPLAY(padverb,7); */
-				/* move(x,0); */
-				x=x+6;
+				uiverbose(&padverb, &x, COLS);
 			}
 			if (show_help && cursed) {
 				uihelp(&padhelp, &x, COLS, LINES);
@@ -3672,25 +3660,33 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			if (show_cpu && cursed) {
 				proc_read(P_CPUINFO);
 				proc_read(P_VERSION);
-				uicpu(&padcpu, &x, COLS, LINES);
+				uikern(&padkern, &x, COLS, LINES);
 			}
 			if (show_longterm ) {
-				proc_read(P_STAT);
-				proc_cpu();
-				cpu_user = p->cpu_total.user - q->cpu_total.user;
-				cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
-				cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
-				cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
-				cpu_steal= p->cpu_total.steal- q->cpu_total.steal;
-				/* DEBUG inject steal       cpu_steal = cpu_sys; */
-				cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
+				// proc_read(P_STAT);
+				// proc_cpu();
+				// cpu_user = p->cpu_total.user - q->cpu_total.user;
+				// cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
+				// cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
+				// cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
+				// cpu_steal= p->cpu_total.steal- q->cpu_total.steal;
+				// /* DEBUG inject steal       cpu_steal = cpu_sys; */
+				// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
+				// stollcri, 2015
+				struct syscpu thiscpu = getsyscpuinfo();
+				cpu_user = thiscpu.user;
+				cpu_sys = thiscpu.sys;
+				cpu_wait = thiscpu.wait;
+				cpu_idle = thiscpu.idle;
+				cpu_steal = thiscpu.steal;
+				cpu_sum = thiscpu.scale;
 				
 				save_snap(
-						  (double)cpu_user / (double)cpu_sum * 100.0,
-						  (double)cpu_sys  / (double)cpu_sum * 100.0,
-						  (double)cpu_wait / (double)cpu_sum * 100.0,
-						  (double)cpu_idle / (double)cpu_sum * 100.0,
-						  (double)cpu_steal/ (double)cpu_sum * 100.0);
+						  (double)cpu_user / (double)cpu_sum,
+						  (double)cpu_sys  / (double)cpu_sum,
+						  (double)cpu_wait / (double)cpu_sum,
+						  (double)cpu_idle / (double)cpu_sum,
+						  (double)cpu_steal/ (double)cpu_sum);
 				plot_snap(padlong);
 				DISPLAY(padlong,MAX_SNAP_ROWS+2);
 			}
@@ -3720,41 +3716,28 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				}
 				if (show_smp) {
 					if(cursed) {
-						BANNER(padsmp,"CPU Utilisation");
-						
-						/* mvwprintw(padsmp,1, 0, cpu_line);*/
-						/*
-						 *mvwprintw(padsmp,2, 0, "CPU  User%%  Sys%% Wait%% Idle|0          |25         |50          |75       100|");
-						 */
-						mvwprintw(padsmp,1, 0, cpu_line);
-						mvwprintw(padsmp,2, 0, "CPU  ");
-						COLOUR wattrset(padsmp, COLOR_PAIR(2));
-						mvwprintw(padsmp,2, 4, "User%%");
-						COLOUR wattrset(padsmp, COLOR_PAIR(1));
-						mvwprintw(padsmp,2, 9, "  Sys%%");
-						COLOUR wattrset(padsmp, COLOR_PAIR(4));
-						mvwprintw(padsmp,2, 15, " Wait%%");
-						if(p->cpu_total.steal != q->cpu_total.steal){
-							COLOUR wattrset(padsmp, COLOR_PAIR(5));
-							mvwprintw(padsmp,2, 22, "Steal");
-						} else {
-							COLOUR wattrset(padsmp, COLOR_PAIR(0));
-							mvwprintw(padsmp,2, 22, " Idle");
-						}
-						COLOUR wattrset(padsmp, COLOR_PAIR(0));
-						mvwprintw(padsmp,2, 27, "|0          |25         |50          |75       100|");
+						uicpu(&padsmp, &x, COLS, colour);
 					}	/* if (show_smp) AND if(cursed) */
 					proc_read(P_STAT);
 					proc_cpu();
 					for (i = 0; i < cpus; i++) {
-						cpu_user = p->cpuN[i].user - q->cpuN[i].user;
-						cpu_sys  = p->cpuN[i].sys  - q->cpuN[i].sys;
-						cpu_wait = p->cpuN[i].wait - q->cpuN[i].wait;
-						cpu_idle = p->cpuN[i].idle - q->cpuN[i].idle;
-						cpu_steal= p->cpuN[i].steal- q->cpuN[i].steal;
-						/* DEBUG inject steal       cpu_steal = cpu_sys; */
-						cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
-						/* Check if we had a CPU # change and have to set idle to 100 */
+						// cpu_user = p->cpuN[i].user - q->cpuN[i].user;
+						// cpu_sys  = p->cpuN[i].sys  - q->cpuN[i].sys;
+						// cpu_wait = p->cpuN[i].wait - q->cpuN[i].wait;
+						// cpu_idle = p->cpuN[i].idle - q->cpuN[i].idle;
+						// cpu_steal= p->cpuN[i].steal- q->cpuN[i].steal;
+						// /* DEBUG inject steal       cpu_steal = cpu_sys; */
+						// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
+						// /* Check if we had a CPU # change and have to set idle to 100 */
+						// stollcri, 2015
+						struct syscpu thiscpu = getsyscpuinfo();
+						cpu_user = thiscpu.user;
+						cpu_sys = thiscpu.sys;
+						cpu_wait = thiscpu.wait;
+						cpu_idle = thiscpu.idle;
+						cpu_steal = thiscpu.steal;
+						cpu_sum = thiscpu.scale;
+
 						if( cpu_sum == 0)
 							cpu_sum = cpu_idle = 100.0;
 						if(smp_first_time && cursed) {
@@ -3766,11 +3749,11 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 						} else {
 							if(!show_raw)
 								plot_smp(padsmp,i+1, 3 + i,
-										 (double)cpu_user / (double)cpu_sum * 100.0,
-										 (double)cpu_sys  / (double)cpu_sum * 100.0,
-										 (double)cpu_wait / (double)cpu_sum * 100.0,
-										 (double)cpu_idle / (double)cpu_sum * 100.0,
-										 (double)cpu_steal / (double)cpu_sum * 100.0);
+										 (double)cpu_user / (double)cpu_sum,
+										 (double)cpu_sys  / (double)cpu_sum,
+										 (double)cpu_wait / (double)cpu_sum,
+										 (double)cpu_idle / (double)cpu_sum,
+										 (double)cpu_steal / (double)cpu_sum);
 							else
 								save_smp(padsmp,i+1, 3+i,
 										 RAW(user) - RAW(nice),
@@ -3783,40 +3766,48 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 										 RAW(steal));
 							
 							RRD fprintf(fp,"rrdtool update cpu%02d.rrd %s:%.1f:%.1f:%.1f:%.1f\n",i,LOOP,
-										(double)cpu_user / (double)cpu_sum * 100.0,
-										(double)cpu_sys  / (double)cpu_sum * 100.0,
-										(double)cpu_wait / (double)cpu_sum * 100.0,
-										(double)cpu_idle / (double)cpu_sum * 100.0);
+										(double)cpu_user / (double)cpu_sum,
+										(double)cpu_sys  / (double)cpu_sum,
+										(double)cpu_wait / (double)cpu_sum,
+										(double)cpu_idle / (double)cpu_sum);
 						}
 					}	/* for (i = 0; i < cpus; i++) */
 					CURSE mvwprintw(padsmp,i + 3, 0, cpu_line);
-					cpu_user = p->cpu_total.user - q->cpu_total.user;
-					cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
-					cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
-					cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
-					cpu_steal= p->cpu_total.steal- q->cpu_total.steal;
-					/* DEBUG inject steal       cpu_steal = cpu_sys; */
-					cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
+					// cpu_user = p->cpu_total.user - q->cpu_total.user;
+					// cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
+					// cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
+					// cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
+					// cpu_steal= p->cpu_total.steal- q->cpu_total.steal;
+					// /* DEBUG inject steal       cpu_steal = cpu_sys; */
+					// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
+					// stollcri, 2015
+					struct syscpu thiscpu = getsyscpuinfo();
+					cpu_user = thiscpu.user;
+					cpu_sys = thiscpu.sys;
+					cpu_wait = thiscpu.wait;
+					cpu_idle = thiscpu.idle;
+					cpu_steal = thiscpu.steal;
+					cpu_sum = thiscpu.scale;
 					
 					/* Check if we had a CPU # change and have to set idle to 100 */
 					if( cpu_sum == 0)
 						cpu_sum = cpu_idle = 100.0;
 					
-					RRD fprintf(fp,"rrdtool update cpu.rrd %s:%.1f:%.1f:%.1f:%.1f%.1f\n",LOOP,
-								(double)cpu_user / (double)cpu_sum * 100.0,
-								(double)cpu_sys  / (double)cpu_sum * 100.0,
-								(double)cpu_wait / (double)cpu_sum * 100.0,
-								(double)cpu_idle / (double)cpu_sum * 100.0,
-								(double)cpu_steal/ (double)cpu_sum * 100.0);
+					RRD fprintf(fp,"rrdtool update cpu.rrd %s:%.f:%.1f:%.1f:%.1f%.1f\n",LOOP,
+								(double)cpu_user / (double)cpu_sum,
+								(double)cpu_sys  / (double)cpu_sum,
+								(double)cpu_wait / (double)cpu_sum,
+								(double)cpu_idle / (double)cpu_sum,
+								(double)cpu_steal/ (double)cpu_sum);
 					if (cpus > 1 || !cursed) {
 						if(!smp_first_time || !cursed) {
 							if(!show_raw) {
 								plot_smp(padsmp,0, 4 + i,
-										 (double)cpu_user / (double)cpu_sum * 100.0,
-										 (double)cpu_sys  / (double)cpu_sum * 100.0,
-										 (double)cpu_wait / (double)cpu_sum * 100.0,
-										 (double)cpu_idle / (double)cpu_sum * 100.0,
-										 (double)cpu_steal/ (double)cpu_sum * 100.0);
+										 (double)cpu_user / (double)cpu_sum,
+										 (double)cpu_sys  / (double)cpu_sum,
+										 (double)cpu_wait / (double)cpu_sum,
+										 (double)cpu_idle / (double)cpu_sum,
+										 (double)cpu_steal/ (double)cpu_sum);
 							} else {
 								save_smp(padsmp,0, 4+i,
 										 RAWTOTAL(user) - RAWTOTAL(nice),
@@ -3837,13 +3828,18 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 					DISPLAY(padsmp, i + 4);
 				}	/* if (show_smp)  */
 				if(show_verbose && cursed) {
-					cpu_user = p->cpu_total.user - q->cpu_total.user;
-					cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
-					cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
-					cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
-					cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait;
-					
-					cpu_busy= (double)(cpu_user + cpu_sys)/ (double)cpu_sum * 100.0;
+					// cpu_user = p->cpu_total.user - q->cpu_total.user;
+					// cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
+					// cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
+					// cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
+					// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait;
+					// stollcri, 2015
+					struct syscpu thiscpu = getsyscpuinfo();
+					cpu_user = thiscpu.user;
+					cpu_sys = thiscpu.sys;
+					cpu_sum = thiscpu.scale;
+					cpu_busy = thiscpu.busy;
+
 					mvwprintw(padverb,2, 0, "        -> CPU               %%busy %5.1f%%\t>80%%\t>90%%          ",cpu_busy);
 					if(cpu_busy > 90.0){
 						COLOUR wattrset(padverb,COLOR_PAIR(1));
@@ -4129,33 +4125,33 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				proc_read(P_LOADAVG);
 				proc_kernel();
 				if(cursed) {
-					BANNER(padker,"Kernel Stats");
-					mvwprintw(padker,1, 1, "RunQueue       %8lld   Load Average    CPU use since boot time",
+					BANNER(padkstat,"Kernel Stats");
+					mvwprintw(padkstat,1, 1, "RunQueue       %8lld   Load Average    CPU use since boot time",
 							  p->cpu_total.running);
 					updays=p->cpu_total.uptime/60/60/24;
 					uphours=(p->cpu_total.uptime-updays*60*60*24)/60/60;
 					upmins=(p->cpu_total.uptime-updays*60*60*24-uphours*60*60)/60;
-					mvwprintw(padker,2, 1, "ContextSwitch  %8.1f    1 mins %5.2f    Uptime Days=%3d Hours=%2d Mins=%2d",
+					mvwprintw(padkstat,2, 1, "ContextSwitch  %8.1f    1 mins %5.2f    Uptime Days=%3d Hours=%2d Mins=%2d",
 							  (float)(p->cpu_total.ctxt - q->cpu_total.ctxt)/elapsed,
 							  (float)p->cpu_total.mins1,
 							  updays, uphours, upmins);
 					updays=p->cpu_total.idletime/60/60/24;
 					uphours=(p->cpu_total.idletime-updays*60*60*24)/60/60;
 					upmins=(p->cpu_total.idletime-updays*60*60*24-uphours*60*60)/60;
-					mvwprintw(padker,3, 1, "Forks          %8.1f    5 mins %5.2f    Idle   Days=%3d Hours=%2d Mins=%2d",
+					mvwprintw(padkstat,3, 1, "Forks          %8.1f    5 mins %5.2f    Idle   Days=%3d Hours=%2d Mins=%2d",
 							  (float)(p->cpu_total.procs - q->cpu_total.procs)/elapsed,
 							  (float)p->cpu_total.mins5,
 							  updays, uphours, upmins);
 					
-					mvwprintw(padker,4, 1, "Interrupts     %8.1f   15 mins %5.2f",
+					mvwprintw(padkstat,4, 1, "Interrupts     %8.1f   15 mins %5.2f",
 							  (float)(p->cpu_total.intr - q->cpu_total.intr)/elapsed,
 							  (float)p->cpu_total.mins15);
 					average = (p->cpu_total.uptime - p->cpu_total.idletime)/ p->cpu_total.uptime *100.0;
 					if( average > 0.0)
-						mvwprintw(padker,4, 46, "Average CPU use=%6.2f%%", average);
+						mvwprintw(padkstat,4, 46, "Average CPU use=%6.2f%%", average);
 					else
-						mvwprintw(padker,4, 46, "Uptime has overflowed");
-					DISPLAY(padker,5);
+						mvwprintw(padkstat,4, 46, "Uptime has overflowed");
+					DISPLAY(padkstat,5);
 				} else {
 					if(proc_first_time) {
 						q->cpu_total.ctxt = p->cpu_total.ctxt;

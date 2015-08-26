@@ -27,9 +27,11 @@
 #define MSG_ERR_FAILEDDIR "Directory attempted was:%s\n"
 #define MSG_ERR_NOPENFILE "nmond: failed to open output file"
 
-extern void uiheader(int, int, int, char*, char*, double, time_t);
+extern void uiheader(int*, int, int, char*, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int*, int, int);
+extern void uikern(WINDOW**, int*, int, int);
+extern void uiverbose(WINDOW**, int*, int);
 extern void uicpu(WINDOW**, int*, int, int);
 
 #endif

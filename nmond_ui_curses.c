@@ -10,7 +10,7 @@
 
 static inline void uibanner(int cols, WINDOW *pad, char *string)
 {
-	mvwhline(pad, 0, 0, ACS_HLINE,cols-2);
+	mvwhline(pad, 0, 0, ACS_HLINE, cols-2);
 	wmove(pad, 0, 0);
 	wattron(pad, A_STANDOUT);
 	wprintw(pad, " ");
@@ -25,36 +25,39 @@ static inline void uidisplay(int *xin, int cols, int rows, WINDOW *pad, int line
 	int x = *xin;
 
 	if(x+2+(rows) > lines) {
-		pnoutrefresh(pad, 0,0,x,1,lines-2, cols-2);
+		pnoutrefresh(pad, 0, 0, x, 1, lines-2, cols-2);
 	} else {
-		pnoutrefresh(pad, 0,0,x,1,x+rows+1,cols-2);
+		pnoutrefresh(pad, 0, 0, x, 1, x+rows+1, cols-2);
 	}
 
 	x=x+(rows);
 	if(x+4 > lines) {
-		mvwprintw(stdscr, lines-1, 1, MSG_WRN_NOT_SHOWN);
+		mvwprintw(stdscr, lines-1, 10, MSG_WRN_NOT_SHOWN);
 	}
 
 	*xin = x;
 }
 
-inline void uiheader(int x, int usecolor, int useblink, char *version, char *hostname, double elapsed, time_t timer)
+inline void uiheader(int *xin, int usecolor, int useblink, char *version, char *hostname, double elapsed, time_t timer)
 {
+	int x = *xin;
 	struct tm *tim = localtime(&timer);
 
-	box(stdscr,0,0);
+	box(stdscr, 0, 0);
 	mvprintw(x, 2, "nmond");
 	mvprintw(x, 8, "%s", version);
 	if(useblink) {
-		mvprintw(x,14,"[H for help]");
+		mvprintw(x, 14,"[H for help]");
 	}
 	mvprintw(x, 29, "%s", hostname);
 	mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
+
+	*xin = x + 1;
 }
 
-inline void uiwelcome(WINDOW **padwelcomein, int *xin, int cols, int rows, int usecolor, struct syshw hw)
+void uiwelcome(WINDOW **padwelcomein, int *xin, int cols, int rows, int usecolor, struct syshw hw)
 {
 	WINDOW *padwelcome = *padwelcomein;
 	if (padwelcome == NULL) {
@@ -90,10 +93,11 @@ inline void uiwelcome(WINDOW **padwelcomein, int *xin, int cols, int rows, int u
 	mvwprintw(padwelcome, x+21, 3, "   h = more options                   q = Quit");
 	pnoutrefresh(padwelcome, 0, 0, x, 1, rows-2, cols-2);
 	wnoutrefresh(stdscr);
-	*xin = x;
+	
+	*xin = x + 22;
 }
 
-inline void uihelp(WINDOW **padhelpin, int *xin, int cols, int rows)
+void uihelp(WINDOW **padhelpin, int *xin, int cols, int rows)
 {
 	WINDOW *padhelp = *padhelpin;
 	if (padhelp == NULL) {
@@ -101,7 +105,7 @@ inline void uihelp(WINDOW **padhelpin, int *xin, int cols, int rows)
 	}
 	int x = *xin;
 	uibanner(cols, padhelp, "HELP");
-	mvwprintw(padhelp,  1, 5, "key  --- statistics which toggle on/off ---%d",x);
+	mvwprintw(padhelp,  1, 5, "key  --- statistics which toggle on/off ---");
 	mvwprintw(padhelp,  2, 5, "h = This help information");
 	mvwprintw(padhelp,  3, 5, "r = RS6000/pSeries CPU/cache/OS/kernel/hostname details + LPAR");
 	mvwprintw(padhelp,  4, 5, "t = Top Process Stats 1=basic 3=CPU");
@@ -122,17 +126,18 @@ inline void uihelp(WINDOW **padhelpin, int *xin, int cols, int rows)
 	mvwprintw(padhelp, 19, 5, "Chrisotpher Stoll, 2015 (https://github.com/stollcri)");
 	pnoutrefresh(padhelp, 0, 0, x, 1, rows-2, cols-2);
 	uidisplay(&x, cols, 20, padhelp, rows);
+	
 	*xin = x;
 }
 
-inline void uicpu(WINDOW **padcpuin, int *xin, int cols, int rows)
+void uikern(WINDOW **padcpuin, int *xin, int cols, int rows)
 {
 	WINDOW *padcpu = *padcpuin;
 	if (padcpu == NULL) {
 		return;
 	}
 	int x = *xin;
-	uibanner(cols, padcpu,"Linux and Processor Details");
+	uibanner(cols, padcpu, "Linux and Processor Details");
 	mvwprintw(padcpu, 1, 4, "Linux: %s", "??"); // proc[P_VERSION].line[0]);
 	mvwprintw(padcpu, 2, 4, "Build: %s", "??"); // proc[P_VERSION].line[1]);
 	mvwprintw(padcpu, 3, 4, "Release  : %s", "??"); // uts.release );
@@ -149,5 +154,56 @@ inline void uicpu(WINDOW **padcpuin, int *xin, int cols, int rows)
 	mvwprintw(padcpu, 18, 4,"lsb_release: %s", "??"); // lsb_release[2]);
 	mvwprintw(padcpu, 19, 4,"lsb_release: %s", "??"); // lsb_release[3]);
 	uidisplay(&x, cols, 20, padcpu, rows);
+	
+	*xin = x;
+}
+
+void uiverbose(WINDOW **padverbin, int *xin, int cols)
+{
+	WINDOW *padverb = *padverbin;
+	if (padverb == NULL) {
+		return;
+	}
+	int x = *xin;
+
+	uibanner(cols, padverb, "Verbose Mode");
+	mvwprintw(padverb, 1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
+
+	*xin = x + 6;
+}
+
+void uicpu(WINDOW **padsmpin, int *xin, int cols, int usecolor)
+{
+	WINDOW *padsmp = *padsmpin;
+	if (padsmp == NULL) {
+		return;
+	}
+	int x = *xin;
+
+	uibanner(cols, padsmp, "CPU Utilisation");
+	// BANNER(padsmp,"CPU Utilisation");
+	// /* mvwprintw(padsmp,1, 0, cpu_line);*/
+	// /*
+	//  *mvwprintw(padsmp,2, 0, "CPU  User%%  Sys%% Wait%% Idle|0          |25         |50          |75       100|");
+	//  */
+	char cpu_line[] = "---------------------------+-------------------------------------------------+";
+	mvwprintw(padsmp, 1, 0, cpu_line);
+	mvwprintw(padsmp, 2, 0, "CPU  ");
+	COLOUR wattrset(padsmp, COLOR_PAIR(2));
+	mvwprintw(padsmp, 2, 4, "User%%");
+	COLOUR wattrset(padsmp, COLOR_PAIR(1));
+	mvwprintw(padsmp, 2, 9, "  Sys%%");
+	COLOUR wattrset(padsmp, COLOR_PAIR(4));
+	mvwprintw(padsmp, 2, 15, " Wait%%");
+	// if(p->cpu_total.steal != q->cpu_total.steal){
+	// 	COLOUR wattrset(padsmp, COLOR_PAIR(5));
+	// 	mvwprintw(padsmp,2, 22, "Steal");
+	// } else {
+		COLOUR wattrset(padsmp, COLOR_PAIR(0));
+		mvwprintw(padsmp, 2, 22, " Idle");
+	// }
+	COLOUR wattrset(padsmp, COLOR_PAIR(0));
+	mvwprintw(padsmp, 2, 27, "|0          |25         |50          |75       100|");
+
 	*xin = x;
 }
