@@ -3638,7 +3638,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				if(welcome && getenv("NMON") == 0) {
 					// stollcri, 2015-08-22
 					struct syshw thissys = getsyshwinfo();
-					uiwelcome(x, colour, thissys);
+					uiwelcome(&padwelcome, &x, COLS, LINES, colour, thissys);
 					x = x + 22;
 				}
 			} else {
@@ -3661,8 +3661,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				x=x+6;
 			}
 			if (show_help && cursed) {
-				uihelp(x, LINES);
-				
+				uihelp(&padhelp, &x, COLS, LINES);
 			}
 			/* for debugging use only
 			 if(error_on && errorstr[0] != 0) {
@@ -3673,7 +3672,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			if (show_cpu && cursed) {
 				proc_read(P_CPUINFO);
 				proc_read(P_VERSION);
-				uicpu(x, LINES);
+				uicpu(&padcpu, &x, COLS, LINES);
 			}
 			if (show_longterm ) {
 				proc_read(P_STAT);
