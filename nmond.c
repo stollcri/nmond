@@ -354,44 +354,6 @@ char *timestamp(int loop, time_t eon)
 }
 #define LOOP timestamp(loop,timer)
 
-char *easy[5] = {"not found",0,0,0,0};
-char *lsb_release[5] = {"not found",0,0,0,0};
-
-void find_release()
-{
-	FILE *pop;
-	int i;
-	char tmpstr[71];
-	
-	pop = popen("cat /etc/*ease 2>/dev/null", "r");
-	if(pop != NULL) {
-		tmpstr[0]=0;
-		for(i=0;i<4;i++) {
-			if(fgets(tmpstr, 70, pop) == NULL)
-				break;
-			tmpstr[strlen(tmpstr)-1]=0; /* remove newline */
-			easy[i] = MALLOC(strlen(tmpstr)+1);
-			strcpy(easy[i],tmpstr);
-		}
-		pclose(pop);
-	}
-	pop = popen("/usr/bin/lsb_release -idrc 2>/dev/null", "r");
-	if(pop != NULL) {
-		tmpstr[0]=0;
-		for(i=0;i<4;i++) {
-			if(fgets(tmpstr, 70, pop) == NULL)
-				break;
-			tmpstr[strlen(tmpstr)-1]=0; /* remove newline */
-			lsb_release[i] = MALLOC(strlen(tmpstr)+1);
-			strcpy(lsb_release[i],tmpstr);
-		}
-		pclose(pop);
-	}
-}
-
-
-
-
 
 void args_output(int pid, int loop, char *progname)
 {
@@ -3284,9 +3246,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		/* Initialise the time stamps for the first loop */
 		p->time = doubletime();
 		q->time = doubletime();
-		
-		find_release();
-		
+				
 		/* Determine number of active LOGICAL cpu - depends on SMT mode ! */
 		get_cpu_cnt();
 		max_cpus=old_cpus=cpus;
