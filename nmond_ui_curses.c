@@ -20,19 +20,19 @@ static inline void uibanner(int cols, WINDOW *pad, char *string)
 }
 
 
-static inline void uidisplay(int *xin, int cols, int rows, WINDOW *pad)
+static inline void uidisplay(int *xin, int cols, int rows, WINDOW *pad, int lines)
 {
 	int x = *xin;
 
-	if(x+2+(rows) > rows) {
-		pnoutrefresh(pad, 0,0,x,1,rows-2, cols-2);
+	if(x+2+(rows) > lines) {
+		pnoutrefresh(pad, 0,0,x,1,lines-2, cols-2);
 	} else {
 		pnoutrefresh(pad, 0,0,x,1,x+rows+1,cols-2);
 	}
 
 	x=x+(rows);
-	if(x+4 > rows) {
-		mvwprintw(stdscr, rows-1, 10, MSG_WRN_NOT_SHOWN);
+	if(x+4 > lines) {
+		mvwprintw(stdscr, lines-1, 1, MSG_WRN_NOT_SHOWN);
 	}
 
 	*xin = x;
@@ -45,7 +45,9 @@ inline void uiheader(int x, int usecolor, int useblink, char *version, char *hos
 	box(stdscr,0,0);
 	mvprintw(x, 2, "nmond");
 	mvprintw(x, 8, "%s", version);
-	if(useblink) mvprintw(x,14,"[H for help]");
+	if(useblink) {
+		mvprintw(x,14,"[H for help]");
+	}
 	mvprintw(x, 29, "%s", hostname);
 	mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
@@ -55,6 +57,9 @@ inline void uiheader(int x, int usecolor, int useblink, char *version, char *hos
 inline void uiwelcome(WINDOW **padwelcomein, int *xin, int cols, int rows, int usecolor, struct syshw hw)
 {
 	WINDOW *padwelcome = *padwelcomein;
+	if (padwelcome == NULL) {
+		return;
+	}
 	int x = *xin;
 
 	COLOUR wattrset(padwelcome, COLOR_PAIR(2));
@@ -85,13 +90,16 @@ inline void uiwelcome(WINDOW **padwelcomein, int *xin, int cols, int rows, int u
 	mvwprintw(padwelcome, x+21, 3, "   h = more options                   q = Quit");
 	pnoutrefresh(padwelcome, 0, 0, x, 1, rows-2, cols-2);
 	wnoutrefresh(stdscr);
+	*xin = x;
 }
 
-inline void uihelp(WINDOW **padhelpin, int *xin, int cols, int lines)
+inline void uihelp(WINDOW **padhelpin, int *xin, int cols, int rows)
 {
 	WINDOW *padhelp = *padhelpin;
+	if (padhelp == NULL) {
+		return;
+	}
 	int x = *xin;
-
 	uibanner(cols, padhelp, "HELP");
 	mvwprintw(padhelp,  1, 5, "key  --- statistics which toggle on/off ---%d",x);
 	mvwprintw(padhelp,  2, 5, "h = This help information");
@@ -112,17 +120,18 @@ inline void uihelp(WINDOW **padhelpin, int *xin, int cols, int lines)
 	mvwprintw(padhelp, 17, 5, ". = Minimum Mode =display only busy disks and processes");
 	mvwprintw(padhelp, 18, 5, "0 = reset peak counts to zero (peak = \">\")");
 	mvwprintw(padhelp, 19, 5, "Chrisotpher Stoll, 2015 (https://github.com/stollcri)");
-	pnoutrefresh(padhelp, 0, 0, x, 1, lines-2, cols-2);
-	uidisplay(&x, cols, 20, padhelp);
-	
+	pnoutrefresh(padhelp, 0, 0, x, 1, rows-2, cols-2);
+	uidisplay(&x, cols, 20, padhelp, rows);
 	*xin = x;
 }
 
-inline void uicpu(WINDOW **padcpuin, int *xin, int cols, int lines)
+inline void uicpu(WINDOW **padcpuin, int *xin, int cols, int rows)
 {
 	WINDOW *padcpu = *padcpuin;
+	if (padcpu == NULL) {
+		return;
+	}
 	int x = *xin;
-
 	uibanner(cols, padcpu,"Linux and Processor Details");
 	mvwprintw(padcpu, 1, 4, "Linux: %s", "??"); // proc[P_VERSION].line[0]);
 	mvwprintw(padcpu, 2, 4, "Build: %s", "??"); // proc[P_VERSION].line[1]);
@@ -139,7 +148,6 @@ inline void uicpu(WINDOW **padcpuin, int *xin, int cols, int lines)
 	mvwprintw(padcpu, 17, 4,"lsb_release: %s", "??"); // lsb_release[1]);
 	mvwprintw(padcpu, 18, 4,"lsb_release: %s", "??"); // lsb_release[2]);
 	mvwprintw(padcpu, 19, 4,"lsb_release: %s", "??"); // lsb_release[3]);
-	uidisplay(&x, cols, 20, padcpu);
-
+	uidisplay(&x, cols, 20, padcpu, rows);
 	*xin = x;
 }
