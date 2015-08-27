@@ -16,7 +16,6 @@
 #define VERSION "0.0"
 
 #define LARGEMEM 1
-#define PARTITIONS 1
 /* This adds the following to the disk stats
 	pi_num_threads,
 	pi_rt_priority,
@@ -272,7 +271,6 @@ struct net_stat {
 	unsigned long if_ocolls;
 };
 
-#ifdef PARTITIONS
 #define PARTMAX 256
 struct part_stat {
 	int part_major;
@@ -291,7 +289,6 @@ struct part_stat {
 	unsigned long part_use;
 	unsigned long part_aveq;
 };
-#endif /*PARTITIONS*/
 
 #define DISKMIN 256
 #define DISKMAX diskmax
@@ -308,9 +305,7 @@ struct data {
 	struct vm_stat vm;
 	struct nfs_stat nfs;
 	struct net_stat ifnets[NETMAX];
-#ifdef PARTITIONS
 	struct part_stat parts[PARTMAX];
-#endif /*PARTITIONS*/
 	
 	struct timeval tv;
 	double time;

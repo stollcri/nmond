@@ -6,7 +6,7 @@
 
 #include "nmond_ui_cli.h"
 #include <stdio.h>
- 
+
 void uiclhint()
 {
 	printf("\nHint: nmond [-h] [-s <seconds>] [-c <count>] [-f -d <disks> -t -r <name>] [-x]\n\n");
@@ -96,9 +96,7 @@ void uiclhelp(char *version)
 	printf("\tt   = Top Process stats use 1,3,4,5 to select the data & order\n");
 	printf("\tu   = Top Process full command details\n");
 	printf("\tv   = Verbose mode - tries to make recommendations\n");
-#ifdef PARTITIONS
 	printf("\tP   = Partitions Disk I/O Stats\n");
-#endif
 	printf("\tb   = black and white mode (or use -b option)\n");
 	printf("\t.   = minimum mode i.e. only busy disks and processes\n");
 	printf("\n");
@@ -113,7 +111,6 @@ void uiclhelp(char *version)
 	printf("\tIf you find you always type the same toggles every time you start\n");
 	printf("\tthen place them in the NMON shell variable. For example:\n");
 	printf("\t export NMON=cmdrvtan\n");
-	
 	printf("\n");
 	printf("Others:\n");
 	printf("\ta) To you want to stop nmon - kill -USR2 <nmon-pid>\n");
