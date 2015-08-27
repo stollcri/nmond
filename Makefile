@@ -2,9 +2,9 @@
 LANG = en
 
 ifeq ($(LANG),en)
-	LANGFILES = nmond_ui_curses.c
+	LANGFILES = nmond_ui_cli.c nmond_ui_curses.c
 else ifeq ($(LANG),de)
-	LANGFILES = nmond_ui_curses.c
+	LANGFILES = nmond_ui_cli.c nmond_ui_curses.c
 endif
 
 CC = cc

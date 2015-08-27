@@ -186,3 +186,61 @@ Each options shows the same output, the srot order is just changed
 
 #### V -- Virtual Memory
 (TODO: complete)
+
+# procs
+```
+#ifdef DEBUGPROC
+	print_procs(int index)
+	{
+		printf("procs[%d].pid           =%d\n",index,procs[index].pi_pid);
+		printf("procs[%d].comm[0]       =%s\n",index,&procs[index].pi_comm[0]);
+		printf("procs[%d].state         =%c\n",index,procs[index].pi_state);
+		printf("procs[%d].ppid          =%d\n",index,procs[index].pi_ppid);
+		printf("procs[%d].pgrp          =%d\n",index,procs[index].pi_pgrp);
+		printf("procs[%d].session       =%d\n",index,procs[index].pi_session);
+		printf("procs[%d].tty_nr        =%d\n",index,procs[index].pi_tty_nr);
+		printf("procs[%d].tty_pgrp      =%d\n",index,procs[index].pi_tty_pgrp);
+		printf("procs[%d].flags         =%lu\n",index,procs[index].pi_flags);
+		printf("procs[%d].minflt       =%lu\n",index,procs[index].pi_minflt);
+		printf("procs[%d].cmin_flt     =%lu\n",index,procs[index].pi_cmin_flt);
+		printf("procs[%d].majflt       =%lu\n",index,procs[index].pi_majflt);
+		printf("procs[%d].cmaj_flt     =%lu\n",index,procs[index].pi_cmaj_flt);
+		printf("procs[%d].utime        =%lu\n",index,procs[index].pi_utime);
+		printf("procs[%d].stime        =%lu\n",index,procs[index].pi_stime);
+		printf("procs[%d].cutime       =%ld\n",index,procs[index].pi_cutime);
+		printf("procs[%d].cstime       =%ld\n",index,procs[index].pi_cstime);
+		printf("procs[%d].pri           =%d\n",index,procs[index].pi_pri);
+		printf("procs[%d].nice          =%d\n",index,procs[index].pi_nice);
+#ifndef KERNEL_2_6_18
+		printf("procs[%d].junk          =%d\n",index,procs[index].junk);
+#else
+		printf("procs[%d].num_threads   =%ld\n",index,procs[index].num_threads);
+#endif
+		printf("procs[%d].it_real_value =%lu\n",index,procs[index].pi_it_real_value);
+		printf("procs[%d].start_time    =%lu\n",index,procs[index].pi_start_time);
+		printf("procs[%d].vsize         =%lu\n",index,procs[index].pi_vsize);
+		printf("procs[%d].rss           =%lu\n",index,procs[index].pi_rss);
+		printf("procs[%d].rlim_cur      =%lu\n",index,procs[index].pi_rlim_cur);
+		printf("procs[%d].start_code    =%lu\n",index,procs[index].pi_start_code);
+		printf("procs[%d].end_code      =%lu\n",index,procs[index].pi_end_code);
+		printf("procs[%d].start_stack   =%lu\n",index,procs[index].pi_start_stack);
+		printf("procs[%d].esp           =%lu\n",index,procs[index].pi_esp);
+		printf("procs[%d].eip           =%lu\n",index,procs[index].pi_eip);
+		printf("procs[%d].pending_signal=%lu\n",index,procs[index].pi_pending_signal);
+		printf("procs[%d].blocked_sig   =%lu\n",index,procs[index].pi_blocked_sig);
+		printf("procs[%d].sigign        =%lu\n",index,procs[index].pi_sigign);
+		printf("procs[%d].sigcatch      =%lu\n",index,procs[index].pi_sigcatch);
+		printf("procs[%d].wchan         =%lu\n",index,procs[index].pi_wchan);
+		printf("procs[%d].nswap         =%lu\n",index,procs[index].pi_nswap);
+		printf("procs[%d].cnswap        =%lu\n",index,procs[index].pi_cnswap);
+		printf("procs[%d].exit_signal   =%d\n",index,procs[index].pi_exit_signal);
+		printf("procs[%d].cpu           =%d\n",index,procs[index].pi_cpu);
+#ifdef KERNEL_2_6_18
+		printf("procs[%d].rt_priority   =%lu\n",index,procs[index].pi_rt_priority);
+		printf("procs[%d].policy        =%lu\n",index,procs[index].pi_policy);
+		printf("procs[%d].delayacct_blkio_ticks=%llu\n",index,procs[index].pi_delayacct_blkio_ticks);
+#endif
+		printf("OK\n");
+	}
+#endif /*DEBUG*/
+```
