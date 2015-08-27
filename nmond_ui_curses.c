@@ -64,7 +64,7 @@ void uiwelcome(WINDOW **padwelcomein, int *xin, int cols, int rows, int usecolor
 		return;
 	}
 	int x = *xin;
-
+	
 	COLOUR wattrset(padwelcome, COLOR_PAIR(2));
 	mvwprintw(padwelcome, x+1, 1, "                                         __");
 	mvwprintw(padwelcome, x+2, 1, "    ____   ____ ___   ____   ____   ____/ /");

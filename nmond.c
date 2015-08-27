@@ -741,185 +741,10 @@ void get_intel_spec() {
 
 	bogo_ptr = 0; // TODO: remove all references to this made up number
 	processorchips = 1; // TODO: should not always be 1, find actual value
-
-	// // DEBUG
-	// struct syskern thissys2 = getsyskerninfo();
-	// vendor_ptr = thissys2.osrelease;
-	// model_ptr = thissys2.osversion;
 }
 
 int stat8 = 0; /* used to determine the number of variables on a line */
 
-
-void proc_cpu()
-{
-	int i;
-	int row;
-	static int intr_line = 0;
-	static int ctxt_line = 0;
-	static int btime_line= 0;
-	static int proc_line = 0;
-	static int run_line  = 0;
-	static int block_line= 0;
-	static int proc_cpu_first_time = 1;
-	long long user;
-	long long nice;
-	long long sys;
-	long long idle;
-	long long iowait;
-	long long hardirq;
-	long long softirq;
-	long long steal;
-	
-	/* Only read data once per interval */
-	if( proc_cpu_done == 1)
-		return;
-	
-	/* If number of CPUs changed, then we need to find the index of intr_line, ... again */
-	if( old_cpus != cpus)
-		intr_line = 0;
-	
-	if(proc_cpu_first_time) {
-		stat8 = sscanf(&proc[P_STAT].line[0][5], "%lld %lld %lld %lld %lld %lld %lld %lld",
-					   &user,
-					   &nice,
-					   &sys,
-					   &idle,
-					   &iowait,
-					   &hardirq,
-					   &softirq,
-					   &steal);
-		proc_cpu_first_time = 0;
-	}
-	user = nice = sys = idle = iowait = hardirq = softirq = steal = 0;
-	if(stat8 == 8) {
-		sscanf(&proc[P_STAT].line[0][5], "%lld %lld %lld %lld %lld %lld %lld %lld",
-			   &user,
-			   &nice,
-			   &sys,
-			   &idle,
-			   &iowait,
-			   &hardirq,
-			   &softirq,
-			   &steal);
-	} else { /* stat 4 variables here as older Linux proc */
-		sscanf(&proc[P_STAT].line[0][5], "%lld %lld %lld %lld",
-			   &user,
-			   &nice,
-			   &sys,
-			   &idle);
-	}
-	p->cpu_total.user = user + nice;
-	p->cpu_total.wait = iowait; /* in the case of 4 variables = 0 */
-	p->cpu_total.sys  = sys;
-	/* p->cpu_total.sys  = sys + hardirq + softirq + steal;*/
-	p->cpu_total.idle = idle;
-	
-	p->cpu_total.irq     = hardirq;
-	p->cpu_total.softirq = softirq;
-	p->cpu_total.steal   = steal;
-	p->cpu_total.nice    = nice;
-	
-#ifdef DEBUG
-	if(debug)fprintf(stderr,"XX user=%lld wait=%lld sys=%lld idle=%lld\n",
-					 p->cpu_total.user,
-					 p->cpu_total.wait,
-					 p->cpu_total.sys,
-					 p->cpu_total.idle);
-#endif /*DEBUG*/
-	
-	for(i=0;i<cpus;i++ ) {
-		user = nice = sys = idle = iowait = hardirq = softirq = steal = 0;
-		
-		/* allow for large CPU numbers */
-		if(i+1 > 1000)     row = 8;
-		else if(i+1 > 100) row = 7;
-		else if(i+1 > 10)  row = 6;
-		else row = 5;
-		
-		if(stat8 == 8) {
-			sscanf(&proc[P_STAT].line[i+1][row],
-				   "%lld %lld %lld %lld %lld %lld %lld %lld",
-				   &user,
-				   &nice,
-				   &sys,
-				   &idle,
-				   &iowait,
-				   &hardirq,
-				   &softirq,
-				   &steal);
-		} else {
-			sscanf(&proc[P_STAT].line[i+1][row], "%lld %lld %lld %lld",
-				   &user,
-				   &nice,
-				   &sys,
-				   &idle);
-		}
-		p->cpuN[i].user = user + nice;
-		p->cpuN[i].wait = iowait;
-		p->cpuN[i].sys  = sys;
-		/*p->cpuN[i].sys  = sys + hardirq + softirq + steal;*/
-		p->cpuN[i].idle = idle;
-		
-		p->cpuN[i].irq     = hardirq;
-		p->cpuN[i].softirq = softirq;
-		p->cpuN[i].steal   = steal;
-		p->cpuN[i].nice    = nice;
-	}
-	
-	if(intr_line == 0) {
-		if(proc[P_STAT].line[i+1][0] == 'p' &&
-		   proc[P_STAT].line[i+1][1] == 'a' &&
-		   proc[P_STAT].line[i+1][2] == 'g' &&
-		   proc[P_STAT].line[i+1][3] == 'e' ) {
-			/* 2.4 kernel */
-			intr_line = i+3;
-			ctxt_line = i+5;
-			btime_line= i+6;
-			proc_line = i+7;
-			run_line  = i+8;
-			block_line= i+9;
-		}else {
-			/* 2.6 kernel */
-			intr_line = i+1;
-			ctxt_line = i+2;
-			btime_line= i+3;
-			proc_line = i+4;
-			run_line  = i+5;
-			block_line= i+6;
-		}
-	}
-	p->cpu_total.intr = -1;
-	p->cpu_total.ctxt = -1;
-	p->cpu_total.btime = -1;
-	p->cpu_total.procs = -1;
-	p->cpu_total.running = -1;
-	p->cpu_total.blocked = -1;
-	if(proc[P_STAT].lines >= intr_line)
-		sscanf(&proc[P_STAT].line[intr_line][0], "intr %lld", &p->cpu_total.intr);
-	if(proc[P_STAT].lines >= ctxt_line)
-		sscanf(&proc[P_STAT].line[ctxt_line][0], "ctxt %lld", &p->cpu_total.ctxt);
-	if(proc[P_STAT].lines >= btime_line)
-		sscanf(&proc[P_STAT].line[btime_line][0], "btime %lld", &p->cpu_total.btime);
-	if(proc[P_STAT].lines >= proc_line)
-		sscanf(&proc[P_STAT].line[proc_line][0], "processes %lld", &p->cpu_total.procs);
-	if(proc[P_STAT].lines >= run_line)
-		sscanf(&proc[P_STAT].line[run_line][0], "procs_running %lld", &p->cpu_total.running);
-	if(proc[P_STAT].lines >= block_line)
-		sscanf(&proc[P_STAT].line[block_line][0], "procs_blocked %lld", &p->cpu_total.blocked);
-	
-	/* If we had a change in the number of CPUs, copy current interval data to the previous, so we
-	 * get a "0" utilization interval, but better than negative or 100%.
-	 * Heads-up - This effects POWER SMT changes too.
-	 */
-	if( old_cpus != cpus )	{
-		memcpy((void *) &(q->cpu_total), (void *) &(p->cpu_total), sizeof(struct cpu_stat));
-		memcpy((void *) q->cpuN, (void *) p->cpuN, sizeof(struct cpu_stat) * cpus );
-	}
-	
-	/* Flag that we processed /proc/stat data; re-set in proc_read() when we re-read /proc/stat */
-	proc_cpu_done = 1;
-}
 
 void proc_nfs()
 {
@@ -3050,7 +2875,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		get_intel_spec();
 
 		proc_read(P_STAT);
-		proc_cpu();
 		proc_read(P_UPTIME);
 		proc_read(P_LOADAVG);
 		proc_kernel();
@@ -3412,15 +3236,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				uikern(&padkern, &x, COLS, LINES);
 			}
 			if (show_longterm ) {
-				// proc_read(P_STAT);
-				// proc_cpu();
-				// cpu_user = p->cpu_total.user - q->cpu_total.user;
-				// cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
-				// cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
-				// cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
-				// cpu_steal= p->cpu_total.steal- q->cpu_total.steal;
-				// /* DEBUG inject steal       cpu_steal = cpu_sys; */
-				// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
 				// stollcri, 2015
 				struct syscpu thiscpu = getsyscpuinfo();
 				cpu_user = thiscpu.user;
@@ -3467,8 +3282,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 					if(cursed) {
 						uicpu(&padsmp, &x, COLS, colour);
 					}	/* if (show_smp) AND if(cursed) */
-					proc_read(P_STAT);
-					proc_cpu();
 					for (i = 0; i < cpus; i++) {
 						// cpu_user = p->cpuN[i].user - q->cpuN[i].user;
 						// cpu_sys  = p->cpuN[i].sys  - q->cpuN[i].sys;
@@ -3868,8 +3681,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				}
 			}
 			if (show_kernel) {
-				proc_read(P_STAT);
-				proc_cpu();
 				proc_read(P_UPTIME);
 				proc_read(P_LOADAVG);
 				proc_kernel();

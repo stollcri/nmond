@@ -148,6 +148,22 @@ static unsigned int intFromSysctlByName(char *name)
 	return result;
 }
 
+/*
+ * Get a character string from sysctl (level 2)
+ */
+static struct timeval timevalFromSysctl(int mib0, int mib1)
+{
+	struct timeval result = { 0, 0 };
+
+	int mib[2];
+	mib[0] = mib0;
+	mib[1] = mib1;
+	size_t length = sizeof(result);
+	sysctl(mib, 2, &result, &length, NULL, 0);
+
+	return result;
+}
+
 //
 // Hardware based information
 // 
@@ -159,16 +175,7 @@ struct syshw getsyshwinfo()
 {
 	struct syshw thissys = SYSHW_INIT;
 
-	thissys.machine = stringFromSysctl(CTL_HW, HW_MACHINE);
-	thissys.model = stringFromSysctl(CTL_HW, HW_MODEL);
-	thissys.byteorder = intFromSysctl(CTL_HW, HW_BYTEORDER);
-	thissys.memorysize = intFromSysctl(CTL_HW, HW_MEMSIZE);
-	thissys.usermemory = intFromSysctl(CTL_HW, HW_USERMEM);
-	thissys.pagesize = intFromSysctl(CTL_HW, HW_PAGESIZE);
-	//thissys.floatingpoint = intFromSysctl(CTL_HW, HW_FLOATINGPOINT);
-	thissys.architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
 	thissys.cpufrequency = intFromSysctl(CTL_HW, HW_CPU_FREQ);
-	thissys.cpufrequency = intFromSysctlByName("hw.cpufrequency");
 	thissys.cpufrequencymin = intFromSysctlByName("hw.cpufrequency_min");
 	thissys.cpufrequencymax = intFromSysctlByName("hw.cpufrequency_max");
 	thissys.cpucount = intFromSysctlByName("hw.ncpu");
@@ -177,7 +184,17 @@ struct syshw getsyshwinfo()
 	thissys.physicalcpumax = intFromSysctlByName("hw.physicalcpu_max");
 	thissys.logicalcpucount = intFromSysctlByName("hw.logicalcpu");
 	thissys.logicalcpumax = intFromSysctlByName("hw.logicalcpu_max");
+	// thissys.floatingpoint = intFromSysctl(CTL_HW, HW_FLOATINGPOINT);
+	
+	thissys.byteorder = intFromSysctl(CTL_HW, HW_BYTEORDER);
+	thissys.memorysize = intFromSysctl(CTL_HW, HW_MEMSIZE);
+	thissys.usermemory = intFromSysctl(CTL_HW, HW_USERMEM);
+	thissys.pagesize = intFromSysctl(CTL_HW, HW_PAGESIZE);
+
+	thissys.architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
 	thissys.cpubrand = stringFromSysctlByName("machdep.cpu.brand_string");
+	thissys.machine = stringFromSysctl(CTL_HW, HW_MACHINE);
+	thissys.model = stringFromSysctl(CTL_HW, HW_MODEL);
 
 	if(thissys.logicalcpucount>thissys.physicalcpucount)
 		thissys.hyperthreads=thissys.logicalcpucount/thissys.physicalcpucount;
@@ -208,29 +225,38 @@ struct syskern getsyskerninfo()
 {
 	struct syskern thissys = SYSKERN_INIT;
 
-	thissys.maxarguments = intFromSysctl(CTL_KERN, KERN_ARGMAX);
-	thissys.bootfile = stringFromSysctl(CTL_KERN, KERN_BOOTFILE);
 	thissys.hostid = intFromSysctl(CTL_KERN, KERN_HOSTID);
-	thissys.hostname = stringFromSysctl(CTL_KERN, KERN_HOSTNAME);
 	thissys.jobcontrol = intFromSysctl(CTL_KERN, KERN_JOB_CONTROL);
+	thissys.maxarguments = intFromSysctl(CTL_KERN, KERN_ARGMAX);
 	thissys.maxfiles = intFromSysctl(CTL_KERN, KERN_MAXFILES);
 	thissys.maxfilespercpu = intFromSysctl(CTL_KERN, KERN_MAXFILESPERPROC);
 	thissys.maxprocesses = intFromSysctl(CTL_KERN, KERN_MAXPROC);
 	thissys.maxprocessespercpu = intFromSysctl(CTL_KERN, KERN_MAXPROCPERUID);
 	thissys.maxvnodes = intFromSysctl(CTL_KERN, KERN_MAXVNODES);
 	thissys.maxgroups = intFromSysctl(CTL_KERN, KERN_NGROUPS);
-	thissys.domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
+	
 	thissys.osdate = intFromSysctl(CTL_KERN, KERN_OSRELDATE);
-	thissys.osrelease = stringFromSysctl(CTL_KERN, KERN_OSRELEASE);
 	thissys.osrevision = intFromSysctl(CTL_KERN, KERN_OSREV);
-	thissys.ostype = stringFromSysctl(CTL_KERN, KERN_OSTYPE);
 	thissys.posixversion = intFromSysctl(CTL_KERN, KERN_POSIX1);
-	//thissys.quantum = intFromSysctl(CTL_KERN, KERN_QUANTUM);
 	thissys.securitylevel = intFromSysctl(CTL_KERN, KERN_SECURELVL);
 	thissys.updateinterval = intFromSysctl(CTL_KERN, KERN_UPDATEINTERVAL);
-	thissys.version = stringFromSysctl(CTL_KERN, KERN_VERSION);
+	
+	thissys.ostype = stringFromSysctl(CTL_KERN, KERN_OSTYPE);
+	thissys.osrelease = stringFromSysctl(CTL_KERN, KERN_OSRELEASE);
 	thissys.osversion = stringFromSysctl(CTL_KERN, KERN_OSVERSION);
+	thissys.version = stringFromSysctl(CTL_KERN, KERN_VERSION);
+	thissys.bootfile = stringFromSysctl(CTL_KERN, KERN_BOOTFILE);
+	thissys.hostname = stringFromSysctl(CTL_KERN, KERN_HOSTNAME);
+	thissys.domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
 
+	thissys.boottime = timevalFromSysctl(CTL_KERN, KERN_BOOTTIME);
+	time_t timet = thissys.boottime.tv_sec;
+	struct tm *ptm = localtime(&timet);
+	//char *timestring = NULL;
+	char timestring[64];
+	strftime(timestring, sizeof(timestring), "%Y-%m-%d %H:%M:%S", ptm);
+	thissys.boottimestring = timestring;
+	
 	return thissys;
 }
 
