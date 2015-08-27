@@ -4,8 +4,9 @@
  *   (for license, see included LICENSE file)
  */
 
-#include "nmond_ui_curses.h"
-
+#include "nmond_ui_cli.h"
+#include <stdio.h>
+ 
 void uiclhint()
 {
 	printf("\nHint: nmond [-h] [-s <seconds>] [-c <count>] [-f -d <disks> -t -r <name>] [-x]\n\n");

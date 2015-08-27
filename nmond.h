@@ -16,7 +16,7 @@
 #define VERSION "0.0"
 
 #define LARGEMEM 1
-#define KERNEL_2_6_18 1 
+#define PARTITIONS 1
 /* This adds the following to the disk stats
 	pi_num_threads,
 	pi_rt_priority,
@@ -71,11 +71,7 @@ struct procsinfo {
 	long pi_cstime;
 	long pi_pri;
 	long pi_nice;
-#ifndef KERNEL_2_6_18
-	long junk /* removed */;
-#else
 	long pi_num_threads;
-#endif
 	long pi_it_real_value;
 	unsigned long pi_start_time;
 	unsigned long pi_vsize;
@@ -96,11 +92,9 @@ struct procsinfo {
 	unsigned long pi_cnswap;
 	int pi_exit_signal;
 	int pi_cpu;
-#ifdef KERNEL_2_6_18
 	unsigned long pi_rt_priority;
 	unsigned long pi_policy;
 	unsigned long long pi_delayacct_blkio_ticks;
-#endif
 	unsigned long statm_size;       /* total program size */
 	unsigned long statm_resident;   /* resident set size */
 	unsigned long statm_share;      /* shared pages */

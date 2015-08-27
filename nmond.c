@@ -2472,11 +2472,7 @@ int proc_procsinfo(int pid, int index)
 	count++; count++;
 	
 	ret = sscanf(&buf[count],
-#ifndef KERNEL_2_6_18
-				 "%c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu %ld %ld %ld %ld %ld %ld %lu %lu %ld %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %d %d",
-#else
 				 "%c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu %ld %ld %ld %ld %ld %ld %lu %lu %ld %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %d %d %lu %lu %llu",
-#endif
 				 &p->procs[index].pi_state,
 				 &p->procs[index].pi_ppid,
 				 &p->procs[index].pi_pgrp,
@@ -2494,11 +2490,7 @@ int proc_procsinfo(int pid, int index)
 				 &p->procs[index].pi_cstime,
 				 &p->procs[index].pi_pri,
 				 &p->procs[index].pi_nice,
-#ifndef KERNEL_2_6_18
-				 &p->procs[index].junk,
-#else
 				 &p->procs[index].pi_num_threads,
-#endif
 				 &p->procs[index].pi_it_real_value,
 				 &p->procs[index].pi_start_time,
 				 &p->procs[index].pi_vsize,
@@ -2517,22 +2509,15 @@ int proc_procsinfo(int pid, int index)
 				 &p->procs[index].pi_nswap,
 				 &p->procs[index].pi_cnswap,
 				 &p->procs[index].pi_exit_signal,
-				 &p->procs[index].pi_cpu
-#ifdef KERNEL_2_6_18
-				 ,
+				 &p->procs[index].pi_cpu,
 				 &p->procs[index].pi_rt_priority,
 				 &p->procs[index].pi_policy,
 				 &p->procs[index].pi_delayacct_blkio_ticks
-#endif
 				 
 				 );
-#ifndef KERNEL_2_6_18
-	if(ret != 37) {
-		fprintf(stderr,"procsinfo2 sscanf wanted 37 returned = %d pid=%d line=%s\n", ret,pid,buf);
-#else
+
 		if(ret != 40) {
 			fprintf(stderr,"procsinfo2 sscanf wanted 40 returned = %d pid=%d line=%s\n", ret,pid,buf);
-#endif
 			return 0;
 		}
 		
@@ -3323,11 +3308,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 
 			if(show_top){
 				fprintf(fp,"TOP,%%CPU Utilisation\n");
-#ifndef KERNEL_2_6_18
-				fprintf(fp,"TOP,+PID,Time,%%CPU,%%Usr,%%Sys,Size,ResSet,ResText,ResData,ShdLib,MinorFault,MajorFault,Command\n");
-#else
 				fprintf(fp,"TOP,+PID,Time,%%CPU,%%Usr,%%Sys,Size,ResSet,ResText,ResData,ShdLib,MinorFault,MajorFault,Command,Threads,IOwaitTime\n");
-#endif
 			}
 			linux_bbbp("/etc/release",     "/bin/cat /etc/*ease 2>/dev/null", WARNING);
 			linux_bbbp("lsb_release",      "/usr/bin/lsb_release -a 2>/dev/null", WARNING);
@@ -3351,9 +3332,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			linux_bbbp("/dev/sd*",   		"ls -l /dev/sd* 2>/dev/null", WARNING);
 			linux_bbbp("/proc/partitions", "/bin/cat /proc/partitions 2>/dev/null", WARNING);
 			linux_bbbp("/proc/1/stat",     "/bin/cat /proc/1/stat 2>/dev/null", WARNING);
-#ifndef KERNEL_2_6_18
-			linux_bbbp("/proc/1/statm",    "/bin/cat /proc/1/statm 2>/dev/null", WARNING);
-#endif
 			linux_bbbp("/proc/net/rpc/nfs",        "/bin/cat /proc/net/rpc/nfs 2>/dev/null", WARNING);
 			linux_bbbp("/proc/net/rpc/nfsd",        "/bin/cat /proc/net/rpc/nfsd 2>/dev/null", WARNING);
 			linux_bbbp("/proc/modules",    "/bin/cat /proc/modules 2>/dev/null", WARNING);
@@ -5116,11 +5094,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 									if((cmdfound && cmdcheck(p->procs[i].pi_comm)) || 
 									   (!cmdfound && ((topper[j].time / elapsed) > ignore_procdisk_threshold)) )
 									{
-#ifndef KERNEL_2_6_18
-										fprintf(fp,"TOP,%07d,%s,%.2f,%.2f,%.2f,%lu,%lu,%lu,%lu,%lu,%d,%d,%s\n",
-#else
 												fprintf(fp,"TOP,%07d,%s,%.2f,%.2f,%.2f,%lu,%lu,%lu,%lu,%lu,%d,%d,%s,%ld,%llu\n",
-#endif
 														/* 1 */ p->procs[i].pi_pid,
 														/* 2 */ LOOP,
 														/* 3 */ topper[j].time / elapsed,
@@ -5134,16 +5108,10 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 														/* 11*/ (int)(COUNTDELTA(pi_minflt) / elapsed),
 														/* 12*/ (int)(COUNTDELTA(pi_majflt) / elapsed),
 														/* 13*/ p->procs[i].pi_comm
-														
-#ifndef KERNEL_2_6_18
-														);
-#else
-												
 												,
 												p->procs[i].pi_num_threads,
 												COUNTDELTA(pi_delayacct_blkio_ticks)
 												);
-#endif
 										
 										if(show_args)
 											args_output(p->procs[i].pi_pid,loop, p->procs[i].pi_comm);
