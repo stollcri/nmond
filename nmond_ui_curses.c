@@ -64,7 +64,7 @@ void uiwelcome(WINDOW **padwelcomein, int *xin, int cols, int rows, int usecolor
 		return;
 	}
 	int x = *xin;
-	
+
 	COLOUR wattrset(padwelcome, COLOR_PAIR(2));
 	mvwprintw(padwelcome, x+1, 1, "                                         __");
 	mvwprintw(padwelcome, x+2, 1, "    ____   ____ ___   ____   ____   ____/ /");
@@ -130,30 +130,30 @@ void uihelp(WINDOW **padhelpin, int *xin, int cols, int rows)
 	*xin = x;
 }
 
-void uikern(WINDOW **padcpuin, int *xin, int cols, int rows)
+void uisys(WINDOW **padsysin, int *xin, int cols, int rows)
 {
-	WINDOW *padcpu = *padcpuin;
-	if (padcpu == NULL) {
+	WINDOW *padsys = *padsysin;
+	if (padsys == NULL) {
 		return;
 	}
 	int x = *xin;
-	uibanner(cols, padcpu, "Linux and Processor Details");
-	mvwprintw(padcpu, 1, 4, "Linux: %s", "??"); // proc[P_VERSION].line[0]);
-	mvwprintw(padcpu, 2, 4, "Build: %s", "??"); // proc[P_VERSION].line[1]);
-	mvwprintw(padcpu, 3, 4, "Release  : %s", "??"); // uts.release );
-	mvwprintw(padcpu, 4, 4, "Version  : %s", "??"); // uts.version);
-	mvwprintw(padcpu, 9, 4, "# of CPUs: %d", -1); // cpus);
-	mvwprintw(padcpu, 10, 4,"Machine  : %s", "??"); // uts.machine);
-	mvwprintw(padcpu, 11, 4,"Nodename : %s", "??"); // uts.nodename);
-	mvwprintw(padcpu, 12, 4,"/etc/*ease[1]: %s", "??"); // easy[0]);
-	mvwprintw(padcpu, 13, 4,"/etc/*ease[2]: %s", "??"); // easy[1]);
-	mvwprintw(padcpu, 14, 4,"/etc/*ease[3]: %s", "??"); // easy[2]);
-	mvwprintw(padcpu, 15, 4,"/etc/*ease[4]: %s", "??"); // easy[3]);
-	mvwprintw(padcpu, 16, 4,"lsb_release: %s", "??"); // lsb_release[0]);
-	mvwprintw(padcpu, 17, 4,"lsb_release: %s", "??"); // lsb_release[1]);
-	mvwprintw(padcpu, 18, 4,"lsb_release: %s", "??"); // lsb_release[2]);
-	mvwprintw(padcpu, 19, 4,"lsb_release: %s", "??"); // lsb_release[3]);
-	uidisplay(&x, cols, 20, padcpu, rows);
+	uibanner(cols, padsys, "Linux and Processor Details");
+	mvwprintw(padsys, 1, 4, "Linux: %s", "??"); // proc[P_VERSION].line[0]);
+	mvwprintw(padsys, 2, 4, "Build: %s", "??"); // proc[P_VERSION].line[1]);
+	mvwprintw(padsys, 3, 4, "Release  : %s", "??"); // uts.release );
+	mvwprintw(padsys, 4, 4, "Version  : %s", "??"); // uts.version);
+	mvwprintw(padsys, 9, 4, "# of CPUs: %d", -1); // cpus);
+	mvwprintw(padsys, 10, 4,"Machine  : %s", "??"); // uts.machine);
+	mvwprintw(padsys, 11, 4,"Nodename : %s", "??"); // uts.nodename);
+	mvwprintw(padsys, 12, 4,"/etc/*ease[1]: %s", "??"); // easy[0]);
+	mvwprintw(padsys, 13, 4,"/etc/*ease[2]: %s", "??"); // easy[1]);
+	mvwprintw(padsys, 14, 4,"/etc/*ease[3]: %s", "??"); // easy[2]);
+	mvwprintw(padsys, 15, 4,"/etc/*ease[4]: %s", "??"); // easy[3]);
+	mvwprintw(padsys, 16, 4,"lsb_release: %s", "??"); // lsb_release[0]);
+	mvwprintw(padsys, 17, 4,"lsb_release: %s", "??"); // lsb_release[1]);
+	mvwprintw(padsys, 18, 4,"lsb_release: %s", "??"); // lsb_release[2]);
+	mvwprintw(padsys, 19, 4,"lsb_release: %s", "??"); // lsb_release[3]);
+	uidisplay(&x, cols, 20, padsys, rows);
 	
 	*xin = x;
 }

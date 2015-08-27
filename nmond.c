@@ -87,7 +87,7 @@ WINDOW *padkstat = NULL;
 WINDOW *padnet = NULL;
 WINDOW *padneterr = NULL;
 WINDOW *padnfs = NULL;
-WINDOW *padkern = NULL;
+WINDOW *padsys = NULL;
 WINDOW *padsmp = NULL;
 WINDOW *padlong = NULL;
 WINDOW *paddisk = NULL;
@@ -2076,7 +2076,7 @@ int checkinput(void)
 					case 'r':
 					case 'R':
 						FLIP(show_cpu);
-						wclear(padkern);
+						wclear(padsys);
 						break;
 					case 't':
 						show_topmode = 3; /* Fall Through */
@@ -2955,7 +2955,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			padmem = newpad(20,MAXCOLS);
 			padlarge = newpad(20,MAXCOLS);
 			padpage = newpad(20,MAXCOLS);
-			padkern = newpad(20,MAXCOLS);
+			padsys = newpad(20,MAXCOLS);
 			padsmp = newpad(MAXROWS,MAXCOLS);
 			padlong = newpad(MAXROWS,MAXCOLS);
 			padnet = newpad(MAXROWS,MAXCOLS);
@@ -3233,7 +3233,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			if (show_cpu && cursed) {
 				proc_read(P_CPUINFO);
 				proc_read(P_VERSION);
-				uikern(&padkern, &x, COLS, LINES);
+				uisys(&padsys, &x, COLS, LINES);
 			}
 			if (show_longterm ) {
 				// stollcri, 2015

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #define STR_INIT "-"
+#define DATE_FORMAT "%Y-%m-%d %H:%M:%S"
 
 //
 // Hardware based information
@@ -80,8 +81,10 @@ struct syskern { // CTL_KERN
 	char *hostname; // KERN_HOSTNAME
 	char *domainname; // KERN_NISDOMAINNAME
 	char *boottimestring;
+	char *uptimestring;
 
 	struct timeval boottime; // KERN_BOOTTIME ("{ sec = 1439860179, usec = 0 }")
+	struct timeval uptime;
 
 	//struct clockinfo clockrate; // KERN_CLOCKRATE ("{ hz = 100, tick = 10000, tickadj = 22, profhz = 100, stathz = 100 }")
 	//struct file filetable; // KERN_FILE
@@ -89,7 +92,7 @@ struct syskern { // CTL_KERN
 	// KERN_PROC
 	// KERN_PROF
 };
-#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, { 0, 0 } }
+#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, { 0, 0 }, { 0, 0 } }
 
 extern struct syskern getsyskerninfo(void);
 

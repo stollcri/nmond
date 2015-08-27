@@ -250,13 +250,22 @@ struct syskern getsyskerninfo()
 	thissys.domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
 
 	thissys.boottime = timevalFromSysctl(CTL_KERN, KERN_BOOTTIME);
+	// now store it as a string for quick printing
 	time_t timet = thissys.boottime.tv_sec;
 	struct tm *ptm = localtime(&timet);
-	//char *timestring = NULL;
-	char timestring[64];
-	strftime(timestring, sizeof(timestring), "%Y-%m-%d %H:%M:%S", ptm);
-	thissys.boottimestring = timestring;
-	
+	char boottimestring[64];
+	strftime(boottimestring, sizeof(boottimestring), DATE_FORMAT, ptm);
+	thissys.boottimestring = boottimestring;
+
+	// struct timeval tv;
+	// gettimeofday(&tv, NULL);
+	// thissys.uptime = sinfo.uptime;
+	// timet = thissys.uptime.tv_sec - thissys.boottime.tv_sec;
+	// ptm = localtime(&timet);
+	// char uptimestring[64];
+	// strftime(uptimestring, sizeof(uptimestring), "%Y-%m-%d %H:%M:%S", ptm);
+	// thissys.uptimestring = uptimestring;
+
 	return thissys;
 }
 
