@@ -908,3 +908,42 @@
 				gettimeofday(&nmon_tv, 0);
 				nmon_start_time = (double)nmon_tv.tv_sec + (double)nmon_tv.tv_usec * 1.0e-6;
 
+// ~~~~~~~~~~~~~
+// xport_part_17
+// ~~~~~~~~~~~~~
+
+	if(firsttime) {
+		fprintf(fp,"CPUTICKS_ALL,AAA,user,sys,wait,idle,nice,irq,softirq,steal\n");
+		fprintf(fp,"CPUTICKS%03d,AAA,user,sys,wait,idle,nice,irq,softirq,steal\n", cpu_no);
+		firsttime=0;
+	}
+	if(cpu_no==0) {
+		fprintf(fp,"CPUTICKS_ALL,%s,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld\n",
+				LOOP, user, kernel, iowait, idle, nice, irq, softirq, steal);
+	} else {
+		fprintf(fp,"CPUTICKS%03d,%s,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld\n",
+				cpu_no, LOOP, user, kernel, iowait, idle, nice, irq, softirq, steal);
+	}
+
+// ~~~~~~~~~~~~~
+// xport_part_18
+// ~~~~~~~~~~~~~
+
+		/* Sanity check the numnbers */
+		if( user < 0.0 || kernel < 0.0 || iowait < 0.0 || idle < 0.0 || idle >100.0 || steal <0 ) {
+			user = kernel = iowait = idle = steal = 0;
+		}
+		
+		if(first_steal && steal >0 ) {
+			fprintf(fp,"AAA,steal,1\n");
+			first_steal=0;
+		}
+		if(cpu_no == 0)
+			fprintf(fp,"CPU_ALL,%s,%.1lf,%.1lf,%.1lf,%.1f,%.1lf,,%d\n", LOOP,
+					user, kernel, iowait, idle, steal, cpus);
+		else {
+			fprintf(fp,"CPU%03d,%s,%.1lf,%.1lf,%.1lf,%.1lf,%.1f\n", cpu_no, LOOP,
+					user, kernel, iowait, idle, steal );
+		}
+
+

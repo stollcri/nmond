@@ -103,8 +103,6 @@ const char disk_busy_map_ch[] =
 "_____.....----------++++++++++oooooooooo0000000000OOOOOOOOOO8888888888XXXXXXXXXX##########@@@@@@@@@@*";
 /*"00000555551111111111222222222233333333334444444444555555555566666666667777777777888888888899999999991"*/
 
-int extended_disk = 0;	/* report additional data from /proc/diskstats to spreadsheet output */
-
 char *month[12] = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
 	"JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
 
@@ -131,18 +129,6 @@ char *check_call_string (char* callback, const char* name)
 		return callback;
 }
 
-/* Remove error output to this buffer and display it if NMONDEBUG=1 */
-char errorstr[70];
-int error_on = 0;
-void error(char *err)
-{
-	strncpy(errorstr,err,69);
-}
-
-
-int proc_cpu_done = 0;	/* Flag if we have run function proc_cpu() already in this interval */
-
-int reread =0;
 
 void proc_init()
 {
@@ -170,16 +156,11 @@ void proc_read(int num)
 	if(proc[num].fp == 0) {
 		if( (proc[num].fp = fopen(proc[num].filename,"r")) == NULL) {
 			sprintf(buf, "failed to open file %s", proc[num].filename);
-			error(buf);
 			proc[num].fp = 0;
 			return;
 		}
 	}
 	rewind(proc[num].fp);
-	
-	/* We re-read P_STAT, now flag proc_cpu() that it has to re-process that data */
-	if( num == P_STAT)
-		proc_cpu_done = 0;
 	
 	if(proc[num].size == 0) {
 		/* first time so allocate  initial now */
@@ -239,10 +220,6 @@ void proc_read(int num)
 		if(proc[num].lines==PROC_MAXLINES-1)
 			break;
 	}
-	if(reread) {
-		fclose( proc[num].fp);
-		proc[num].fp = 0;
-	}
 	/* Set flag so we do not re-read the data even if called multiple times in same interval */
 	proc[num].read_this_interval = 1;
 }
@@ -262,8 +239,6 @@ char *vendor_ptr = "-";
 char *model_ptr  = "-";
 char *mhz_ptr    = "00000000000";
 char *bogo_ptr   = "-";
-int old_cpus = 1;	/* Number of CPU seen in previuos interval */
-int	max_cpus = 1;  	/* highest number of CPUs in DLPAR */
 int	networks = 0;  	/* number of networks in system  */
 int	partitions = 0;  	/* number of partitions in system  */
 int	partitions_short = 0;  	/* partitions file data short form (i.e. data missing) */
@@ -316,7 +291,6 @@ int	first_steal  = 1;
 long	huge_peak    = 0;
 int	welcome      = 1;
 int	dotline      = 0;
-int	show_rrd     = 0;
 int	show_lpar    = 0;
 int	show_vm    = 0;
 int	show_dgroup  = 0; /* disk groups */
@@ -324,8 +298,6 @@ int	auto_dgroup  = 0; /* disk groups defined via -g auto */
 int	disk_only_mode  = 0; /* disk stats shows disks only if user used -g auto */
 int     dgroup_loaded = 0; /* 0 = no, 1=needed, 2=loaded */
 int	show_raw    = 0;
-
-#define RRD if(show_rrd)
 
 double ignore_procdisk_threshold = 0.1;
 double ignore_io_threshold      = 0.1;
@@ -346,10 +318,7 @@ FILE *fp;	/* filepointer for spreadsheet output */
 char *timestamp(int loop, time_t eon)
 {
 	static char string[64];
-	if(show_rrd)
-		sprintf(string,"%ld",(long)eon);
-	else
-		sprintf(string,"T%04d",loop);
+	sprintf(string,"T%04d",loop);
 	return string;
 }
 #define LOOP timestamp(loop,timer)
@@ -715,14 +684,6 @@ double	doubletime(void)
 }
 
 /*
- * Check that CPU count is less than max supported (changed for sysctl)
- * (used to actually determine the cpu count)
- */
-void get_cpu_cnt()	{
-	// TODO: delete me (stollcri)
-}
-
-/*
  * Get Intel processor details (modified to use sysctl)
  *  stollcri, 2015-08-22
  */
@@ -948,7 +909,7 @@ void proc_diskstats(double elapsed)
 	if( fp == (FILE *)-1) {
 		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmond/dbg/diskstats","r")) == NULL) {
 			/* DEBUG if( (fp = fopen("diskstats","r")) == NULL) { */
-			error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/diskstats");
+			//error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/diskstats");
 			disks=0;
 			return;
 		}
@@ -1024,10 +985,7 @@ void proc_diskstats(double elapsed)
 		if( p->dk[i].dk_xfers > 0)
 			i++;
 	}
-	if(reread) {
-		fclose(fp);
-		fp = (FILE *)-1;
-	} else rewind(fp);
+	rewind(fp);
 	disks = i;
 }
 
@@ -1065,7 +1023,7 @@ void proc_partitions(double elapsed)
 	
 	if( fp == (FILE *)-1) {
 		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmond/dbg/partitions","r")) == NULL) {
-			error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/partitions");
+			//error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/partitions");
 			partitions=0;
 			return;
 		}
@@ -1123,10 +1081,7 @@ void proc_partitions(double elapsed)
 		} else partitions_short = 0;
 	}
 end:
-	if(reread) {
-		fclose(fp);
-		fp = (FILE *)-1;
-	} else rewind(fp);
+	rewind(fp);
 	disks = i;
 }
 
@@ -1353,91 +1308,67 @@ void save_smp(WINDOW *pad, int cpu_no, int row, long user, long kernel, long iow
 				  cpu_no, user, kernel, iowait, idle, steal, nice, irq, softirq);
 		return;
 	}
-	if(firsttime) {
-		fprintf(fp,"CPUTICKS_ALL,AAA,user,sys,wait,idle,nice,irq,softirq,steal\n");
-		fprintf(fp,"CPUTICKS%03d,AAA,user,sys,wait,idle,nice,irq,softirq,steal\n", cpu_no);
-		firsttime=0;
-	}
-	if(cpu_no==0) {
-		fprintf(fp,"CPUTICKS_ALL,%s,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld\n",
-				LOOP, user, kernel, iowait, idle, nice, irq, softirq, steal);
-	} else {
-		fprintf(fp,"CPUTICKS%03d,%s,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld\n",
-				cpu_no, LOOP, user, kernel, iowait, idle, nice, irq, softirq, steal);
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~
+	// moved to xport_part_17
+	// ~~~~~~~~~~~~~~~~~~~~~~
 }
 
-void plot_smp(WINDOW *pad, int cpu_no, int row, double user, double kernel, double iowait, double idle, double steal)
-{
-	int	i;
-	int	peak_col;
-	
-	if(show_rrd) return;
-	
-	if(cpu_peak[cpu_no] < (user + kernel + iowait) )
-		cpu_peak[cpu_no] = (double)((int)user/2 + (int)kernel/2 + (int)iowait/2)*2.0;
-	
-	if (cursed) {
-		if(cpu_no == 0)
-			mvwprintw(pad,row, 0, "Avg");
-		else
-			mvwprintw(pad,row, 0, "%3d", cpu_no);
-		mvwprintw(pad,row,  3, "% 6.1lf", user);
-		mvwprintw(pad,row,  9, "% 6.1lf", kernel);
-		mvwprintw(pad,row, 15, "% 6.1lf", iowait);
-		if(steal) {
-			mvwprintw(pad,row, 21, "% 6.1lf", steal);
-		} else {
-			mvwprintw(pad,row, 21, "% 6.1lf", idle);
-		}
-		mvwprintw(pad,row, 27, "|");
-		wmove(pad,row, 28);
-		for (i = 0; i < (int)(user   / 2); i++){
-			COLOUR wattrset(pad,COLOR_PAIR(9));
-			wprintw(pad,"U");
-		}
-		for (i = 0; i < (int)(kernel / 2); i++){
-			COLOUR wattrset(pad,COLOR_PAIR(8));
-			wprintw(pad,"s");
-		}
-		for (i = 0; i < (int)(iowait / 2); i++) {
-			COLOUR wattrset(pad,COLOR_PAIR(10));
-			wprintw(pad,"W");
-		}
-		COLOUR wattrset(pad,COLOR_PAIR(0));
-		for (i = 0; i <= (int)(idle   / 2); i++) {  /* added "=" to try to conteract missing halves */
-				wprintw(pad," ");
-		}
-		for (i = 0; i < (int)((steal+1)  / 2); i++) {
-			COLOUR wattrset(pad,COLOR_PAIR(5));
-			wprintw(pad,"S");
-		}
-		COLOUR wattrset(pad,COLOR_PAIR(0));
-		mvwprintw(pad,row, 77, "| ");
+// void plot_smp(WINDOW *pad, int cpu_no, int row, double user, double kernel, double iowait, double idle, double steal)
+// {
+// 	int	i;
+// 	int	peak_col;
 		
-		peak_col = 28 +(int)(cpu_peak[cpu_no]/2);
-		if(peak_col > 77)
-			peak_col=77;
-		mvwprintw(pad,row, peak_col, ">");
-	} else {
-		/* Sanity check the numnbers */
-		if( user < 0.0 || kernel < 0.0 || iowait < 0.0 || idle < 0.0 || idle >100.0 || steal <0 ) {
-			user = kernel = iowait = idle = steal = 0;
-		}
+// 	if(cpu_peak[cpu_no] < (user + kernel + iowait) )
+// 		cpu_peak[cpu_no] = (double)((int)user/2 + (int)kernel/2 + (int)iowait/2)*2.0;
+	
+// 	if (cursed) {
+// 		if(cpu_no == 0)
+// 			mvwprintw(pad,row, 0, "Avg");
+// 		else
+// 			mvwprintw(pad,row, 0, "%3d", cpu_no);
+// 		mvwprintw(pad,row,  3, "% 6.1lf", user);
+// 		mvwprintw(pad,row,  9, "% 6.1lf", kernel);
+// 		mvwprintw(pad,row, 15, "% 6.1lf", iowait);
+// 		if(steal) {
+// 			mvwprintw(pad,row, 21, "% 6.1lf", steal);
+// 		} else {
+// 			mvwprintw(pad,row, 21, "% 6.1lf", idle);
+// 		}
+// 		mvwprintw(pad,row, 27, "|");
+// 		wmove(pad,row, 28);
+// 		for (i = 0; i < (int)(user   / 2); i++){
+// 			COLOUR wattrset(pad,COLOR_PAIR(9));
+// 			wprintw(pad,"U");
+// 		}
+// 		for (i = 0; i < (int)(kernel / 2); i++){
+// 			COLOUR wattrset(pad,COLOR_PAIR(8));
+// 			wprintw(pad,"s");
+// 		}
+// 		for (i = 0; i < (int)(iowait / 2); i++) {
+// 			COLOUR wattrset(pad,COLOR_PAIR(10));
+// 			wprintw(pad,"W");
+// 		}
+// 		COLOUR wattrset(pad,COLOR_PAIR(0));
+// 		for (i = 0; i <= (int)(idle   / 2); i++) {  /* added "=" to try to conteract missing halves */
+// 				wprintw(pad," ");
+// 		}
+// 		for (i = 0; i < (int)((steal+1)  / 2); i++) {
+// 			COLOUR wattrset(pad,COLOR_PAIR(5));
+// 			wprintw(pad,"S");
+// 		}
+// 		COLOUR wattrset(pad,COLOR_PAIR(0));
+// 		mvwprintw(pad,row, 77, "| ");
 		
-		if(first_steal && steal >0 ) {
-			fprintf(fp,"AAA,steal,1\n");
-			first_steal=0;
-		}
-		if(cpu_no == 0)
-			fprintf(fp,"CPU_ALL,%s,%.1lf,%.1lf,%.1lf,%.1f,%.1lf,,%d\n", LOOP,
-					user, kernel, iowait, idle, steal, cpus);
-		else {
-			fprintf(fp,"CPU%03d,%s,%.1lf,%.1lf,%.1lf,%.1lf,%.1f\n", cpu_no, LOOP,
-					user, kernel, iowait, idle, steal );
-		}
-	}
-}
+// 		peak_col = 28 +(int)(cpu_peak[cpu_no]/2);
+// 		if(peak_col > 77)
+// 			peak_col=77;
+// 		mvwprintw(pad,row, peak_col, ">");
+// 	} else {
+// 		// ~~~~~~~~~~~~~~~~~~~~~~
+// 		// moved to xport_part_18
+// 		// ~~~~~~~~~~~~~~~~~~~~~~
+// 	}
+// }
 /* Added variable to remember started children
  * 0 - start
  * 1 - snap
@@ -1764,64 +1695,6 @@ void list_dgroup(struct dsk_stat *dk)
 			fprintf(fp, ",%s", dgroup_name[i]);
 	}
 	fprintf(fp, "\n");
-	
-	/* If requested provide additional data available in /proc/diskstats */
-	if( extended_disk == 1 && disk_mode == DISK_MODE_DISKSTATS )	{
-		fprintf(fp, "DGREADS,Disk Group read/s %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGREADMERGE,Disk Group merged read/s %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGREADSERV,Disk Group read service time (SUM ms) %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGWRITES,Disk Group write/s %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGWRITEMERGE,Disk Group merged write/s %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGWRITESERV,Disk Group write service time (SUM ms) %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGINFLIGHT,Disk Group in flight IO %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGIOTIME,Disk Group time spent for IO (ms) %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-		fprintf(fp, "DGBACKLOG,Disk Group Backlog time (ms) %s", hostname);
-		for (i = 0; i < DGROUPS; i++) {
-			if (dgroup_name[i] != 0)
-				fprintf(fp, ",%s", dgroup_name[i]);
-		}
-		fprintf(fp, "\n");
-	}
 }
 
 int is_dgroup_name(char *name)
@@ -2131,7 +2004,7 @@ int checkinput(void)
 						}
 						break;
 					case '0':
-						for(i=0;i<(max_cpus+1);i++)
+						for(i=0;i<(cpus+1);i++)
 							cpu_peak[i]=0;
 						for(i=0;i<networks;i++) {
 							net_read_peak[i]=0.0;
@@ -2202,7 +2075,7 @@ void proc_net()
 	
 	if( fp == (FILE *)-1) {
 		if( (fp = fopen("/Users/stollcri/Documents/code/c/nmond/dbg/net/dev","r")) == NULL) {
-			error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/net/dev");
+			//error("failed to open - /Users/stollcri/Documents/code/c/nmond/dbg/net/dev");
 			networks=0;
 			return;
 		}
@@ -2244,10 +2117,7 @@ void proc_net()
 			fprintf(stderr,"sscanf wanted 16 returned = %d line=%s\n", ret, (char *)buf);
 	}
 end:
-	if(reread) {
-		fclose(fp);
-		fp = (FILE *)-1;
-	} else rewind(fp);
+	rewind(fp);
 	networks = i;
 }
 
@@ -2265,7 +2135,7 @@ int proc_procsinfo(int pid, int index)
 	sprintf(filename,"/Users/stollcri/Documents/code/c/nmond/dbg/%d/stat",pid);
 	if( (fp = fopen(filename,"r")) == NULL) {
 		sprintf(buf,"failed to open file %s",filename);
-		error(buf);
+		//error(buf);
 		return 0;
 	}
 	size = fread(buf, 1, 1024-1, fp);
@@ -2349,7 +2219,7 @@ int proc_procsinfo(int pid, int index)
 		sprintf(filename,"/Users/stollcri/Documents/code/c/nmond/dbg/%d/statm",pid);
 		if( (fp = fopen(filename,"r")) == NULL) {
 			sprintf(buf,"failed to open file %s",filename);
-			error(buf);
+			//error(buf);
 			return 0;
 		}
 		size = fread(buf, 1, 1024*4-1, fp);
@@ -2357,7 +2227,7 @@ int proc_procsinfo(int pid, int index)
 					 between open & read i.e. the device driver does not behave like a file */
 		if(size == -1) {
 			sprintf(buf,"failed to read file %s",filename);
-			error(buf);
+			//error(buf);
 			return 0;
 		}
 		
@@ -2534,11 +2404,11 @@ int proc_procsinfo(int pid, int index)
 		// exit(15);
 
 		int secs;
-		int cpu_idle;
-		int cpu_user;
-		int cpu_sys;
-		int cpu_wait;
-		int cpu_steal;
+		double cpu_scaled_user;
+		double cpu_scaled_sys;
+		double cpu_scaled_wait;
+		double cpu_scaled_idle;
+		double cpu_scaled_steal;
 		int	n=0;			/* reusable counters */
 		int	i=0;
 		int	j=0;
@@ -2549,7 +2419,6 @@ int proc_procsinfo(int pid, int index)
 		int	x = 0;			/* curses row */
 		int	y = 0;			/* curses column */
 		double	elapsed;		/* actual seconds between screen updates */
-		double	cpu_sum;
 		double	cpu_busy;
 		double	ftmp;
 		int	top_first_time =1;
@@ -2655,12 +2524,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		
 		if(getenv("NMONDEBUG") != NULL)
 			debug=1;
-		if(getenv("NMONERROR") != NULL)
-			error_on=1;
-		if(getenv("NMONBUG1") != NULL)
-			reread=1;
-		if (getenv("NMONDEBUG") != NULL)
-			debug = 1;
 		
 		if ((nmon_start = getenv("NMON_START")) != NULL) {
 			nmon_start = check_call_string(nmon_start, "NMON_START");
@@ -2695,9 +2558,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		printf("TIMESTAMP=%d.\n",time_stamp_type);
 #endif
 		
-#ifdef REREAD
-		reread=1;
-#endif
 		for(i=0; i<CMDMAX;i++) {
 			sprintf(cmdstr,"NMONCMD%d",i);
 			cmdlist[i] = getenv(cmdstr);
@@ -2762,11 +2622,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 						diskmax = DISKMIN;
 					}
 					break;
-				case 'D':
-					extended_disk=1;
-					break;
 				case 'R':
-					show_rrd = 1;
 					go_background(288, 300);
 					show_aaa = 0;
 					show_para = 0;
@@ -2856,11 +2712,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		if (cursed)
 			show_dgroup = 0;
 		
-		/* -D need -g filename */
-		if(extended_disk == 1 && show_dgroup == 0) {
-			printf(MSG_INF_IGNORINGD);
-			extended_disk=0;
-		}
 		/* To get the pointers setup */
 		switcher();
 		
@@ -2868,9 +2719,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		p->time = doubletime();
 		q->time = doubletime();
 				
-		/* Determine number of active LOGICAL cpu - depends on SMT mode ! */
-		get_cpu_cnt();
-		max_cpus=old_cpus=cpus;
 
 		get_intel_spec();
 
@@ -2890,7 +2738,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		}
 		
 		cpu_peak = MALLOC(sizeof(double) * (CPUMAX + 1)); /* MAGIC */
-		for(i=0;i < max_cpus+1;i++)
+		for(i=0;i < cpus+1;i++)
 			cpu_peak[i]=0.0;
 		
 		n = getprocs(0);
@@ -2967,8 +2815,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			padverb = newpad(8,MAXCOLS);
 			padnfs = newpad(25,MAXCOLS);
 			padtop = newpad(MAXROWS,MAXCOLS*2);
-			
-			
 		} else {
 			// ~~~~~~~~~~~~~~~~~~~~~~
 			// moved to xport_part_01
@@ -2982,6 +2828,17 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		
 		/* Main loop of the code */
 		for(loop=1; ; loop++) {
+			// stollcri, 2015
+			struct syshw thishw = getsyshwinfo();
+			struct syskern thiskern = getsyskerninfo();
+			struct syscpu thiscpu = getsyscpuinfo();
+			cpu_busy = thiscpu.busy;
+			cpu_scaled_user = (double)thiscpu.user / (double)thiscpu.scale;
+			cpu_scaled_sys = (double)thiscpu.sys / (double)thiscpu.scale;
+			cpu_scaled_wait = (double)thiscpu.wait / (double)thiscpu.scale;
+			cpu_scaled_idle = (double)thiscpu.idle / (double)thiscpu.scale;
+			cpu_scaled_steal = (double)thiscpu.steal/ (double)thiscpu.scale;
+
 			/* Save the time and work out how long we were actually asleep
 			 * Do this as early as possible and close to reading the CPU statistics in /proc/stat
 			 */
@@ -2990,14 +2847,9 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			timer = time(0);
 			tim = localtime(&timer);
 			
-			/* Get current count of CPU
-			 * As side effect /proc/stat is read
-			 */
-			old_cpus = cpus;
-			get_cpu_cnt();
 			
 			if(loop <= 3) /* This stops the nmon causing the cpu peak at startup */
-				for(i=0;i < max_cpus+1;i++)
+				for(i=0;i < cpus+1;i++)
 					cpu_peak[i]=0.0;
 			
 			/* Reset the cursor position to top left */
@@ -3008,8 +2860,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				
 				if(welcome && getenv("NMON") == 0) {
 					// stollcri, 2015-08-22
-					struct syshw thissys = getsyshwinfo();
-					uiwelcome(&padwelcome, &x, COLS, LINES, colour, thissys);
+					uiwelcome(&padwelcome, &x, COLS, LINES, colour, thishw);
 				}
 			} else {
 				// ~~~~~~~~~~~~~~~~~~~~~~
@@ -3022,182 +2873,22 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			if (show_help && cursed) {
 				uihelp(&padhelp, &x, COLS, LINES);
 			}
-			/* for debugging use only
-			 if(error_on && errorstr[0] != 0) {
-			 mvprintw(x, 0, "Error: %s  ",errorstr);
-			 x = x + 1;
-			 }
-			 */
+
 			if (show_cpu && cursed) {
 				proc_read(P_CPUINFO);
 				proc_read(P_VERSION);
-				uisys(&padsys, &x, COLS, LINES);
+				uisys(&padsys, &x, COLS, LINES, thiskern);
 			}
 			if (show_longterm ) {
-				// stollcri, 2015
-				struct syscpu thiscpu = getsyscpuinfo();
-				cpu_user = thiscpu.user;
-				cpu_sys = thiscpu.sys;
-				cpu_wait = thiscpu.wait;
-				cpu_idle = thiscpu.idle;
-				cpu_steal = thiscpu.steal;
-				cpu_sum = thiscpu.scale;
-				
-				save_snap(
-						  (double)cpu_user / (double)cpu_sum,
-						  (double)cpu_sys  / (double)cpu_sum,
-						  (double)cpu_wait / (double)cpu_sum,
-						  (double)cpu_idle / (double)cpu_sum,
-						  (double)cpu_steal/ (double)cpu_sum);
+				save_snap(cpu_scaled_user, cpu_scaled_sys, cpu_scaled_wait, cpu_scaled_idle, cpu_scaled_steal);
 				plot_snap(padlong);
 				DISPLAY(padlong,MAX_SNAP_ROWS+2);
 			}
 			if (show_smp || show_verbose) {
-				if(cpus>max_cpus && !cursed) {
-					// ~~~~~~~~~~~~~~~~~~~~~~
-					// moved to xport_part_03
-					// ~~~~~~~~~~~~~~~~~~~~~~
-				}
-				if( old_cpus != cpus )	{
-					if( !cursed )	{
-						// ~~~~~~~~~~~~~~~~~~~~~~
-						// moved to xport_part_04
-						// ~~~~~~~~~~~~~~~~~~~~~~
-					}
-					else 	{
-						/* wmove(padsmp,0,0); */
-						/* doesn't work CURSE wclrtobot(padsmp); */
-						/* Do BRUTE force overwrite of previous data */
-						if( cpus < old_cpus)	{
-							for(i=cpus; i < old_cpus; i++)
-								mvwprintw(padsmp,i+4,0,"                                                                                    ");
-						}
-					}
-				}
 				if (show_smp) {
-					if(cursed) {
-						uicpu(&padsmp, &x, COLS, colour);
-					}	/* if (show_smp) AND if(cursed) */
-					for (i = 0; i < cpus; i++) {
-						// cpu_user = p->cpuN[i].user - q->cpuN[i].user;
-						// cpu_sys  = p->cpuN[i].sys  - q->cpuN[i].sys;
-						// cpu_wait = p->cpuN[i].wait - q->cpuN[i].wait;
-						// cpu_idle = p->cpuN[i].idle - q->cpuN[i].idle;
-						// cpu_steal= p->cpuN[i].steal- q->cpuN[i].steal;
-						// /* DEBUG inject steal       cpu_steal = cpu_sys; */
-						// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
-						// /* Check if we had a CPU # change and have to set idle to 100 */
-						// stollcri, 2015
-						struct syscpu thiscpu = getsyscpuinfo();
-						cpu_user = thiscpu.user;
-						cpu_sys = thiscpu.sys;
-						cpu_wait = thiscpu.wait;
-						cpu_idle = thiscpu.idle;
-						cpu_steal = thiscpu.steal;
-						cpu_sum = thiscpu.scale;
-
-						if( cpu_sum == 0)
-							cpu_sum = cpu_idle = 100.0;
-						if(smp_first_time && cursed) {
-							if(i == 0)
-								mvwprintw(padsmp,3 + i, 27, "| Please wait gathering CPU statistics");
-							else
-								mvwprintw(padsmp,3 + i, 27, "|");
-							mvwprintw(padsmp,3 + i, 77, "|");
-						} else {
-							if(!show_raw)
-								plot_smp(padsmp,i+1, 3 + i,
-										 (double)cpu_user / (double)cpu_sum,
-										 (double)cpu_sys  / (double)cpu_sum,
-										 (double)cpu_wait / (double)cpu_sum,
-										 (double)cpu_idle / (double)cpu_sum,
-										 (double)cpu_steal / (double)cpu_sum);
-							else
-								save_smp(padsmp,i+1, 3+i,
-										 RAW(user) - RAW(nice),
-										 RAW(sys),
-										 RAW(wait),
-										 RAW(idle),
-										 RAW(nice),
-										 RAW(irq),
-										 RAW(softirq),
-										 RAW(steal));
-							
-							RRD fprintf(fp,"rrdtool update cpu%02d.rrd %s:%.1f:%.1f:%.1f:%.1f\n",i,LOOP,
-										(double)cpu_user / (double)cpu_sum,
-										(double)cpu_sys  / (double)cpu_sum,
-										(double)cpu_wait / (double)cpu_sum,
-										(double)cpu_idle / (double)cpu_sum);
-						}
-					}	/* for (i = 0; i < cpus; i++) */
-					CURSE mvwprintw(padsmp,i + 3, 0, cpu_line);
-					// cpu_user = p->cpu_total.user - q->cpu_total.user;
-					// cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
-					// cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
-					// cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
-					// cpu_steal= p->cpu_total.steal- q->cpu_total.steal;
-					// /* DEBUG inject steal       cpu_steal = cpu_sys; */
-					// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait + cpu_steal;
-					// stollcri, 2015
-					struct syscpu thiscpu = getsyscpuinfo();
-					cpu_user = thiscpu.user;
-					cpu_sys = thiscpu.sys;
-					cpu_wait = thiscpu.wait;
-					cpu_idle = thiscpu.idle;
-					cpu_steal = thiscpu.steal;
-					cpu_sum = thiscpu.scale;
-					
-					/* Check if we had a CPU # change and have to set idle to 100 */
-					if( cpu_sum == 0)
-						cpu_sum = cpu_idle = 100.0;
-					
-					RRD fprintf(fp,"rrdtool update cpu.rrd %s:%.f:%.1f:%.1f:%.1f%.1f\n",LOOP,
-								(double)cpu_user / (double)cpu_sum,
-								(double)cpu_sys  / (double)cpu_sum,
-								(double)cpu_wait / (double)cpu_sum,
-								(double)cpu_idle / (double)cpu_sum,
-								(double)cpu_steal/ (double)cpu_sum);
-					if (cpus > 1 || !cursed) {
-						if(!smp_first_time || !cursed) {
-							if(!show_raw) {
-								plot_smp(padsmp,0, 4 + i,
-										 (double)cpu_user / (double)cpu_sum,
-										 (double)cpu_sys  / (double)cpu_sum,
-										 (double)cpu_wait / (double)cpu_sum,
-										 (double)cpu_idle / (double)cpu_sum,
-										 (double)cpu_steal/ (double)cpu_sum);
-							} else {
-								save_smp(padsmp,0, 4+i,
-										 RAWTOTAL(user) - RAWTOTAL(nice),
-										 RAWTOTAL(sys),
-										 RAWTOTAL(wait),
-										 RAWTOTAL(idle),
-										 RAWTOTAL(nice),
-										 RAWTOTAL(irq),
-										 RAWTOTAL(softirq),
-										 RAWTOTAL(steal));
-							}
-						}
-						
-						CURSE mvwprintw(padsmp, i + 5, 0, cpu_line);
-						i = i + 2;
-					} /* if (cpus > 1 || !cursed) */
-					smp_first_time=0;
-					DISPLAY(padsmp, i + 4);
+					uicpu(&padsmp, &x, COLS, LINES, colour, thiscpu, show_raw);
 				}	/* if (show_smp)  */
 				if(show_verbose && cursed) {
-					// cpu_user = p->cpu_total.user - q->cpu_total.user;
-					// cpu_sys  = p->cpu_total.sys  - q->cpu_total.sys;
-					// cpu_wait = p->cpu_total.wait - q->cpu_total.wait;
-					// cpu_idle = p->cpu_total.idle - q->cpu_total.idle;
-					// cpu_sum = cpu_idle + cpu_user + cpu_sys + cpu_wait;
-					// stollcri, 2015
-					struct syscpu thiscpu = getsyscpuinfo();
-					cpu_user = thiscpu.user;
-					cpu_sys = thiscpu.sys;
-					cpu_sum = thiscpu.scale;
-					cpu_busy = thiscpu.busy;
-
 					mvwprintw(padverb,2, 0, "        -> CPU               %%busy %5.1f%%\t>80%%\t>90%%          ",cpu_busy);
 					if(cpu_busy > 90.0){
 						COLOUR wattrset(padverb,COLOR_PAIR(1));

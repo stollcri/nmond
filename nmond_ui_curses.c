@@ -130,7 +130,7 @@ void uihelp(WINDOW **padhelpin, int *xin, int cols, int rows)
 	*xin = x;
 }
 
-void uisys(WINDOW **padsysin, int *xin, int cols, int rows)
+void uisys(WINDOW **padsysin, int *xin, int cols, int rows, struct syskern kern)
 {
 	WINDOW *padsys = *padsysin;
 	if (padsys == NULL) {
@@ -138,10 +138,10 @@ void uisys(WINDOW **padsysin, int *xin, int cols, int rows)
 	}
 	int x = *xin;
 	uibanner(cols, padsys, "Linux and Processor Details");
-	mvwprintw(padsys, 1, 4, "Linux: %s", "??"); // proc[P_VERSION].line[0]);
+	mvwprintw(padsys, 1, 4, "Linux: %s", kern.version); // proc[P_VERSION].line[0]);
 	mvwprintw(padsys, 2, 4, "Build: %s", "??"); // proc[P_VERSION].line[1]);
-	mvwprintw(padsys, 3, 4, "Release  : %s", "??"); // uts.release );
-	mvwprintw(padsys, 4, 4, "Version  : %s", "??"); // uts.version);
+	mvwprintw(padsys, 3, 4, "Release  : %s", kern.osrelease); // uts.release );
+	mvwprintw(padsys, 4, 4, "Version  : %s", kern.osversion); // uts.version);
 	mvwprintw(padsys, 9, 4, "# of CPUs: %d", -1); // cpus);
 	mvwprintw(padsys, 10, 4,"Machine  : %s", "??"); // uts.machine);
 	mvwprintw(padsys, 11, 4,"Nodename : %s", "??"); // uts.nodename);
@@ -172,13 +172,75 @@ void uiverbose(WINDOW **padverbin, int *xin, int cols)
 	*xin = x + 6;
 }
 
-void uicpu(WINDOW **padsmpin, int *xin, int cols, int usecolor)
+
+
+
+
+void plot_smp(WINDOW *pad, int cpu_no, int row, int usecolor, double user, double kernel, double iowait, double idle, double steal)
+{
+	int	i;
+	int	peak_col;
+		
+	// if(cpu_peak[cpu_no] < (user + kernel + iowait) )
+	// 	cpu_peak[cpu_no] = (double)((int)user/2 + (int)kernel/2 + (int)iowait/2)*2.0;
+	
+	if(cpu_no == 0)
+		mvwprintw(pad,row, 0, "Avg");
+	else
+		mvwprintw(pad,row, 0, "%3d", cpu_no);
+	mvwprintw(pad,row,  3, "% 6.1lf", user);
+	mvwprintw(pad,row,  9, "% 6.1lf", kernel);
+	mvwprintw(pad,row, 15, "% 6.1lf", iowait);
+	if(steal) {
+		mvwprintw(pad,row, 21, "% 6.1lf", steal);
+	} else {
+		mvwprintw(pad,row, 21, "% 6.1lf", idle);
+	}
+	mvwprintw(pad,row, 27, "|");
+	wmove(pad,row, 28);
+	for (i = 0; i < (int)(user   / 2); i++){
+		COLOUR wattrset(pad,COLOR_PAIR(9));
+		wprintw(pad,"U");
+	}
+	for (i = 0; i < (int)(kernel / 2); i++){
+		COLOUR wattrset(pad,COLOR_PAIR(8));
+		wprintw(pad,"s");
+	}
+	for (i = 0; i < (int)(iowait / 2); i++) {
+		COLOUR wattrset(pad,COLOR_PAIR(10));
+		wprintw(pad,"W");
+	}
+	COLOUR wattrset(pad,COLOR_PAIR(0));
+	for (i = 0; i <= (int)(idle   / 2); i++) {  /* added "=" to try to conteract missing halves */
+			wprintw(pad," ");
+	}
+	for (i = 0; i < (int)((steal+1)  / 2); i++) {
+		COLOUR wattrset(pad,COLOR_PAIR(5));
+		wprintw(pad,"S");
+	}
+	COLOUR wattrset(pad,COLOR_PAIR(0));
+	mvwprintw(pad,row, 77, "| ");
+	
+	// peak_col = 28 +(int)(cpu_peak[cpu_no]/2);
+	// if(peak_col > 77)
+	// 	peak_col=77;
+	// mvwprintw(pad,row, peak_col, ">");
+}
+
+void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct syscpu cpu, int show_raw)
 {
 	WINDOW *padsmp = *padsmpin;
 	if (padsmp == NULL) {
 		return;
 	}
 	int x = *xin;
+
+	double cpu_busy = cpu.busy;
+	double cpu_scaled_user = (double)cpu.user / (double)cpu.scale;
+	double cpu_scaled_sys = (double)cpu.sys / (double)cpu.scale;
+	double cpu_scaled_wait = (double)cpu.wait / (double)cpu.scale;
+	double cpu_scaled_idle = (double)cpu.idle / (double)cpu.scale;
+	double cpu_scaled_steal = (double)cpu.steal/ (double)cpu.scale;
 
 	uibanner(cols, padsmp, "CPU Utilisation");
 	// BANNER(padsmp,"CPU Utilisation");
@@ -204,6 +266,63 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int usecolor)
 	// }
 	COLOUR wattrset(padsmp, COLOR_PAIR(0));
 	mvwprintw(padsmp, 2, 27, "|0          |25         |50          |75       100|");
+
+	int i = 0;
+	for (i = 0; i < cpu.count; i++) {
+		// if(smp_first_time && cursed) {
+			// if(i == 0)
+			// 	mvwprintw(padsmp,3 + i, 27, "| Please wait gathering CPU statistics");
+			// else
+		// 		mvwprintw(padsmp,3 + i, 27, "|");
+		 	mvwprintw(padsmp,3 + i, 77, "|");
+		// } else {
+			// if(!show_raw)
+				plot_smp(padsmp,i+1, 3 + i, usecolor, cpu_scaled_user, cpu_scaled_sys, cpu_scaled_wait, cpu_scaled_idle, cpu_scaled_steal);
+			// else
+				// save_smp(padsmp,i+1, 3+i,
+				// 		 RAW(user) - RAW(nice),
+				// 		 RAW(sys),
+				// 		 RAW(wait),
+				// 		 RAW(idle),
+				// 		 RAW(nice),
+				// 		 RAW(irq),
+				// 		 RAW(softirq),
+				// 		 RAW(steal));
+		// }
+	}
+	mvwprintw(padsmp,i + 3, 0, cpu_line);
+	
+	if (cpu.count > 1) {
+		// if(!smp_first_time || !cursed) {
+		// 	if(!show_raw) {
+				plot_smp(padsmp,0, 4 + i, usecolor,
+						 cpu_scaled_user,
+						 cpu_scaled_sys,
+						 cpu_scaled_wait,
+						 cpu_scaled_idle,
+						 cpu_scaled_steal);
+		// 	} else {
+		// 		save_smp(padsmp,0, 4+i,
+		// 				 RAWTOTAL(user) - RAWTOTAL(nice),
+		// 				 RAWTOTAL(sys),
+		// 				 RAWTOTAL(wait),
+		// 				 RAWTOTAL(idle),
+		// 				 RAWTOTAL(nice),
+		// 				 RAWTOTAL(irq),
+		// 				 RAWTOTAL(softirq),
+		// 				 RAWTOTAL(steal));
+		// 	}
+		// }
+		
+		mvwprintw(padsmp, i + 5, 0, cpu_line);
+		i = i + 2;
+	}
+	// smp_first_time=0;
+	//x = x + 4;
+	uidisplay(&x, cols, (i+4), padsmp, rows);
+	//DISPLAY(padsmp, i + 4);
+
+
 
 	*xin = x;
 }

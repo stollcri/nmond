@@ -128,6 +128,7 @@ extern struct sysproc *getsysprocinfobyruid(int, size_t);
 // 
 
 struct syscpu {
+	int count;
 	double user;
 	double sys;
 	double wait;
@@ -136,7 +137,7 @@ struct syscpu {
 	double scale;
 	double busy;
 };
-#define SYSCPU_INIT { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+#define SYSCPU_INIT { 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
 
 extern struct syscpu getsyscpuinfo(void);
 

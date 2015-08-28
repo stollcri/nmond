@@ -436,13 +436,16 @@ extern struct syscpu getsyscpuinfo(void)
 	error = sysctl(mib, 2, &thisload, &length, NULL, 0);
 
 	if(!error) {
-		thiscpu.user = thisload.ldavg[0];
-		thiscpu.sys = thisload.ldavg[1];
+		thiscpu.count = 2; // TODO: FIXME
+		thiscpu.user = thisload.ldavg[0] * (thisload.ldavg[0] / 85);
+		//if(thiscpu.user>1000) thiscpu.user=1000;
+		thiscpu.sys = thisload.ldavg[1] * (thisload.ldavg[1] / 135);
+		//if(thiscpu.sys>1000) thiscpu.sys=1000;
 		thiscpu.wait = thisload.ldavg[2];
 		thiscpu.idle = 0;
 		thiscpu.steal = 0;
 		thiscpu.scale = thisload.fscale;
-		thiscpu.busy= (thisload.ldavg[0] + thisload.ldavg[1]) / thisload.fscale;
+		thiscpu.busy = (thisload.ldavg[0] + thisload.ldavg[1]) / thisload.fscale;
 	}
 
 	return thiscpu;
