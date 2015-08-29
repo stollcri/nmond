@@ -19,150 +19,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-//
-// Sysctl helper functions
-// 
-
-/*
- * Get a character string from sysctl (level 2)
- */
-static char *stringFromSysctl(int mib0, int mib1)
-{
-	char *result = NULL;
-
-	int mib[2];
-	mib[0] = mib0;
-	mib[1] = mib1;
-	size_t length = 0;
-	int complete = 0;
-	int error = 0;
-
-	// catch memory errors (ENOMEM),
-	// assert to catch program errors
-	while(!complete && !error) {
-		assert(result == NULL);
-		length = 0;
-
-		// get the expected length of the result
-		error = sysctl(mib, 2, NULL, &length, NULL, 0);
-
-		// allocate memory for the result
-		if(!error) {
-			result = malloc(length);
-			if (result == NULL) {
-				error = 1;
-			}
-		}
-
-		// get the result
-		if(!error) {
-			error = sysctl(mib, 2, result, &length, NULL, 0);
-			if(!error) {
-				complete = 1;
-			} else {
-				assert(result != NULL);
-				free(result);
-				result = NULL;
-				
-				complete = 0;
-				error = 0;
-			}
-		}
-	}
-
-	return result;
-}
-
-/*
- * Get a character string from sysctlbyname
- */
-static char *stringFromSysctlByName(char *name)
-{
-	char *result = NULL;
-	size_t length = 0;
-	int complete = 0;
-	int error = 0;
-
-	// catch memory errors (ENOMEM),
-	// assert to catch program errors
-	while(!complete && !error) {
-		assert(result == NULL);
-		length = 0;
-
-		// get the expected length of the result
-		error = sysctlbyname(name, NULL, &length, NULL, 0);
-
-		// allocate memory for the result
-		if(!error) {
-			result = malloc(length);
-			if(result == NULL) {
-				error = 1;
-			}
-		}
-
-		// get the result
-		if(!error) {
-			error = sysctlbyname(name, result, &length, NULL, 0);
-			if(!error) {
-				complete = 1;
-			} else {
-				assert(result != NULL);
-				free(result);
-				result = NULL;
-
-				complete = 0;
-				error = 0;
-			}
-		}
-	}
-
-	return result;
-}
-
-/*
- * Get an integer from sysctl (level 2)
- */
-static unsigned int intFromSysctl(int mib0, int mib1)
-{
-	unsigned int result = 0;
-
-	int mib[2];
-	mib[0] = mib0;
-	mib[1] = mib1;
-	size_t length = sizeof(result);
-	sysctl(mib, 2, &result, &length, NULL, 0);
-
-	return result;
-}
-
-/*
- * Get an integer from sysctlbyname
- */
-static unsigned int intFromSysctlByName(char *name)
-{
-	unsigned int result = 0;
-
-	size_t length = sizeof(result);
-	sysctlbyname(name, &result, &length, NULL, 0);
-
-	return result;
-}
-
-/*
- * Get a character string from sysctl (level 2)
- */
-static struct timeval timevalFromSysctl(int mib0, int mib1)
-{
-	struct timeval result = { 0, 0 };
-
-	int mib[2];
-	mib[0] = mib0;
-	mib[1] = mib1;
-	size_t length = sizeof(result);
-	sysctl(mib, 2, &result, &length, NULL, 0);
-
-	return result;
-}
+#include "sysctlhelper.h"
 
 //
 // Hardware based information
@@ -191,7 +48,13 @@ struct syshw getsyshwinfo()
 	thissys.usermemory = intFromSysctl(CTL_HW, HW_USERMEM);
 	thissys.pagesize = intFromSysctl(CTL_HW, HW_PAGESIZE);
 
+	thissys.thermalsensor = intFromSysctlByName("machdep.cpu.thermal.sensor");
+	thissys.thermallevelcpu = intFromSysctlByName("machdep.xcpm.cpu_thermal_level");
+	thissys.thermallevelgpu = intFromSysctlByName("machdep.xcpm.gpu_thermal_level");
+	thissys.thermallevelio = intFromSysctlByName("machdep.xcpm.io_thermal_level");
+
 	thissys.architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
+	thissys.cpuvendor = stringFromSysctlByName("machdep.cpu.vendor"); 
 	thissys.cpubrand = stringFromSysctlByName("machdep.cpu.brand_string");
 	thissys.machine = stringFromSysctl(CTL_HW, HW_MACHINE);
 	thissys.model = stringFromSysctl(CTL_HW, HW_MODEL);
@@ -437,12 +300,12 @@ extern struct syscpu getsyscpuinfo(void)
 
 	if(!error) {
 		thiscpu.count = 2; // TODO: FIXME
-		thiscpu.user = thisload.ldavg[0] * (thisload.ldavg[0] / 85);
+		thiscpu.user = thisload.ldavg[0];// * (thisload.ldavg[0] / 85);
 		//if(thiscpu.user>1000) thiscpu.user=1000;
-		thiscpu.sys = thisload.ldavg[1] * (thisload.ldavg[1] / 135);
+		thiscpu.sys = thisload.ldavg[1];// * (thisload.ldavg[1] / 135);
 		//if(thiscpu.sys>1000) thiscpu.sys=1000;
 		thiscpu.wait = thisload.ldavg[2];
-		thiscpu.idle = 0;
+		thiscpu.idle = thiscpu.scale - (thisload.ldavg[0] + thisload.ldavg[1] + thisload.ldavg[2]);
 		thiscpu.steal = 0;
 		thiscpu.scale = thisload.fscale;
 		thiscpu.busy = (thisload.ldavg[0] + thisload.ldavg[1]) / thisload.fscale;

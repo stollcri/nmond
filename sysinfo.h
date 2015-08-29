@@ -42,13 +42,19 @@ struct syshw { // CTL_HW
 	unsigned int l1dcachesize;
 	unsigned int l2cachesize;
 	unsigned int l3cachesiz;
-	
+
+	unsigned int thermalsensor; // machdep.cpu.thermal.sensor
+	unsigned int thermallevelcpu; // machdep.xcpm.cpu_thermal_level
+	unsigned int thermallevelgpu; // machdep.xcpm.gpu_thermal_level
+	unsigned int thermallevelio; // machdep.xcpm.io_thermal_level
+
 	char *architecture; // HW_MACHINE_ARCH
+	char *cpuvendor; // machdep.cpu.vendor ("GenuineIntel")
 	char *cpubrand; // machdep.cpu.brand_string ("Intel(R) Core(TM) i7-4650U CPU @ 1.70GHz")
 	char *machine; // HW_MACHINE ("x86_64")
 	char *model; // HW_MODEL ("MacbookAir6,2")
 };
-#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
+#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
 
 extern struct syshw getsyshwinfo(void);
 
@@ -75,7 +81,7 @@ struct syskern { // CTL_KERN
 
 	char *ostype; // KERN_OSTYPE ("Darwin")
 	char *osrelease; // KERN_OSRELEASE ("14.5.0")
-	char *osversion; // KERN_OSVERSION
+	char *osversion; // KERN_OSVERSION ("199506")
 	char *version; // KERN_VERSION ("Darwin Kernel Version 14.5.0: Wed Jul 29 02:26:53 PDT 2015; root:xnu-2782.40.9~1/RELEASE_X86_64")
 	char *bootfile; // KERN_BOOTFILE
 	char *hostname; // KERN_HOSTNAME
@@ -140,5 +146,11 @@ struct syscpu {
 #define SYSCPU_INIT { 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
 
 extern struct syscpu getsyscpuinfo(void);
+
+//
+// Mem
+// 
+// vm.swapusage: total = 2048.00M  used = 988.00M  free = 1060.00M  (encrypted)
+// vmmeter.h
 
 #endif
