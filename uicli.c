@@ -4,7 +4,7 @@
  *   (for license, see included LICENSE file)
  */
 
-#include "nmond_ui_cli.h"
+#include "uicli.h"
 #include <stdio.h>
 
 void uiclhint()

@@ -2,9 +2,9 @@
 LANG = en
 
 ifeq ($(LANG),en)
-	LANGFILES = nmond_ui_cli.c nmond_ui_curses.c
+	LANGFILES = uicli.c uicurses.c
 else ifeq ($(LANG),de)
-	LANGFILES = nmond_ui_cli.c nmond_ui_curses.c
+	LANGFILES = uicli.c uicurses.c
 endif
 
 CC = cc
@@ -13,7 +13,7 @@ CC = cc
 CFLAGS = -Oz -Wall -D NDEBUG
 LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
-CFILES = nmond.c mntent.c sysinfo.c $(LANGFILES)
+CFILES = nmond.c mntent.c sysctlhelper.c sysinfo.c $(LANGFILES)
 
 CFLAGS_DBG = -O0 -g -Weverything
 LFLAGS_DBG = -l ncurses
