@@ -109,9 +109,7 @@ extern struct syskern getsyskerninfo(void);
 // System resource utilization information
 // 
 
-struct sysres {
-	unsigned int count;
-
+struct sysrescpu {
 	int user;
 	int sys;
 	int idle;
@@ -127,18 +125,19 @@ struct sysres {
 	double percentuser;
 	double percentsys;
 	double percentidle;
-	double percentnice;
-	
-	double wait;
-	double steal;
-	double scale;
-	double busy;
+};
+#define SYSRESCPU_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0 }
+
+struct sysres {
+	int cpucount;
+
+	struct sysrescpu *cpus;
 
 	double loadavg1;
 	double loadavg5;
 	double loadavg15;
 };
-#define SYSRES_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+#define SYSRES_INIT { 0, SYSRESCPU_INIT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
 
 extern void getsysresinfo(struct sysres *);
 

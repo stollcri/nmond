@@ -6,8 +6,6 @@
 
 #include "uicurses.h"
 
-#define COLOUR if(usecolor) /* Only use this for single line color curses calls */
-
 static inline void uibanner(int cols, WINDOW *pad, char *string)
 {
 	mvwhline(pad, 0, 0, ACS_HLINE, cols-2);
@@ -177,15 +175,14 @@ void uiverbose(WINDOW **padverbin, int *xin, int cols)
 
 
 
-void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double sys, double wait, double idle, double steal)
+void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double sys, double wait, double idle)
 {
-	int	i;
 	int	peak_col;
 		
 	// if(cpu_peak[cpuno] < (user + kernel + iowait) )
 	// 	cpu_peak[cpuno] = (double)((int)user/2 + (int)kernel/2 + (int)iowait/2)*2.0;
 	
-	if(cpuno == 0) {
+	if(cpuno == -1) {
 		mvwprintw(pad,row, 0, "Avg");
 	} else {
 		mvwprintw(pad,row, 0, "%3d", cpuno);
@@ -193,11 +190,7 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 	mvwprintw(pad,row,  4, "%2.2f", user);
 	mvwprintw(pad,row, 10, "%2.2f", sys);
 	mvwprintw(pad,row, 16, "%2.2f", wait);
-	if(steal) {
-		mvwprintw(pad,row, 22, "%2.2f", steal);
-	} else {
-		mvwprintw(pad,row, 22, "%2.2f", idle);
-	}
+	mvwprintw(pad,row, 22, "%2.2f", idle);
 
 	mvwprintw(pad,row, 27, "|");
 
@@ -282,7 +275,7 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 	// mvwprintw(pad,row, peak_col, ">");
 }
 
-void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct sysres res, int show_raw)
+void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct sysres thisres, int show_raw)
 {
 	WINDOW *padsmp = *padsmpin;
 	if (padsmp == NULL) {
@@ -290,32 +283,20 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	}
 	int x = *xin;
 
-	double cpu_busy = res.busy;
-	double cpu_scaled_user = res.percentuser;
-	double cpu_scaled_sys = res.percentsys;
-	double cpu_scaled_wait = 0;
-	double cpu_scaled_idle = res.percentidle;
-	double cpu_scaled_steal = 0;
-
 	uibanner(cols, padsmp, "CPU Utilisation");
-	// BANNER(padsmp,"CPU Utilisation");
-	// /* mvwprintw(padsmp,1, 0, cpu_line);*/
-	// /*
-	//  *mvwprintw(padsmp,2, 0, "CPU  User%%  Sys%% Wait%% Idle|0          |25         |50          |75       100|");
-	//  */
 	char cpu_line[78] = "---------------------------+-------------------------------------------------+";
 	mvwprintw(padsmp, 1, 0, cpu_line);
 	mvwprintw(padsmp, 2, 0, "CPU  ");
 	if(usecolor) {
-		wattrset(padsmp, COLOR_BLUE);
+		wattrset(padsmp, COLOR_PAIR(COLOR_BLUE));
 	}
 	mvwprintw(padsmp, 2, 4, "User%%");
 	if(usecolor) {
-		wattrset(padsmp, COLOR_RED);
+		wattrset(padsmp, COLOR_PAIR(COLOR_RED));
 	}
 	mvwprintw(padsmp, 2, 10, "Sys %%");
 	if(usecolor) {
-		wattrset(padsmp, COLOR_GREEN);
+		wattrset(padsmp, COLOR_PAIR(COLOR_GREEN));
 	}
 	mvwprintw(padsmp, 2, 16, "Wait%%");
 	if(usecolor) {
@@ -328,12 +309,23 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	mvwprintw(padsmp, 2, 27, "|0          |25         |50          |75       100|");
 
 	int i = 0;
-	for (i = 0; i < res.count; i++) {
-	 	mvwprintw(padsmp,3 + i, 77, "|");
+	double avguser = 0;
+	double avgsys = 0;
+	double avgwait = 0;
+	double avgidle = 0;
+	for (int cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
+	 	mvwprintw(padsmp, 3 + i, 77, "|");
 		// if(!show_raw)
-			plot_smp(padsmp,i+1, 3 + i, usecolor,
-				cpu_scaled_user,cpu_scaled_sys, cpu_scaled_wait,
-				cpu_scaled_idle, cpu_scaled_steal);
+			plot_smp(padsmp, cpuno, (cpuno + 3), usecolor,
+				thisres.cpus[cpuno].percentuser, 
+				thisres.cpus[cpuno].percentsys,
+				0, 
+				thisres.cpus[cpuno].percentidle);
+
+			avguser += thisres.cpus[cpuno].percentuser;
+			avgsys += thisres.cpus[cpuno].percentsys;
+			avgwait += 0;
+			avgidle += thisres.cpus[cpuno].percentidle;
 		// else
 			// save_smp(padsmp,i+1, 3+i,
 			// 		 RAW(user) - RAW(nice),
@@ -344,14 +336,18 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 			// 		 RAW(irq),
 			// 		 RAW(softirq),
 			// 		 RAW(steal));
+		i = cpuno;
 	}
+	i=2;
+	avguser /= (double)thisres.cpucount;
+	avgsys /= (double)thisres.cpucount;
+	avgwait /= (double)thisres.cpucount;
+	avgidle /= (double)thisres.cpucount;
 	mvwprintw(padsmp,i + 3, 0, cpu_line);
 	
-	if (res.count > 1) {
+	if (thisres.cpucount > 1) {
 		// 	if(!show_raw) {
-				plot_smp(padsmp,0, 4 + i, usecolor,
-					cpu_scaled_user, cpu_scaled_sys, cpu_scaled_wait,
-					cpu_scaled_idle, cpu_scaled_steal);
+				plot_smp(padsmp, -1, (i + 4), usecolor, avguser, avgsys, avgwait, avgidle);
 		// 	} else {
 		// 		save_smp(padsmp,0, 4+i,
 		// 				 RAWTOTAL(user) - RAWTOTAL(nice),

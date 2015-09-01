@@ -319,6 +319,7 @@ void getsysresinfo(struct sysres *inres)
 	// mib[0] = CTL_VM;
 	// mib[1] = VM_LOADAVG;
 	int error = 0;
+	int newcpucount = 0;
 
 	// struct loadavg thisload;
 	// size_t length = sizeof(thisload);
@@ -326,7 +327,7 @@ void getsysresinfo(struct sysres *inres)
 
 	// if(!error) {
 		// thisres.count = intFromSysctlByName("machdep.cpu.core_count");
-		thisres.count = 2;
+		newcpucount = 2;
 
 	// 	//thisres.user = thisload.ldavg[0];// * (thisload.ldavg[0] / 85);
 	// 	//if(thisres.user>1000) thisres.user=1000;
@@ -341,52 +342,78 @@ void getsysresinfo(struct sysres *inres)
 
 	//struct rusage thisusage;
 	//error = getrusage(RUSAGE_SELF, &thisusage);
+	if (!thisres.cpucount || (newcpucount != thisres.cpucount)) {
+		thisres.cpucount = newcpucount;
+		thisres.cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)thisres.cpucount);
+	}
 
 	double total = 0;
-	host_info_t r_load;
+	natural_t cpuCount;
+	host_info_t hostinfo;
 	mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
-	error = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, r_load, &count);
+	//error = host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, hostinfo, &count);
+	error = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &hostinfo, &count);
 	if (!error) {
-		thisres.olduser = thisres.user;
-		thisres.oldsys = thisres.sys;
-		thisres.oldidle = thisres.idle;
-		thisres.oldnice = thisres.nice;
-		thisres.oldtotal = thisres.total;
+		processor_cpu_load_info_data_t* r_load = (processor_cpu_load_info_data_t*)hostinfo;
 
-		thisres.user = r_load[CPU_STATE_USER];
-		thisres.sys = r_load[CPU_STATE_SYSTEM];
-		thisres.idle = r_load[CPU_STATE_IDLE];
-		thisres.nice = r_load[CPU_STATE_NICE];
-		thisres.total = r_load[CPU_STATE_USER] + r_load[CPU_STATE_SYSTEM] + r_load[CPU_STATE_IDLE] + r_load[CPU_STATE_NICE];
+		for (int cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
+			thisres.cpus[cpuno].olduser = thisres.cpus[cpuno].user;
+			thisres.cpus[cpuno].oldsys = thisres.cpus[cpuno].sys;
+			thisres.cpus[cpuno].oldidle = thisres.cpus[cpuno].idle;
+			thisres.cpus[cpuno].oldnice = thisres.cpus[cpuno].nice;
+			thisres.cpus[cpuno].oldtotal = thisres.cpus[cpuno].total;
 
-		total = (double)(thisres.total - thisres.oldtotal);
-		// if(thisres.olduser && thisres.oldsys && thisres.oldidle && total) {
+			// thisres.olduser = thisres.user;
+			// thisres.oldsys = thisres.sys;
+			// thisres.oldidle = thisres.idle;
+			// thisres.oldnice = thisres.nice;
+			// thisres.oldtotal = thisres.total;
 
-			thisres.percentuser = (double)(thisres.user - thisres.olduser) / total * 450;
-			thisres.percentsys = (double)(thisres.sys - thisres.oldsys) / total * 450;
-			// thisres.percentidle = 450 - (thisres.percentuser + thisres.percentsys);
-			thisres.percentidle = (double)(thisres.idle - thisres.oldidle) / total * 450;
-			// thisres.percentnice = (double)(thisres.nice - thisres.oldnice) / total * 100;
+			thisres.cpus[cpuno].user = r_load[cpuno].cpu_ticks[CPU_STATE_USER];
+			thisres.cpus[cpuno].sys = r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
+			thisres.cpus[cpuno].idle = r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
+			thisres.cpus[cpuno].nice = r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
+			thisres.cpus[cpuno].total = 
+				r_load[cpuno].cpu_ticks[CPU_STATE_USER] + r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] + 
+				r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
 
-			// printf("0 = %f\n", thisres.percentuser);
-			// printf("1 = %f\n", thisres.percentsys);
-			// printf("2 = %f\n", thisres.percentidle);
-			// printf("3 = %f\n", thisres.percentnice);
-			// printf("  = %f\n", thisres.percentnice);
-		// }
+			// printf("0 = %d / %d (user)\n", thisres.cpus[cpuno].olduser, thisres.cpus[cpuno].user);
+			// printf("1 = %d / %d (sys)\n", thisres.cpus[cpuno].oldsys, thisres.cpus[cpuno].sys);
+			// printf("2 = %d / %d (idle)\n", thisres.cpus[cpuno].oldidle, thisres.cpus[cpuno].idle);
+			// printf("3 = %d / %d (nice)\n", thisres.cpus[cpuno].oldnice, thisres.cpus[cpuno].nice);
+			// printf("  = %d / %d (total)\n", thisres.cpus[cpuno].oldnice, thisres.cpus[cpuno].nice);
 
-		// printf("0 = %d / %d (user)\n", thisres.olduser, thisres.user);
-		// printf("1 = %d / %d (sys)\n", thisres.oldsys, thisres.sys);
-		// printf("2 = %d / %d (idle)\n", thisres.oldidle, thisres.idle);
-		// printf("3 = %d / %d (nice)\n", thisres.oldnice, thisres.nice);
-		// printf("  = %d / %d (total)\n", thisres.oldnice, thisres.nice);
+			// thisres.user = r_load[CPU_STATE_USER];
+			// thisres.sys = r_load[CPU_STATE_SYSTEM];
+			// thisres.idle = r_load[CPU_STATE_IDLE];
+			// thisres.nice = r_load[CPU_STATE_NICE];
+			// thisres.total = r_load[CPU_STATE_USER] + r_load[CPU_STATE_SYSTEM] + r_load[CPU_STATE_IDLE] + r_load[CPU_STATE_NICE];
 
-		// printf("Total User CPU = %ld.%ld\n",
-		//         thisusage.ru_utime.tv_sec,
-		//         thisusage.ru_utime.tv_usec);
-		// printf("Total System CPU = %ld.%ld\n",
-		//         thisusage.ru_stime.tv_sec,
-		//         thisusage.ru_stime.tv_usec);
+			total = (double)(thisres.cpus[cpuno].total - thisres.cpus[cpuno].oldtotal);
+			// if(thisres.olduser && thisres.oldsys && thisres.oldidle && total) {
+
+				thisres.cpus[cpuno].percentuser = 
+					(double)(thisres.cpus[cpuno].user - thisres.cpus[cpuno].olduser) / total * 100;
+				thisres.cpus[cpuno].percentsys = 
+					(double)(thisres.cpus[cpuno].sys - thisres.cpus[cpuno].oldsys) / total * 100;
+				// thisres.percentidle = 100 - (thisres.percentuser + thisres.percentsys);
+				thisres.cpus[cpuno].percentidle = 
+					(double)(thisres.cpus[cpuno].idle - thisres.cpus[cpuno].oldidle) / total * 100;
+				// thisres.percentnice = (double)(thisres.nice - thisres.oldnice) / total * 100;
+
+				// printf("%d: 0 = %f\n", cpuno, thisres.cpus[cpuno].percentuser);
+				// printf("%d: 1 = %f\n", cpuno, thisres.cpus[cpuno].percentsys);
+				// printf("%d: 2 = %f\n", cpuno, thisres.cpus[cpuno].percentidle);
+				// printf("\n");
+			// }
+
+			// printf("Total User CPU = %ld.%ld\n",
+			//         thisusage.ru_utime.tv_sec,
+			//         thisusage.ru_utime.tv_usec);
+			// printf("Total System CPU = %ld.%ld\n",
+			//         thisusage.ru_stime.tv_sec,
+			//         thisusage.ru_stime.tv_usec);
+		}
 	}
 
 	*inres = thisres;
