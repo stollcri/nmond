@@ -308,59 +308,35 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	}
 	mvwprintw(padsmp, 2, 27, "|0          |25         |50          |75       100|");
 
-	int i = 0;
+	int cpuno = 0;
 	double avguser = 0;
 	double avgsys = 0;
 	double avgwait = 0;
 	double avgidle = 0;
-	for (int cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
-	 	mvwprintw(padsmp, 3 + i, 77, "|");
-		// if(!show_raw)
-			plot_smp(padsmp, cpuno, (cpuno + 3), usecolor,
-				thisres.cpus[cpuno].percentuser, 
-				thisres.cpus[cpuno].percentsys,
-				0, 
-				thisres.cpus[cpuno].percentidle);
+	for (cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
+	 	mvwprintw(padsmp, (3 + cpuno), 77, "|");
+		plot_smp(padsmp, cpuno, (cpuno + 3), usecolor,
+			thisres.cpus[cpuno].percentuser, 
+			thisres.cpus[cpuno].percentsys,
+			0, 
+			thisres.cpus[cpuno].percentidle);
 
-			avguser += thisres.cpus[cpuno].percentuser;
-			avgsys += thisres.cpus[cpuno].percentsys;
-			avgwait += 0;
-			avgidle += thisres.cpus[cpuno].percentidle;
-		// else
-			// save_smp(padsmp,i+1, 3+i,
-			// 		 RAW(user) - RAW(nice),
-			// 		 RAW(sys),
-			// 		 RAW(wait),
-			// 		 RAW(idle),
-			// 		 RAW(nice),
-			// 		 RAW(irq),
-			// 		 RAW(softirq),
-			// 		 RAW(steal));
-		i = cpuno;
+		avguser += thisres.cpus[cpuno].percentuser;
+		avgsys += thisres.cpus[cpuno].percentsys;
+		avgwait += 0;
+		avgidle += thisres.cpus[cpuno].percentidle;
 	}
-	i=2;
+
+	int i = cpuno;
 	avguser /= (double)thisres.cpucount;
 	avgsys /= (double)thisres.cpucount;
 	avgwait /= (double)thisres.cpucount;
 	avgidle /= (double)thisres.cpucount;
-	mvwprintw(padsmp,i + 3, 0, cpu_line);
-	
+
+	mvwprintw(padsmp, (i + 3), 0, cpu_line);
 	if (thisres.cpucount > 1) {
-		// 	if(!show_raw) {
-				plot_smp(padsmp, -1, (i + 4), usecolor, avguser, avgsys, avgwait, avgidle);
-		// 	} else {
-		// 		save_smp(padsmp,0, 4+i,
-		// 				 RAWTOTAL(user) - RAWTOTAL(nice),
-		// 				 RAWTOTAL(sys),
-		// 				 RAWTOTAL(wait),
-		// 				 RAWTOTAL(idle),
-		// 				 RAWTOTAL(nice),
-		// 				 RAWTOTAL(irq),
-		// 				 RAWTOTAL(softirq),
-		// 				 RAWTOTAL(steal));
-		// 	}
-		
-		mvwprintw(padsmp, i + 5, 0, cpu_line);
+		plot_smp(padsmp, -1, (i + 4), usecolor, avguser, avgsys, avgwait, avgidle);
+		mvwprintw(padsmp, (i + 5), 0, cpu_line);
 		i = i + 2;
 	}
 	uidisplay(&x, cols, (i+4), padsmp, rows);
