@@ -38,8 +38,8 @@
 #include "mntent.h"
 
 #include "sysinfo.h"
-#include "nmond_ui_cli.h"
-#include "nmond_ui_curses.h"
+#include "uicli.h"
+#include "uicurses.h"
 
 #define RAW(member)      (long)((long)(p->cpuN[i].member)   - (long)(q->cpuN[i].member))
 #define RAWTOTAL(member) (long)((long)(p->cpu_total.member) - (long)(q->cpu_total.member))
@@ -2398,9 +2398,17 @@ int proc_procsinfo(int pid, int index)
 	
 	int main(int argc, char **argv)
 	{
+		//
 		// DEBUG -- stollcri
-		// size_t tmplen = 0;
-		// getsysprocinfoall(tmplen);
+		// 
+		struct syshw thishw = getsyshwinfo();
+		struct syskern thiskern = getsyskerninfo();
+		struct sysres thisres = SYSRES_INIT;
+		getsysresinfo(&thisres);
+		int processcount = 0;
+		struct sysproc thisproc = getsysprocinfoall(&processcount);
+
+		// getsysresinfo(&thisres);
 		// exit(15);
 
 		int secs;
@@ -2829,15 +2837,11 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 		/* Main loop of the code */
 		for(loop=1; ; loop++) {
 			// stollcri, 2015
-			struct syshw thishw = getsyshwinfo();
-			struct syskern thiskern = getsyskerninfo();
-			struct syscpu thiscpu = getsyscpuinfo();
-			cpu_busy = thiscpu.busy;
-			cpu_scaled_user = (double)thiscpu.user / (double)thiscpu.scale;
-			cpu_scaled_sys = (double)thiscpu.sys / (double)thiscpu.scale;
-			cpu_scaled_wait = (double)thiscpu.wait / (double)thiscpu.scale;
-			cpu_scaled_idle = (double)thiscpu.idle / (double)thiscpu.scale;
-			cpu_scaled_steal = (double)thiscpu.steal/ (double)thiscpu.scale;
+			thishw = getsyshwinfo();
+			thiskern = getsyskerninfo();
+			getsysresinfo(&thisres);
+			processcount = 0;
+			thisproc = getsysprocinfoall(&processcount);
 
 			/* Save the time and work out how long we were actually asleep
 			 * Do this as early as possible and close to reading the CPU statistics in /proc/stat
@@ -2886,7 +2890,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			}
 			if (show_smp || show_verbose) {
 				if (show_smp) {
-					uicpu(&padsmp, &x, COLS, LINES, colour, thiscpu, show_raw);
+					uicpu(&padsmp, &x, COLS, LINES, colour, thisres, show_raw);
 				}	/* if (show_smp)  */
 				if(show_verbose && cursed) {
 					mvwprintw(padverb,2, 0, "        -> CPU               %%busy %5.1f%%\t>80%%\t>90%%          ",cpu_busy);

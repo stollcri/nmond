@@ -14,6 +14,10 @@
 #define MAXROWS 256
 #define MAXCOLS 150
 
+#define COLOR_RED COLOR_PAIR(1)
+#define COLOR_GREEN COLOR_PAIR(2)
+#define COLOR_BLUE COLOR_PAIR(4)
+
 #define MSG_VERSION "nmond version %s\n"
 #define MSG_INF_GEN_DISKG "Generating disk group file from lsblk output to file: \"auto\"\n"
 #define MSG_INF_AUTOF_CMD "Create auto file command was: %s\n"
@@ -32,6 +36,6 @@ extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int*, int, int);
 extern void uisys(WINDOW**, int*, int, int, struct syskern);
 extern void uiverbose(WINDOW**, int*, int);
-extern void uicpu(WINDOW**, int*, int, int, int, struct syscpu, int);
+extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
 
 #endif

@@ -1,7 +1,7 @@
 .DS_Store
 
 dbg
-inc/Apple
+inc/Apple/xnu
 bin/nmond.dSYM
 
 NOTES.md

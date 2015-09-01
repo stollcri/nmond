@@ -145,23 +145,15 @@ void uisys(WINDOW **padsysin, int *xin, int cols, int rows, struct syskern kern)
 		return;
 	}
 	int x = *xin;
-	uibanner(cols, padsys, "Linux and Processor Details");
-	mvwprintw(padsys, 1, 4, "Linux: %s", kern.version); // proc[P_VERSION].line[0]);
-	mvwprintw(padsys, 2, 4, "Build: %s", "??"); // proc[P_VERSION].line[1]);
-	mvwprintw(padsys, 3, 4, "Release  : %s", kern.osrelease); // uts.release );
-	mvwprintw(padsys, 4, 4, "Version  : %s", kern.osversion); // uts.version);
-	mvwprintw(padsys, 9, 4, "# of CPUs: %d", -1); // cpus);
-	mvwprintw(padsys, 10, 4,"Machine  : %s", "??"); // uts.machine);
-	mvwprintw(padsys, 11, 4,"Nodename : %s", "??"); // uts.nodename);
-	mvwprintw(padsys, 12, 4,"/etc/*ease[1]: %s", "??"); // easy[0]);
-	mvwprintw(padsys, 13, 4,"/etc/*ease[2]: %s", "??"); // easy[1]);
-	mvwprintw(padsys, 14, 4,"/etc/*ease[3]: %s", "??"); // easy[2]);
-	mvwprintw(padsys, 15, 4,"/etc/*ease[4]: %s", "??"); // easy[3]);
-	mvwprintw(padsys, 16, 4,"lsb_release: %s", "??"); // lsb_release[0]);
-	mvwprintw(padsys, 17, 4,"lsb_release: %s", "??"); // lsb_release[1]);
-	mvwprintw(padsys, 18, 4,"lsb_release: %s", "??"); // lsb_release[2]);
-	mvwprintw(padsys, 19, 4,"lsb_release: %s", "??"); // lsb_release[3]);
-	uidisplay(&x, cols, 20, padsys, rows);
+	uibanner(cols, padsys, "Kernel and Processor Details");
+	mvwprintw(padsys, 1, 2, "%s", kern.version);
+	mvwprintw(padsys, 2, 2, "Release  : %s", kern.osrelease);
+	mvwprintw(padsys, 3, 2, "Version  : %s", kern.osversion);
+	mvwprintw(padsys, 4, 2, "# of CPUs: %d", kern.corecount);
+	mvwprintw(padsys, 5, 2, "Nodename : %s", kern.hostname);
+	mvwprintw(padsys, 6, 2, "Domain   : %s", kern.domainname);
+	mvwprintw(padsys, 7, 2, "Booted   : %s", kern.boottimestring);
+	uidisplay(&x, cols, 8, padsys, rows);
 	
 	*xin = x;
 }
@@ -198,13 +190,13 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 	} else {
 		mvwprintw(pad,row, 0, "%3d", cpuno);
 	}
-	mvwprintw(pad,row,  3, "% 6.1lf", user);
-	mvwprintw(pad,row,  9, "% 6.1lf", sys);
-	mvwprintw(pad,row, 15, "% 6.1lf", wait);
+	mvwprintw(pad,row,  4, "%2.2f", user);
+	mvwprintw(pad,row, 10, "%2.2f", sys);
+	mvwprintw(pad,row, 16, "%2.2f", wait);
 	if(steal) {
-		mvwprintw(pad,row, 21, "% 6.1lf", steal);
+		mvwprintw(pad,row, 22, "%2.2f", steal);
 	} else {
-		mvwprintw(pad,row, 21, "% 6.1lf", idle);
+		mvwprintw(pad,row, 22, "%2.2f", idle);
 	}
 
 	mvwprintw(pad,row, 27, "|");
@@ -216,7 +208,7 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 	for(int i=28; i<=77; ++i){
 		if(userquant) {
 			if(usecolor) {
-				wattrset(pad,COLOR_PAIR(9));
+				wattrset(pad,COLOR_PAIR(10));
 				wprintw(pad,"|");
 			} else {
 				wprintw(pad,"U");
@@ -234,7 +226,7 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 			} else {
 				if(systquant) {
 					if(usecolor) {
-						wattrset(pad,COLOR_PAIR(8));
+						wattrset(pad,COLOR_PAIR(9));
 						wprintw(pad,"|");
 					} else {
 						wprintw(pad,"W");
@@ -242,7 +234,7 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 					--systquant;
 				} else {
 					wattrset(pad,COLOR_PAIR(0));
-					wprintw(pad,"|");
+					wprintw(pad,"=");
 				}
 			}
 		}
@@ -290,7 +282,7 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 	// mvwprintw(pad,row, peak_col, ">");
 }
 
-void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct syscpu cpu, int show_raw)
+void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct sysres res, int show_raw)
 {
 	WINDOW *padsmp = *padsmpin;
 	if (padsmp == NULL) {
@@ -298,12 +290,12 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	}
 	int x = *xin;
 
-	double cpu_busy = cpu.busy;
-	double cpu_scaled_user = (double)cpu.user / (double)cpu.scale;
-	double cpu_scaled_sys = (double)cpu.sys / (double)cpu.scale;
-	double cpu_scaled_wait = (double)cpu.wait / (double)cpu.scale;
-	double cpu_scaled_idle = (double)cpu.idle / (double)cpu.scale;
-	double cpu_scaled_steal = (double)cpu.steal/ (double)cpu.scale;
+	double cpu_busy = res.busy;
+	double cpu_scaled_user = res.percentuser;
+	double cpu_scaled_sys = res.percentsys;
+	double cpu_scaled_wait = 0;
+	double cpu_scaled_idle = res.percentidle;
+	double cpu_scaled_steal = 0;
 
 	uibanner(cols, padsmp, "CPU Utilisation");
 	// BANNER(padsmp,"CPU Utilisation");
@@ -315,28 +307,28 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	mvwprintw(padsmp, 1, 0, cpu_line);
 	mvwprintw(padsmp, 2, 0, "CPU  ");
 	if(usecolor) {
-		wattrset(padsmp, COLOR_PAIR(2));
+		wattrset(padsmp, COLOR_BLUE);
 	}
 	mvwprintw(padsmp, 2, 4, "User%%");
 	if(usecolor) {
-		wattrset(padsmp, COLOR_PAIR(1));
+		wattrset(padsmp, COLOR_RED);
 	}
-	mvwprintw(padsmp, 2, 9, "  Sys%%");
+	mvwprintw(padsmp, 2, 10, "Sys %%");
 	if(usecolor) {
-		wattrset(padsmp, COLOR_PAIR(4));
+		wattrset(padsmp, COLOR_GREEN);
 	}
-	mvwprintw(padsmp, 2, 15, " Wait%%");
+	mvwprintw(padsmp, 2, 16, "Wait%%");
 	if(usecolor) {
 		wattrset(padsmp, COLOR_PAIR(0));
 	}
-	mvwprintw(padsmp, 2, 22, " Idle");
+	mvwprintw(padsmp, 2, 22, "Idle");
 	if(usecolor) {
 		wattrset(padsmp, COLOR_PAIR(0));
 	}
 	mvwprintw(padsmp, 2, 27, "|0          |25         |50          |75       100|");
 
 	int i = 0;
-	for (i = 0; i < cpu.count; i++) {
+	for (i = 0; i < res.count; i++) {
 	 	mvwprintw(padsmp,3 + i, 77, "|");
 		// if(!show_raw)
 			plot_smp(padsmp,i+1, 3 + i, usecolor,
@@ -355,7 +347,7 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	}
 	mvwprintw(padsmp,i + 3, 0, cpu_line);
 	
-	if (cpu.count > 1) {
+	if (res.count > 1) {
 		// 	if(!show_raw) {
 				plot_smp(padsmp,0, 4 + i, usecolor,
 					cpu_scaled_user, cpu_scaled_sys, cpu_scaled_wait,

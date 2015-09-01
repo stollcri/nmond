@@ -11,6 +11,7 @@
 
 #define STR_INIT "-"
 #define DATE_FORMAT "%Y-%m-%d %H:%M:%S"
+#define CPU_TIME_DENOMINATOR 1000000
 
 //
 // Hardware based information
@@ -79,6 +80,8 @@ struct syskern { // CTL_KERN
 	unsigned int securitylevel; // KERN_SECURELVL
 	unsigned int updateinterval; // KERN_UPDATEINTERVAL
 
+	unsigned int corecount; // machdep.cpu.core_count
+
 	char *ostype; // KERN_OSTYPE ("Darwin")
 	char *osrelease; // KERN_OSRELEASE ("14.5.0")
 	char *osversion; // KERN_OSVERSION ("199506")
@@ -98,9 +101,46 @@ struct syskern { // CTL_KERN
 	// KERN_PROC
 	// KERN_PROF
 };
-#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, { 0, 0 }, { 0, 0 } }
+#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, { 0, 0 }, { 0, 0 } }
 
 extern struct syskern getsyskerninfo(void);
+
+//
+// System resource utilization information
+// 
+
+struct sysres {
+	unsigned int count;
+
+	int user;
+	int sys;
+	int idle;
+	int nice;
+	int total;
+
+	int olduser;
+	int oldsys;
+	int oldidle;
+	int oldnice;
+	int oldtotal;
+
+	double percentuser;
+	double percentsys;
+	double percentidle;
+	double percentnice;
+	
+	double wait;
+	double steal;
+	double scale;
+	double busy;
+
+	double loadavg1;
+	double loadavg5;
+	double loadavg15;
+};
+#define SYSRES_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+
+extern void getsysresinfo(struct sysres *);
 
 //
 // Processes information
@@ -112,40 +152,27 @@ struct sysproc {
 	int status;
 	int ttydev;
 	int priority;
+	
 	unsigned int realuid;
 	unsigned int effectiveuid;
+	
+	int utime;
+	int stime;
+
 	char *name;
 	char *path;
 	char *statustext;
 	char *realusername;
 	char *effectiveusername;
 };
-#define SYSPROC_INIT { 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
+#define SYSPROC_INIT { 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
-extern struct sysproc *getsysprocinfoall(size_t);
-extern struct sysproc *getsysprocinfobypid(int, size_t);
-extern struct sysproc *getsysprocinfobypgrp(int, size_t);
-extern struct sysproc *getsysprocinfobytty(int, size_t);
-extern struct sysproc *getsysprocinfobyuid(int, size_t);
-extern struct sysproc *getsysprocinfobyruid(int, size_t);
-
-//
-// CPU Utlization information
-// 
-
-struct syscpu {
-	int count;
-	double user;
-	double sys;
-	double wait;
-	double idle;
-	double steal;
-	double scale;
-	double busy;
-};
-#define SYSCPU_INIT { 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
-
-extern struct syscpu getsyscpuinfo(void);
+extern struct sysproc getsysprocinfoall(size_t);
+extern struct sysproc getsysprocinfobypid(int, size_t);
+extern struct sysproc getsysprocinfobypgrp(int, size_t);
+extern struct sysproc getsysprocinfobytty(int, size_t);
+extern struct sysproc getsysprocinfobyuid(int, size_t);
+extern struct sysproc getsysprocinfobyruid(int, size_t);
 
 //
 // Mem
