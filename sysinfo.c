@@ -12,7 +12,6 @@
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <sys/resource.h>
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
@@ -23,9 +22,6 @@
 #include <sys/time.h>
 
 #include "sysctlhelper.h"
-// #include "inc/Apple/xnu/osfmk/mach/host_info.h"
-// #include "inc/Apple/xnu/libsyscall/mach/mach/mach_init.h"
-// #include "inc/Apple/xnu/libsyscall/wrappers/libproc/libproc.h"
 
 /*
  * Get all hardware information from sysctl
@@ -43,7 +39,6 @@ struct syshw getsyshwinfo()
 	thissys.physicalcpumax = intFromSysctlByName("hw.physicalcpu_max");
 	thissys.logicalcpucount = intFromSysctlByName("hw.logicalcpu");
 	thissys.logicalcpumax = intFromSysctlByName("hw.logicalcpu_max");
-	// thissys.floatingpoint = intFromSysctl(CTL_HW, HW_FLOATINGPOINT);
 	
 	thissys.byteorder = intFromSysctl(CTL_HW, HW_BYTEORDER);
 	thissys.memorysize = intFromSysctl(CTL_HW, HW_MEMSIZE);
@@ -61,20 +56,12 @@ struct syshw getsyshwinfo()
 	thissys.machine = stringFromSysctl(CTL_HW, HW_MACHINE);
 	thissys.model = stringFromSysctl(CTL_HW, HW_MODEL);
 
-	if(thissys.logicalcpucount>thissys.physicalcpucount)
+	if(thissys.logicalcpucount>thissys.physicalcpucount) {
 		thissys.hyperthreads=thissys.logicalcpucount/thissys.physicalcpucount;
-	else
+	} else {
 		thissys.hyperthreads=0;
-
-	thissys.cpucount = thissys.cpucount / thissys.logicalcpucount;
-	// TODO: set to two for development purposes only
-	thissys.cpucount = 2;
-
-	// TODO: this is legacy code
-	if(thissys.cpucount >= CPUMAX) {
-		printf("This nmon supports only %d CPU threads (Logical CPUs) and the machine appears to have %d.\nnmon stopping as its unsafe to continue.\n", CPUMAX, thissys.cpucount);
-		exit(44);
 	}
+	thissys.cpucount = thissys.cpucount / thissys.logicalcpucount;
 
 	return thissys;
 }
@@ -130,6 +117,90 @@ struct syskern getsyskerninfo()
 	// thissys.uptimestring = uptimestring;
 
 	return thissys;
+}
+
+//
+// System Resource (CPU Utlization) information
+// 
+
+void getsysresinfo(struct sysres *inres)
+{
+	struct sysres thisres = *inres;
+
+	int error = 0;
+	int newcpucount = 4; // TODO: FIXME Below
+
+	int mib[2];
+	mib[0] = CTL_VM;
+	mib[1] = VM_LOADAVG;
+	struct loadavg thisload;
+	size_t length = sizeof(thisload);
+	error = sysctl(mib, 2, &thisload, &length, NULL, 0);
+	if(!error) {
+		newcpucount = intFromSysctlByName("hw.ncpu");
+		thisres.loadavg1 = thisload.ldavg[0] / thisload.fscale;
+		thisres.loadavg5 = thisload.ldavg[1] / thisload.fscale;
+		thisres.loadavg15 = thisload.ldavg[2] / thisload.fscale;
+	}
+
+	// does the CPU count really change? Set it on the first pass
+	if (!thisres.cpucount || (newcpucount != thisres.cpucount)) {
+		thisres.cpucount = newcpucount;
+		thisres.cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)thisres.cpucount);
+	}
+
+	double total = 0;
+	natural_t cpuCount;
+	host_info_t hostinfo;
+	mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+	error = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &hostinfo, &count);
+	if (!error) {
+		processor_cpu_load_info_data_t* r_load = (processor_cpu_load_info_data_t*)hostinfo;
+
+		thisres.avgpercentuser = 0;
+		thisres.avgpercentsys = 0;
+		thisres.avgpercentidle = 0;
+		thisres.avgpercentnice = 0;
+
+		for (int cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
+			thisres.cpus[cpuno].olduser = thisres.cpus[cpuno].user;
+			thisres.cpus[cpuno].oldsys = thisres.cpus[cpuno].sys;
+			thisres.cpus[cpuno].oldidle = thisres.cpus[cpuno].idle;
+			thisres.cpus[cpuno].oldnice = thisres.cpus[cpuno].nice;
+			thisres.cpus[cpuno].oldtotal = thisres.cpus[cpuno].total;
+
+			thisres.cpus[cpuno].user = r_load[cpuno].cpu_ticks[CPU_STATE_USER];
+			thisres.cpus[cpuno].sys = r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
+			thisres.cpus[cpuno].idle = r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
+			thisres.cpus[cpuno].nice = r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
+			thisres.cpus[cpuno].total = 
+				r_load[cpuno].cpu_ticks[CPU_STATE_USER] + r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] + 
+				r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
+
+			total = (double)(thisres.cpus[cpuno].total - thisres.cpus[cpuno].oldtotal);
+
+			thisres.cpus[cpuno].percentuser = 
+				(double)(thisres.cpus[cpuno].user - thisres.cpus[cpuno].olduser) / total * 100;
+			thisres.cpus[cpuno].percentsys = 
+				(double)(thisres.cpus[cpuno].sys - thisres.cpus[cpuno].oldsys) / total * 100;
+			thisres.cpus[cpuno].percentidle = 
+				(double)(thisres.cpus[cpuno].idle - thisres.cpus[cpuno].oldidle) / total * 100;
+			thisres.cpus[cpuno].percentnice = 
+				(double)(thisres.cpus[cpuno].nice - thisres.cpus[cpuno].oldnice) / total * 100;
+
+			thisres.avgpercentuser += thisres.cpus[cpuno].percentuser;
+			thisres.avgpercentsys += thisres.cpus[cpuno].percentsys;
+			thisres.avgpercentidle += thisres.cpus[cpuno].percentidle;
+			thisres.avgpercentnice += thisres.cpus[cpuno].percentnice;
+		}
+
+		thisres.avgpercentuser /= thisres.cpucount;
+		thisres.avgpercentsys /= thisres.cpucount;
+		thisres.avgpercentidle /= thisres.cpucount;
+		thisres.avgpercentnice /= thisres.cpucount;
+	}
+
+	*inres = thisres;
 }
 
 //
@@ -305,78 +376,4 @@ struct sysproc getsysprocinfobyruid(int realuserid, size_t length)
 {
 	struct sysres thisres = SYSRES_INIT;
 	return getsysprocinfo(KERN_PROC_RUID, realuserid, &length);
-}
-
-//
-// CPU Utlization information
-// 
-
-void getsysresinfo(struct sysres *inres)
-{
-	struct sysres thisres = *inres;
-
-	int error = 0;
-	int newcpucount = 4; // TODO: FIXME Below
-
-	// int mib[2];
-	// mib[0] = CTL_VM;
-	// mib[1] = VM_LOADAVG;
-	// struct loadavg thisload;
-	// size_t length = sizeof(thisload);
-	// error = sysctl(mib, 2, &thisload, &length, NULL, 0);
-	// if(!error) {
-		// newcpucount = intFromSysctlByName("machdep.cpu.core_count");
-	// 	//thisres.user = thisload.ldavg[0];// * (thisload.ldavg[0] / 85);
-	// 	//if(thisres.user>1000) thisres.user=1000;
-	// 	//thisres.sys = thisload.ldavg[1];// * (thisload.ldavg[1] / 135);
-	// 	//if(thisres.sys>1000) thisres.sys=1000;
-	// 	thisres.wait = thisload.ldavg[2];
-	// 	//thisres.idle = thisres.scale - (thisload.ldavg[0] + thisload.ldavg[1] + thisload.ldavg[2]);
-	// 	thisres.steal = 0;
-	// 	thisres.scale = thisload.fscale;
-	// 	thisres.busy = (thisload.ldavg[0] + thisload.ldavg[1]) / thisload.fscale;
-	// }
-
-	//struct rusage thisusage;
-	//error = getrusage(RUSAGE_SELF, &thisusage);
-	if (!thisres.cpucount || (newcpucount != thisres.cpucount)) {
-		thisres.cpucount = newcpucount;
-		thisres.cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)thisres.cpucount);
-	}
-
-	double total = 0;
-	natural_t cpuCount;
-	host_info_t hostinfo;
-	mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
-	error = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &hostinfo, &count);
-	if (!error) {
-		processor_cpu_load_info_data_t* r_load = (processor_cpu_load_info_data_t*)hostinfo;
-
-		for (int cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
-			thisres.cpus[cpuno].olduser = thisres.cpus[cpuno].user;
-			thisres.cpus[cpuno].oldsys = thisres.cpus[cpuno].sys;
-			thisres.cpus[cpuno].oldidle = thisres.cpus[cpuno].idle;
-			thisres.cpus[cpuno].oldnice = thisres.cpus[cpuno].nice;
-			thisres.cpus[cpuno].oldtotal = thisres.cpus[cpuno].total;
-
-			thisres.cpus[cpuno].user = r_load[cpuno].cpu_ticks[CPU_STATE_USER];
-			thisres.cpus[cpuno].sys = r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
-			thisres.cpus[cpuno].idle = r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
-			thisres.cpus[cpuno].nice = r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
-			thisres.cpus[cpuno].total = 
-				r_load[cpuno].cpu_ticks[CPU_STATE_USER] + r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] + 
-				r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
-
-			total = (double)(thisres.cpus[cpuno].total - thisres.cpus[cpuno].oldtotal);
-
-			thisres.cpus[cpuno].percentuser = 
-				(double)(thisres.cpus[cpuno].user - thisres.cpus[cpuno].olduser) / total * 100;
-			thisres.cpus[cpuno].percentsys = 
-				(double)(thisres.cpus[cpuno].sys - thisres.cpus[cpuno].oldsys) / total * 100;
-			thisres.cpus[cpuno].percentidle = 
-				(double)(thisres.cpus[cpuno].idle - thisres.cpus[cpuno].oldidle) / total * 100;
-		}
-	}
-
-	*inres = thisres;
 }

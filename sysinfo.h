@@ -17,11 +17,6 @@
 // Hardware based information
 // 
 
-// TODO: this is legacy code
-/* Supports up to 780, but not POWER6 595 follow-up with POWER7 */
-/* XXXX needs rework to cope to with fairly rare but interesting higher numbers of CPU machines */
-#define CPUMAX (192 * 8) /* MAGIC COOKIE WARNING */
-
 struct syshw { // CTL_HW
 	unsigned int cpufrequency; // hw.cpufrequency
 	unsigned int cpufrequencymin; // hw.cpufrequency_min
@@ -33,7 +28,6 @@ struct syshw { // CTL_HW
 	unsigned int logicalcpucount; // hw.logicalcpu
 	unsigned int logicalcpumax; // hw.logicalcpu_max
 	unsigned int hyperthreads;
-	//int floatingpoint; // HW_FLOATINGPOINT (hardware support)
 	
 	unsigned int byteorder; // HW_BYTEORDER
 	unsigned int memorysize; // HW_MEMSIZE (total memory, 64bit int)
@@ -125,6 +119,7 @@ struct sysrescpu {
 	double percentuser;
 	double percentsys;
 	double percentidle;
+	double percentnice;
 };
 #define SYSRESCPU_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0 }
 
@@ -132,6 +127,11 @@ struct sysres {
 	int cpucount;
 
 	struct sysrescpu *cpus;
+
+	double avgpercentuser;
+	double avgpercentsys;
+	double avgpercentidle;
+	double avgpercentnice;
 
 	double loadavg1;
 	double loadavg5;

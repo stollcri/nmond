@@ -170,39 +170,43 @@ void uiverbose(WINDOW **padverbin, int *xin, int cols)
 	*xin = x + 6;
 }
 
-
-
-
-
-
-void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double sys, double wait, double idle)
+void uicpudetail(WINDOW *pad, int cpuno, int row, int usecolor, double user, double sys, double idle, double nice)
 {
-	int	peak_col;
-		
-	// if(cpu_peak[cpuno] < (user + kernel + iowait) )
-	// 	cpu_peak[cpuno] = (double)((int)user/2 + (int)kernel/2 + (int)iowait/2)*2.0;
-	
 	if(cpuno == -1) {
 		mvwprintw(pad,row, 0, "Avg");
 	} else {
 		mvwprintw(pad,row, 0, "%3d", cpuno);
 	}
-	mvwprintw(pad,row,  4, "%2.2f", user);
-	mvwprintw(pad,row, 10, "%2.2f", sys);
-	mvwprintw(pad,row, 16, "%2.2f", wait);
-	mvwprintw(pad,row, 22, "%2.2f", idle);
-
+	mvwprintw(pad,row,  4, "%4.2f ", user);
+	mvwprintw(pad,row, 10, "%4.2f ", sys);
+	mvwprintw(pad,row, 16, "%4.2f ", nice);
+	mvwprintw(pad,row, 22, "%4.2f ", idle);
 	mvwprintw(pad,row, 27, "|");
 
 	wmove(pad,row, 28);
+	char *metermark = (char*)malloc(sizeof(char));
 	int userquant = (int)(user / 2);
 	int systquant = (int)(sys / 2);
-	int waitquant = (int)(wait / 2);
+	int nicequant = (int)(nice / 2);
 	for(int i=28; i<=77; ++i){
+		if(((i + 3) % 5) == 0) {
+			metermark = "|";
+		} else {
+			if(cpuno >= 0) {
+				if(((cpuno + 1) % 2) == 0) {
+					metermark = " ";
+				} else {
+					metermark = "-";
+				}
+			} else {
+				metermark = "=";
+			}
+		}
+
 		if(userquant) {
 			if(usecolor) {
 				wattrset(pad,COLOR_PAIR(10));
-				wprintw(pad,"|");
+				wprintw(pad, metermark);
 			} else {
 				wprintw(pad,"U");
 			}
@@ -211,7 +215,7 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 			if(systquant) {
 				if(usecolor) {
 					wattrset(pad,COLOR_PAIR(8));
-					wprintw(pad,"|");
+					wprintw(pad, metermark);
 				} else {
 					wprintw(pad,"S");
 				}
@@ -220,59 +224,19 @@ void plot_smp(WINDOW *pad, int cpuno, int row, int usecolor, double user, double
 				if(systquant) {
 					if(usecolor) {
 						wattrset(pad,COLOR_PAIR(9));
-						wprintw(pad,"|");
+						wprintw(pad, metermark);
 					} else {
-						wprintw(pad,"W");
+						wprintw(pad,"N");
 					}
 					--systquant;
 				} else {
 					wattrset(pad,COLOR_PAIR(0));
-					wprintw(pad,"=");
+					wprintw(pad, metermark);
 				}
 			}
 		}
 	}
-	/*
-	for (i = 0; i < (int)(user / 2); i++){
-		if(usecolor) {
-			wattrset(pad,COLOR_PAIR(9));
-		}
-		wprintw(pad,"U");
-	}
-	for (i = 0; i < (int)(kernel / 2); i++){
-		if(usecolor) {
-			wattrset(pad,COLOR_PAIR(8));
-		}
-		wprintw(pad,"S");
-	}
-	for (i = 0; i < (int)(iowait / 2); i++) {
-		if(usecolor) {
-			wattrset(pad,COLOR_PAIR(8));
-		}
-		wprintw(pad,"W");
-	}
-	if(usecolor) {
-		wattrset(pad,COLOR_PAIR(0));
-	}
-	for (i = 0; i <= (int)(idle / 2); i++) {  // added "=" to try to conteract missing halves
-			wprintw(pad," ");
-	}
-	for (i = 0; i < (int)((steal+1)  / 2); i++) {
-		if(usecolor) {
-			wattrset(pad,COLOR_PAIR(5));
-		}
-		wprintw(pad,"S");
-	}
-	*/
-	if(usecolor) {
-		wattrset(pad,COLOR_PAIR(0));
-	}
 	mvwprintw(pad,row, 77, "| ");
-	
-	// peak_col = 28 +(int)(cpu_peak[cpuno]/2);
-	// if(peak_col > 77)
-	// 	peak_col=77;
-	// mvwprintw(pad,row, peak_col, ">");
 }
 
 void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct sysres thisres, int show_raw)
@@ -283,63 +247,43 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	}
 	int x = *xin;
 
-	uibanner(cols, padsmp, "CPU Utilisation");
-	char cpu_line[78] = "---------------------------+-------------------------------------------------+";
-	mvwprintw(padsmp, 1, 0, cpu_line);
-	mvwprintw(padsmp, 2, 0, "CPU  ");
+	uibanner(cols, padsmp, "CPU Load");
+	mvwprintw(padsmp, 1, 0, "CPU");
 	if(usecolor) {
 		wattrset(padsmp, COLOR_PAIR(COLOR_BLUE));
-	}
-	mvwprintw(padsmp, 2, 4, "User%%");
-	if(usecolor) {
+		mvwprintw(padsmp, 1, 4, "User%%");
 		wattrset(padsmp, COLOR_PAIR(COLOR_RED));
-	}
-	mvwprintw(padsmp, 2, 10, "Sys %%");
-	if(usecolor) {
+		mvwprintw(padsmp, 1, 10, "Sys %%");
 		wattrset(padsmp, COLOR_PAIR(COLOR_GREEN));
+		mvwprintw(padsmp, 1, 16, "Nice%%");
+		wattrset(padsmp, COLOR_PAIR(COLOR_WHITE));
+		mvwprintw(padsmp, 1, 22, "Idle");
+	} else {
+		mvwprintw(padsmp, 1, 4, "User%%");
+		mvwprintw(padsmp, 1, 10, "Sys %%");
+		mvwprintw(padsmp, 1, 16, "Wait%%");
+		mvwprintw(padsmp, 1, 22, "Idle");
 	}
-	mvwprintw(padsmp, 2, 16, "Wait%%");
-	if(usecolor) {
-		wattrset(padsmp, COLOR_PAIR(0));
-	}
-	mvwprintw(padsmp, 2, 22, "Idle");
-	if(usecolor) {
-		wattrset(padsmp, COLOR_PAIR(0));
-	}
-	mvwprintw(padsmp, 2, 27, "|0          |25         |50          |75       100|");
+	mvwprintw(padsmp, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
 
 	int cpuno = 0;
-	double avguser = 0;
-	double avgsys = 0;
-	double avgwait = 0;
-	double avgidle = 0;
 	for (cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
-	 	mvwprintw(padsmp, (3 + cpuno), 77, "|");
-		plot_smp(padsmp, cpuno, (cpuno + 3), usecolor,
+	 	mvwprintw(padsmp, (2 + cpuno), 77, "|");
+		uicpudetail(padsmp, cpuno, (cpuno + 2), usecolor,
 			thisres.cpus[cpuno].percentuser, 
 			thisres.cpus[cpuno].percentsys,
-			0, 
-			thisres.cpus[cpuno].percentidle);
-
-		avguser += thisres.cpus[cpuno].percentuser;
-		avgsys += thisres.cpus[cpuno].percentsys;
-		avgwait += 0;
-		avgidle += thisres.cpus[cpuno].percentidle;
+			thisres.cpus[cpuno].percentidle,
+			thisres.cpus[cpuno].percentnice);
 	}
 
-	int i = cpuno;
-	avguser /= (double)thisres.cpucount;
-	avgsys /= (double)thisres.cpucount;
-	avgwait /= (double)thisres.cpucount;
-	avgidle /= (double)thisres.cpucount;
-
-	mvwprintw(padsmp, (i + 3), 0, cpu_line);
 	if (thisres.cpucount > 1) {
-		plot_smp(padsmp, -1, (i + 4), usecolor, avguser, avgsys, avgwait, avgidle);
-		mvwprintw(padsmp, (i + 5), 0, cpu_line);
-		i = i + 2;
+		uicpudetail(padsmp, -1, (cpuno + 2), usecolor,
+			thisres.avgpercentuser, 
+			thisres.avgpercentsys, 
+			thisres.avgpercentidle, 
+			thisres.avgpercentnice);
 	}
-	uidisplay(&x, cols, (i+4), padsmp, rows);
+	uidisplay(&x, cols, (cpuno + 3), padsmp, rows);
 
 	*xin = x;
 }
