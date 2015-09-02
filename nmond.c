@@ -1202,102 +1202,6 @@ void snap_clear()
 	cpu_snap_all=0;
 }
 
-void plot_snap(WINDOW *pad)
-{
-	int i;
-	int j;
-	if (cursed) {
-		mvwprintw(pad,0, 0, " CPU +---Long-Term-------------------------------------------------------------+");
-		mvwprintw(pad,1, 0,"100%%-|");
-		mvwprintw(pad,2, 1, "95%%-|");
-		mvwprintw(pad,3, 1, "90%%-|");
-		mvwprintw(pad,4, 1, "85%%-|");
-		mvwprintw(pad,5, 1, "80%%-|");
-		mvwprintw(pad,6, 1, "75%%-|");
-		mvwprintw(pad,7, 1, "70%%-|");
-		mvwprintw(pad,8, 1, "65%%-|");
-		mvwprintw(pad,9, 1, "60%%-|");
-		mvwprintw(pad,10, 1, "55%%-|");
-		mvwprintw(pad,11, 1, "50%%-|");
-		mvwprintw(pad,12, 1, "45%%-|");
-		mvwprintw(pad,13, 1, "40%%-|");
-		mvwprintw(pad,14, 1, "35%%-|");
-		mvwprintw(pad,15, 1, "30%%-|");
-		mvwprintw(pad,16, 1, "25%%-|");
-		mvwprintw(pad,17, 1, "20%%-|");
-		mvwprintw(pad,18, 1,"15%%-|");
-		mvwprintw(pad,19, 1,"10%%-|");
-		mvwprintw(pad,20, 1," 5%%-|");
-		
-		mvwprintw(pad,21, 4, " +-------------------------------------------------------------------------+");
-		if (colour){
-			COLOUR wattrset(pad, COLOR_PAIR(2));
-			mvwprintw(pad,0, 26, "User%%");
-			COLOUR wattrset(pad, COLOR_PAIR(1));
-			mvwprintw(pad,0, 36, "System%%");
-			COLOUR wattrset(pad, COLOR_PAIR(4));
-			mvwprintw(pad,0, 49, "Wait%%");
-			COLOUR wattrset(pad, COLOR_PAIR(5));
-			mvwprintw(pad,0, 59, "Steal%%");
-			COLOUR wattrset(pad, COLOR_PAIR(0));
-		}
-		
-		for (j = 0; j < MAX_SNAPS; j++) {
-			for (i = 0; i < MAX_SNAP_ROWS; i++) {
-				wmove(pad,MAX_SNAP_ROWS-i, j+SNAP_OFFSET);
-				if (cpu_snap[j].user + cpu_snap[j].kernel + cpu_snap[j].iowait + cpu_snap[j].idle + cpu_snap[j].steal == 0) { /* if not all zeros */
-					COLOUR wattrset(pad,COLOR_PAIR(0));
-					wprintw(pad," ");
-				} else if( (cpu_snap[j].user / 100 * MAX_SNAP_ROWS) > i+0.5) {
-					COLOUR wattrset(pad,COLOR_PAIR(9));
-					wprintw(pad,"U");
-				} else if( (cpu_snap[j].user + cpu_snap[j].kernel )/ 100 * MAX_SNAP_ROWS > i+0.5) {
-					COLOUR wattrset(pad,COLOR_PAIR(8));
-					wprintw(pad,"s");
-				} else if( (cpu_snap[j].user + cpu_snap[j].kernel + cpu_snap[j].iowait )/ 100 * MAX_SNAP_ROWS > i+0.5) {
-					COLOUR wattrset(pad,COLOR_PAIR(10));
-					wprintw(pad,"w");
-				} else if( (cpu_snap[j].user + cpu_snap[j].kernel + cpu_snap[j].iowait + cpu_snap[j].idle)/ 100 * MAX_SNAP_ROWS > i) { /*no +0.5 or too few Steal's */
-					COLOUR wattrset(pad,COLOR_PAIR(0));
-					wprintw(pad," ");
-				} else if (cpu_snap[j].user + cpu_snap[j].kernel + cpu_snap[j].iowait + cpu_snap[j].idle + cpu_snap[j].steal > i) { /* if not all zeros */
-					COLOUR wattrset(pad,COLOR_PAIR(5));
-					wprintw(pad,"S");
-				}
-			}
-		}
-		COLOUR wattrset(pad,COLOR_PAIR(0));
-		for (i = 0; i < MAX_SNAP_ROWS; i++) {
-			wmove(pad,MAX_SNAP_ROWS-i, next_cpu_snap+SNAP_OFFSET);
-			wprintw(pad,"|");
-		}
-		wmove(pad,MAX_SNAP_ROWS+1 - (snap_average() /5), next_cpu_snap+SNAP_OFFSET);
-		wprintw(pad,"+");
-		if(dotline) {
-			for (i = 0; i < MAX_SNAPS; i++) {
-				wmove(pad,MAX_SNAP_ROWS+1-dotline*2, i+SNAP_OFFSET);
-				wprintw(pad,"+");
-			}
-			dotline = 0;
-		}
-	}
-}
-
-/* This saves the CPU overall usage for later ploting on the screen */
-void save_snap(double user, double kernel, double iowait, double idle, double steal)
-{
-	cpu_snap[next_cpu_snap].user = user;
-	cpu_snap[next_cpu_snap].kernel = kernel;
-	cpu_snap[next_cpu_snap].iowait = iowait;
-	cpu_snap[next_cpu_snap].idle = idle;
-	cpu_snap[next_cpu_snap].steal = steal;
-	next_cpu_snap++;
-	if(next_cpu_snap >= MAX_SNAPS) {
-		next_cpu_snap=0;
-		cpu_snap_all=1;
-	}
-}
-
 /* This puts the CPU usage on the screen and draws the CPU graphs or outputs to the file */
 
 void save_smp(WINDOW *pad, int cpu_no, int row, long user, long kernel, long iowait, long idle, long nice, long irq, long softirq, long steal)
@@ -1861,6 +1765,7 @@ int checkinput(void)
 					case 'l':
 						FLIP (show_longterm);
 						wclear(padlong);
+						//cpulongitter = 0;
 						break;
 					case 'V':
 						FLIP(show_vm);
@@ -2407,6 +2312,7 @@ int proc_procsinfo(int pid, int index)
 		getsysresinfo(&thisres);
 		int processcount = 0;
 		struct sysproc thisproc = getsysprocinfoall(&processcount);
+		int cpulongitter = 0;
 
 		// getsysresinfo(&thisres);
 		// exit(15);
@@ -2884,9 +2790,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				uisys(&padsys, &x, COLS, LINES, thiskern);
 			}
 			if (show_longterm ) {
-				save_snap(cpu_scaled_user, cpu_scaled_sys, cpu_scaled_wait, cpu_scaled_idle, cpu_scaled_steal);
-				plot_snap(padlong);
-				DISPLAY(padlong,MAX_SNAP_ROWS+2);
+				uicpulong(&padlong, &x, COLS, LINES, &cpulongitter, colour, thisres);
 			}
 			if (show_smp || show_verbose) {
 				if (show_smp) {

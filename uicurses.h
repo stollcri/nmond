@@ -33,5 +33,6 @@ extern void uihelp(WINDOW**, int*, int, int);
 extern void uisys(WINDOW**, int*, int, int, struct syskern);
 extern void uiverbose(WINDOW**, int*, int);
 extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
+extern void uicpulong(WINDOW **padlong, int*, int, int, int*, int, struct sysres);
 
 #endif

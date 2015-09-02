@@ -185,10 +185,10 @@ void uicpudetail(WINDOW *pad, int cpuno, int row, int usecolor, double user, dou
 
 	wmove(pad,row, 28);
 	char *metermark = (char*)malloc(sizeof(char));
-	int userquant = (int)(user / 2);
-	int systquant = (int)(sys / 2);
-	int nicequant = (int)(nice / 2);
-	for(int i=28; i<=77; ++i){
+	int userquant = (int)(round(user) / 2);
+	int systquant = (int)(round(sys) / 2);
+	int nicequant = (int)(round(nice) / 2);
+	for(int i=28; i<77; ++i){
 		if(((i + 3) % 5) == 0) {
 			metermark = "|";
 		} else {
@@ -221,14 +221,14 @@ void uicpudetail(WINDOW *pad, int cpuno, int row, int usecolor, double user, dou
 				}
 				--systquant;
 			} else {
-				if(systquant) {
+				if(nicequant) {
 					if(usecolor) {
 						wattrset(pad,COLOR_PAIR(9));
 						wprintw(pad, metermark);
 					} else {
 						wprintw(pad,"N");
 					}
-					--systquant;
+					--nicequant;
 				} else {
 					wattrset(pad,COLOR_PAIR(0));
 					wprintw(pad, metermark);
@@ -236,7 +236,8 @@ void uicpudetail(WINDOW *pad, int cpuno, int row, int usecolor, double user, dou
 			}
 		}
 	}
-	mvwprintw(pad,row, 77, "| ");
+	wattrset(pad,COLOR_PAIR(0));
+	mvwprintw(pad,row, 77, "|");
 }
 
 void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct sysres thisres, int show_raw)
@@ -285,5 +286,116 @@ void uicpu(WINDOW **padsmpin, int *xin, int cols, int rows, int usecolor, struct
 	}
 	uidisplay(&x, cols, (cpuno + 3), padsmp, rows);
 
+	*xin = x;
+}
+
+#define COLOUR if(colour)
+void uicpulong(WINDOW **padlongin, int *xin, int cols, int rows, int *itterin, int usecolor, struct sysres thisres)
+{
+	WINDOW *padlong = *padlongin;
+	if (padlong == NULL) {
+		return;
+	}
+	int x = *xin;
+	int itteration = *itterin;
+
+	mvwprintw(padlong,0, 0, " CPU +---Long-Term------------------------------------------------------------");
+	if (usecolor){
+		wattrset(padlong, COLOR_PAIR(4));
+		mvwprintw(padlong,0, 27, "User%%");
+		wattrset(padlong, COLOR_PAIR(1));
+		mvwprintw(padlong,0, 35, "System%%");
+		wattrset(padlong, COLOR_PAIR(2));
+		mvwprintw(padlong,0, 45, "Nice%%");
+		wattrset(padlong, COLOR_PAIR(0));
+	}
+	mvwprintw(padlong,1, 0,"100%%-|");
+	mvwprintw(padlong,2, 1, "95%%-|");
+	mvwprintw(padlong,3, 1, "90%%-|");
+	mvwprintw(padlong,4, 1, "85%%-|");
+	mvwprintw(padlong,5, 1, "80%%-|");
+	mvwprintw(padlong,6, 1, "75%%-|");
+	mvwprintw(padlong,7, 1, "70%%-|");
+	mvwprintw(padlong,8, 1, "65%%-|");
+	mvwprintw(padlong,9, 1, "60%%-|");
+	mvwprintw(padlong,10, 1, "55%%-|");
+	mvwprintw(padlong,11, 1, "50%%-|");
+	mvwprintw(padlong,12, 1, "45%%-|");
+	mvwprintw(padlong,13, 1, "40%%-|");
+	mvwprintw(padlong,14, 1, "35%%-|");
+	mvwprintw(padlong,15, 1, "30%%-|");
+	mvwprintw(padlong,16, 1, "25%%-|");
+	mvwprintw(padlong,17, 1, "20%%-|");
+	mvwprintw(padlong,18, 1,"15%%-|");
+	mvwprintw(padlong,19, 1,"10%%-|");
+	mvwprintw(padlong,20, 1," 5%%-|");
+	
+	int graphcols = 70;
+	int graphrows = 20;
+	int offset = 6;
+
+	char *metermark = (char*)malloc(sizeof(char));
+	char *leadermark = (char*)malloc(sizeof(char));
+
+	int userquant = (int)(round(thisres.avgpercentuser) / 5);
+	int systquant = (int)(round(thisres.avgpercentsys) / 5);
+	int nicequant = (int)(round(thisres.avgpercentnice) / 5);
+
+	for (int i = graphrows; i > 0; --i) {
+		wmove(padlong, i, itteration+offset);
+		
+		if((i > 1) && (((i - 1) % 5) == 0)) {
+			metermark = "-";
+			leadermark = "+";
+		} else {
+			metermark = " ";
+			leadermark = "|";
+		}
+
+		if(userquant) {
+			if(usecolor) {
+				wattrset(padlong,COLOR_PAIR(10));
+				wprintw(padlong, metermark);
+			} else {
+				wprintw(padlong,"U");
+			}
+			--userquant;
+		} else {
+			if(systquant) {
+				if(usecolor) {
+					wattrset(padlong,COLOR_PAIR(8));
+					wprintw(padlong, metermark);
+				} else {
+					wprintw(padlong,"S");
+				}
+				--systquant;
+			} else {
+				if(nicequant) {
+					if(usecolor) {
+						wattrset(padlong,COLOR_PAIR(9));
+						wprintw(padlong, metermark);
+					} else {
+						wprintw(padlong,"N");
+					}
+					--nicequant;
+				} else {
+					wattrset(padlong,COLOR_PAIR(0));
+					wprintw(padlong, metermark);
+				}
+			}
+		}
+
+		wattrset(padlong,COLOR_PAIR(0));
+		wmove(padlong, i, itteration+offset+1);
+		wprintw(padlong, leadermark);
+	}
+	uidisplay(&x, cols, 21, padlong, rows);
+
+	++itteration;
+	if(itteration > graphcols) {
+		itteration = 0;
+	}
+
+	*itterin = itteration;
 	*xin = x;
 }
