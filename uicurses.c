@@ -42,12 +42,12 @@ inline void uiheader(int *xin, int usecolor, int blinkon, char *hostname, double
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvprintw(x, 2, APPNAME);
-	mvprintw(x, 8, VERSION);
+	mvprintw(x, 1, APPNAME);
+	mvprintw(x, 9, VERSION);
 	if(blinkon) {
-		mvprintw(x, 16, "[H for help]");
+		mvprintw(x, 15, "[H for help]");
 	}
-	mvprintw(x, 31, "%s", hostname);
+	mvprintw(x, 30, "%s", hostname);
 	mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
@@ -127,7 +127,9 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	mvwprintw(win, 14, 2, "[ n =                               ][                                   ]");
 	mvwprintw(win, 15, 2, "[ N =                               ][                                   ]");
 	mvwprintw(win, 16, 2, "[ q = Quit/Exit                     ][                                   ]");
-	mvwprintw(win, 18, 2, "             Chrisotpher Stoll, 2015 (%s)", APPURL);
+	mvwprintw(win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
+	mvwprintw(win, 19, 2, "              Chrisotpher Stoll, 2015 (%s)", APPURL);
+	
 
 	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
 	uidisplay(win, &x, cols, 20, rows);
