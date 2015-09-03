@@ -158,14 +158,9 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	mvwprintw(win, 14, 2, "[ n =                               ][                                   ]");
 	mvwprintw(win, 15, 2, "[ N =                               ][                                   ]");
 	mvwprintw(win, 16, 2, "[ q = Quit/Exit                     ][                                   ]");
-<<<<<<< HEAD
-	mvwprintw(win, 18, 2, "             Christopher Stoll, 2015 (%s)", APPURL);
-=======
 	mvwprintw(win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
 	mvwprintw(win, 19, 2, "              Chrisotpher Stoll, 2015 (%s)", APPURL);
 	
->>>>>>> f86a3d2c0ad93d69ebc80d9e5b69771d9e37ff48
-
 	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
 	uidisplay(win, &x, cols, 20, rows);
 	
