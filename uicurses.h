@@ -11,6 +11,11 @@
  *   (for license, see included LICENSE file)
  */
 
+#define APPNAME "nmond"
+#define VERSION "0.0.1"
+#define VERDATE "2015-08-18"
+#define APPURL "https://github.com/stollcri/nmond"
+
 #define MAXROWS 256
 #define MAXCOLS 150
 
@@ -27,11 +32,11 @@
 #define MSG_ERR_FAILEDDIR "Directory attempted was:%s\n"
 #define MSG_ERR_NOPENFILE "nmond: failed to open output file"
 
-extern void uiheader(int*, int, int, char*, char*, double, time_t);
+extern void uiheader(int*, int, int, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int*, int, int);
 extern void uisys(WINDOW**, int*, int, int, struct syskern);
-extern void uiverbose(WINDOW**, int*, int);
+extern void uiverbose(WINDOW**, int*, int, int);
 extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
 extern void uicpulong(WINDOW **padlong, int*, int, int, int*, int, struct sysres);
 

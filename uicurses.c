@@ -6,48 +6,48 @@
 
 #include "uicurses.h"
 
-static inline void uibanner(int cols, WINDOW *pad, char *string)
+static inline void uibanner(WINDOW *win, int cols, char *string)
 {
-	mvwhline(pad, 0, 0, ACS_HLINE, cols-2);
-	wmove(pad, 0, 0);
-	wattron(pad, A_STANDOUT);
-	wprintw(pad, " ");
-	wprintw(pad, string);
-	wprintw(pad, " ");
-	wattroff(pad, A_STANDOUT);
+	mvwhline(win, 0, 0, ACS_HLINE, (cols - 2));
+	wmove(win, 0, 0);
+	wattron(win, A_STANDOUT);
+	wprintw(win, " ");
+	wprintw(win, string);
+	wprintw(win, " ");
+	wattroff(win, A_STANDOUT);
 }
 
 
-static inline void uidisplay(int *xin, int cols, int rows, WINDOW *pad, int lines)
+static inline void uidisplay(WINDOW *win, int *xin, int cols, int rows, int lines)
 {
 	int x = *xin;
 
-	if(x+2+(rows) > lines) {
-		pnoutrefresh(pad, 0, 0, x, 1, lines-2, cols-2);
+	if((x + rows + 2) > lines) {
+		pnoutrefresh(win, 0, 0, x, 1, (lines - 2), (cols - 2));
 	} else {
-		pnoutrefresh(pad, 0, 0, x, 1, x+rows+1, cols-2);
+		pnoutrefresh(win, 0, 0, x, 1, (x + rows + 1), (cols - 2));
 	}
 
-	x=x+(rows);
-	if(x+4 > lines) {
+	x = x + rows;
+	if((x + 4) > lines) {
 		mvwprintw(stdscr, lines-1, 10, MSG_WRN_NOT_SHOWN);
 	}
 
 	*xin = x;
 }
 
-inline void uiheader(int *xin, int usecolor, int useblink, char *version, char *hostname, double elapsed, time_t timer)
+inline void uiheader(int *xin, int usecolor, int blinkon, char *hostname, double elapsed, time_t timer)
 {
 	int x = *xin;
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvprintw(x, 2, "nmond");
-	mvprintw(x, 8, "%s", version);
-	if(useblink) {
-		mvprintw(x, 14,"[H for help]");
+	mvprintw(x, 2, APPNAME);
+	mvprintw(x, 8, VERSION);
+	if(blinkon) {
+		mvprintw(x, 16, "[H for help]");
 	}
-	mvprintw(x, 29, "%s", hostname);
+	mvprintw(x, 31, "%s", hostname);
 	mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
@@ -110,28 +110,27 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 		return;
 	}
 	int x = *xin;
-	uibanner(cols, win, "HELP");
-	mvwprintw(win,  1, 5, "key  --- statistics which toggle on/off ---");
-	mvwprintw(win,  2, 5, "h = This help information");
-	mvwprintw(win,  3, 5, "r = RS6000/pSeries CPU/cache/OS/kernel/hostname details + LPAR");
-	mvwprintw(win,  4, 5, "t = Top Process Stats 1=basic 3=CPU");
-	mvwprintw(win,  5, 5, "    u = shows command arguments (hit twice to refresh)");
-	mvwprintw(win,  6, 5, "c = CPU by processor             l = longer term CPU averages");
-	mvwprintw(win,  7, 5, "m = Memory & Swap stats L=Huge   j = JFS Usage Stats");
-	mvwprintw(win,  8, 5, "n = Network stats                N = NFS");
-	mvwprintw(win,  9, 5, "d = Disk I/O Graphs D=Stats      o = Disks %%Busy Map");
-	mvwprintw(win, 10, 5, "k = Kernel stats & loadavg       V = Virtual Memory");
-	mvwprintw(win, 11, 5, "g = User Defined Disk Groups [start nmon with -g <filename>]");
-	mvwprintw(win, 12, 5, "v = Verbose Simple Checks - OK/Warnings/Danger");
-	mvwprintw(win, 13, 5, "b = black & white mode");
-	mvwprintw(win, 14, 5, "--- controls ---");
-	mvwprintw(win, 15, 5, "+ and - = double or half the screen refresh time");
-	mvwprintw(win, 16, 5, "q = quit                     space = refresh screen now");
-	mvwprintw(win, 17, 5, ". = Minimum Mode =display only busy disks and processes");
-	mvwprintw(win, 18, 5, "0 = reset peak counts to zero (peak = \">\")");
-	mvwprintw(win, 19, 5, "Chrisotpher Stoll, 2015 (https://github.com/stollcri)");
+	uibanner(win, cols, "HELP");
+	mvwprintw(win,  1, 2, "[ a =                               ][ t = Top Processes                 ]");
+	mvwprintw(win,  2, 2, "[ b = Black & White mode            ][                                   ]");
+	mvwprintw(win,  3, 2, "[ c = CPU Load                      ][                                   ]");
+	mvwprintw(win,  4, 2, "[ C = CPU Load, long-term           ][                                   ]");
+	mvwprintw(win,  5, 2, "[ d =                               ][                                   ]");
+	mvwprintw(win,  6, 2, "[ D =                               ][                                   ]");
+	mvwprintw(win,  7, 2, "[ f =                               ][                                   ]");
+	mvwprintw(win,  8, 2, "[ F =                               ][                                   ]");
+	mvwprintw(win,  9, 2, "[ h = Help                          ][                                   ]");
+	mvwprintw(win, 10, 2, "[ H = Help                          ][                                   ]");
+	mvwprintw(win, 11, 2, "[ k = Kernel Information            ][                                   ]");
+	mvwprintw(win, 12, 2, "[ m =                               ][                                   ]");
+	mvwprintw(win, 13, 2, "[ M =                               ][                                   ]");
+	mvwprintw(win, 14, 2, "[ n =                               ][                                   ]");
+	mvwprintw(win, 15, 2, "[ N =                               ][                                   ]");
+	mvwprintw(win, 16, 2, "[ q = Quit/Exit                     ][                                   ]");
+	mvwprintw(win, 18, 2, "             Chrisotpher Stoll, 2015 (%s)", APPURL);
+
 	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
-	uidisplay(&x, cols, 20, win, rows);
+	uidisplay(win, &x, cols, 20, rows);
 	
 	*xin = x;
 }
@@ -143,7 +142,7 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syskern kern)
 		return;
 	}
 	int x = *xin;
-	uibanner(cols, win, "Kernel and Processor Details");
+	uibanner(win, cols, "Kernel and Processor Details");
 	mvwprintw(win, 1, 2, "%s", kern.version);
 	mvwprintw(win, 2, 2, "Release  : %s", kern.osrelease);
 	mvwprintw(win, 3, 2, "Version  : %s", kern.osversion);
@@ -151,12 +150,12 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syskern kern)
 	mvwprintw(win, 5, 2, "Nodename : %s", kern.hostname);
 	mvwprintw(win, 6, 2, "Domain   : %s", kern.domainname);
 	mvwprintw(win, 7, 2, "Booted   : %s", kern.boottimestring);
-	uidisplay(&x, cols, 8, win, rows);
+	uidisplay(win, &x, cols, 8, rows);
 	
 	*xin = x;
 }
 
-void uiverbose(WINDOW **winin, int *xin, int cols)
+void uiverbose(WINDOW **winin, int *xin, int cols, int rows)
 {
 	WINDOW *win = *winin;
 	if (win == NULL) {
@@ -164,8 +163,57 @@ void uiverbose(WINDOW **winin, int *xin, int cols)
 	}
 	int x = *xin;
 
-	uibanner(cols, win, "Verbose Mode");
+	uibanner(win, cols, "Verbose Mode");
 	mvwprintw(win, 1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
+
+/*
+					mvwprintw(win, 2, 0, "        -> CPU               %%busy %5.1f%%\t>80%%\t>90%%          ",cpu_busy);
+					if(cpu_busy > 90.0){
+						COLOUR wattrset(win, COLOR_PAIR(1));
+						mvwprintw(win, 2, 0, " DANGER");
+					}
+					else if(cpu_busy > 80.0) {
+						COLOUR wattrset(win, COLOR_PAIR(4));
+						mvwprintw(win, 2, 0, "Warning");
+					}
+					else  {
+						COLOUR wattrset(win, COLOR_PAIR(2));
+						mvwprintw(win, 2, 0, "     OK");
+					}
+					COLOUR wattrset(win, COLOR_PAIR(0));
+
+#define DKDELTA(member) ( (q->dk[i].member > p->dk[i].member) ? 0 : (p->dk[i].member - q->dk[i].member))
+
+				top_disk_busy = 0.0;
+				top_disk_name = "";
+				for (i = 0, k = 0; i < disks; i++) {
+					disk_busy = DKDELTA(dk_time) / elapsed;
+					if( disk_busy > top_disk_busy) {
+						top_disk_busy = disk_busy;
+						top_disk_name = p->dk[i].dk_name;
+					}
+				}
+				if(top_disk_busy > 80.0) {
+					COLOUR wattrset(win, COLOR_PAIR(1));
+					mvwprintw(win, 3, 0, " DANGER");
+				} else if(top_disk_busy > 60.0) {
+					COLOUR wattrset(win, COLOR_PAIR(4));
+					mvwprintw(win, 3, 0, "Warning");
+				} else  {
+					COLOUR wattrset(win, COLOR_PAIR(2));
+					mvwprintw(win, 3, 0, "     OK");
+				}
+				COLOUR wattrset(win, COLOR_PAIR(0));
+				mvwprintw(win, 3, 8, "-> Top Disk %8s %%busy %5.1f%%\t>40%%\t>60%%          ",top_disk_name,top_disk_busy);
+				move(x,0);
+
+
+				y=x;
+				x=1;
+				DISPLAY(padverb,4);
+				x=y;
+*/
+	uidisplay(win, &x, cols, 4, rows);
 
 	*xin = x + 6;
 }
@@ -173,17 +221,17 @@ void uiverbose(WINDOW **winin, int *xin, int cols)
 void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double user, double sys, double idle, double nice)
 {
 	if(cpuno == -1) {
-		mvwprintw(win,row, 0, "Avg");
+		mvwprintw(win, row, 0, "Avg");
 	} else {
-		mvwprintw(win,row, 0, "%3d", cpuno);
+		mvwprintw(win, row, 0, "%3d", cpuno);
 	}
-	mvwprintw(win,row,  4, "%4.2f ", user);
-	mvwprintw(win,row, 10, "%4.2f ", sys);
-	mvwprintw(win,row, 16, "%4.2f ", nice);
-	mvwprintw(win,row, 22, "%4.2f ", idle);
-	mvwprintw(win,row, 27, "|");
+	mvwprintw(win, row,  4, "%4.2f ", user);
+	mvwprintw(win, row, 10, "%4.2f ", sys);
+	mvwprintw(win, row, 16, "%4.2f ", nice);
+	mvwprintw(win, row, 22, "%4.2f ", idle);
+	mvwprintw(win, row, 27, "|");
 
-	wmove(win,row, 28);
+	wmove(win, row, 28);
 	char *metermark = (char*)malloc(sizeof(char));
 	int userquant = (int)(round(user) / 2);
 	int systquant = (int)(round(sys) / 2);
@@ -205,39 +253,39 @@ void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double user, dou
 
 		if(userquant) {
 			if(usecolor) {
-				wattrset(win,COLOR_PAIR(10));
+				wattrset(win, COLOR_PAIR(10));
 				wprintw(win, metermark);
 			} else {
-				wprintw(win,"U");
+				wprintw(win, "U");
 			}
 			--userquant;
 		} else {
 			if(systquant) {
 				if(usecolor) {
-					wattrset(win,COLOR_PAIR(8));
+					wattrset(win, COLOR_PAIR(8));
 					wprintw(win, metermark);
 				} else {
-					wprintw(win,"S");
+					wprintw(win, "S");
 				}
 				--systquant;
 			} else {
 				if(nicequant) {
 					if(usecolor) {
-						wattrset(win,COLOR_PAIR(9));
+						wattrset(win, COLOR_PAIR(9));
 						wprintw(win, metermark);
 					} else {
-						wprintw(win,"N");
+						wprintw(win, "N");
 					}
 					--nicequant;
 				} else {
-					wattrset(win,COLOR_PAIR(0));
+					wattrset(win, COLOR_PAIR(0));
 					wprintw(win, metermark);
 				}
 			}
 		}
 	}
-	wattrset(win,COLOR_PAIR(0));
-	mvwprintw(win,row, 77, "|");
+	wattrset(win, COLOR_PAIR(0));
+	mvwprintw(win, row, 77, "|");
 }
 
 void uicpu(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct sysres thisres, int show_raw)
@@ -248,7 +296,7 @@ void uicpu(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct sy
 	}
 	int x = *xin;
 
-	uibanner(cols, win, "CPU Load");
+	uibanner(win, cols, "CPU Load");
 	mvwprintw(win, 1, 0, "CPU");
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(COLOR_BLUE));
@@ -284,12 +332,11 @@ void uicpu(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct sy
 			thisres.avgpercentidle, 
 			thisres.avgpercentnice);
 	}
-	uidisplay(&x, cols, (cpuno + 3), win, rows);
+	uidisplay(win, &x, cols, (cpuno + 3), rows);
 
 	*xin = x;
 }
 
-#define COLOUR if(colour)
 void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int usecolor, struct sysres thisres)
 {
 	WINDOW *win = *winin;
@@ -299,36 +346,36 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 	int x = *xin;
 	int itteration = *itterin;
 
-	mvwprintw(win,0, 0, " CPU +---Long-Term-----------------------------------------------------------+");
+	mvwprintw(win, 0, 0, " CPU +---Long-Term-----------------------------------------------------------+");
 	if (usecolor){
 		wattrset(win, COLOR_PAIR(4));
-		mvwprintw(win,0, 27, "User%%");
+		mvwprintw(win, 0, 27, "User%%");
 		wattrset(win, COLOR_PAIR(1));
-		mvwprintw(win,0, 35, "System%%");
+		mvwprintw(win, 0, 35, "System%%");
 		wattrset(win, COLOR_PAIR(2));
-		mvwprintw(win,0, 45, "Nice%%");
+		mvwprintw(win, 0, 45, "Nice%%");
 		wattrset(win, COLOR_PAIR(0));
 	}
-	mvwprintw(win,1, 0,"100%%-|");
-	mvwprintw(win,2, 1, "95%%-|");
-	mvwprintw(win,3, 1, "90%%-|");
-	mvwprintw(win,4, 1, "85%%-|");
-	mvwprintw(win,5, 1, "80%%-|");
-	mvwprintw(win,6, 1, "75%%-|");
-	mvwprintw(win,7, 1, "70%%-|");
-	mvwprintw(win,8, 1, "65%%-|");
-	mvwprintw(win,9, 1, "60%%-|");
-	mvwprintw(win,10, 1, "55%%-|");
-	mvwprintw(win,11, 1, "50%%-|");
-	mvwprintw(win,12, 1, "45%%-|");
-	mvwprintw(win,13, 1, "40%%-|");
-	mvwprintw(win,14, 1, "35%%-|");
-	mvwprintw(win,15, 1, "30%%-|");
-	mvwprintw(win,16, 1, "25%%-|");
-	mvwprintw(win,17, 1, "20%%-|");
-	mvwprintw(win,18, 1,"15%%-|");
-	mvwprintw(win,19, 1,"10%%-|");
-	mvwprintw(win,20, 1," 5%%-|");
+	mvwprintw(win, 1, 0, "100%%-|");
+	mvwprintw(win, 2, 1, "95%%-|");
+	mvwprintw(win, 3, 1, "90%%-|");
+	mvwprintw(win, 4, 1, "85%%-|");
+	mvwprintw(win, 5, 1, "80%%-|");
+	mvwprintw(win, 6, 1, "75%%-|");
+	mvwprintw(win, 7, 1, "70%%-|");
+	mvwprintw(win, 8, 1, "65%%-|");
+	mvwprintw(win, 9, 1, "60%%-|");
+	mvwprintw(win, 10, 1, "55%%-|");
+	mvwprintw(win, 11, 1, "50%%-|");
+	mvwprintw(win, 12, 1, "45%%-|");
+	mvwprintw(win, 13, 1, "40%%-|");
+	mvwprintw(win, 14, 1, "35%%-|");
+	mvwprintw(win, 15, 1, "30%%-|");
+	mvwprintw(win, 16, 1, "25%%-|");
+	mvwprintw(win, 17, 1, "20%%-|");
+	mvwprintw(win, 18, 1, "15%%-|");
+	mvwprintw(win, 19, 1, "10%%-|");
+	mvwprintw(win, 20, 1, " 5%%-|");
 	
 	int graphcols = 70;
 	int graphrows = 20;
@@ -354,42 +401,42 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 
 		if(userquant) {
 			if(usecolor) {
-				wattrset(win,COLOR_PAIR(10));
+				wattrset(win, COLOR_PAIR(10));
 				wprintw(win, metermark);
 			} else {
-				wprintw(win,"U");
+				wprintw(win, "U");
 			}
 			--userquant;
 		} else {
 			if(systquant) {
 				if(usecolor) {
-					wattrset(win,COLOR_PAIR(8));
+					wattrset(win, COLOR_PAIR(8));
 					wprintw(win, metermark);
 				} else {
-					wprintw(win,"S");
+					wprintw(win, "S");
 				}
 				--systquant;
 			} else {
 				if(nicequant) {
 					if(usecolor) {
-						wattrset(win,COLOR_PAIR(9));
+						wattrset(win, COLOR_PAIR(9));
 						wprintw(win, metermark);
 					} else {
-						wprintw(win,"N");
+						wprintw(win, "N");
 					}
 					--nicequant;
 				} else {
-					wattrset(win,COLOR_PAIR(0));
+					wattrset(win, COLOR_PAIR(0));
 					wprintw(win, metermark);
 				}
 			}
 		}
 
-		wattrset(win,COLOR_PAIR(0));
+		wattrset(win, COLOR_PAIR(0));
 		wmove(win, i, itteration+offset+1);
 		wprintw(win, leadermark);
 	}
-	uidisplay(&x, cols, 21, win, rows);
+	uidisplay(win, &x, cols, 21, rows);
 
 	++itteration;
 	if(itteration > graphcols) {

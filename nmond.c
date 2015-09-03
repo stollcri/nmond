@@ -2,9 +2,10 @@
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
  *  
- *   forked from:
+ *   forked from (near complete rewrite):
  *   lmon.c -- Curses based Performance Monitor for Linux
  *   Developer: Nigel Griffiths.
+ *   (lmon15g.c dated 2015-07-13)
  */
 
 #include "nmond.h"
@@ -2652,49 +2653,32 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			/* Reset the cursor position to top left */
 			y = x = 0;
 			
-			uiheader(&x, colour, flash_on, VERSION, hostname, elapsed, timer);
+			uiheader(&x, colour, flash_on, hostname, elapsed, timer);
 			
 			if(welcome && getenv("NMON") == 0) {
-				// stollcri, 2015-08-22
 				uiwelcome(&padwelcome, &x, COLS, LINES, colour, thishw);
 			}
 
-			if (show_verbose) {
-				uiverbose(&padverb, &x, COLS);
-			}
 			if (show_help) {
 				uihelp(&padhelp, &x, COLS, LINES);
 			}
 
+			if (show_verbose) {
+				uiverbose(&padverb, &x, COLS, LINES);
+			}
+
 			if (show_cpu) {
-				proc_read(P_CPUINFO);
-				proc_read(P_VERSION);
 				uisys(&padsys, &x, COLS, LINES, thiskern);
 			}
+			
 			if (show_longterm ) {
 				uicpulong(&padlong, &x, COLS, LINES, &cpulongitter, colour, thisres);
 			}
-			if (show_smp || show_verbose) {
-				if (show_smp) {
+			
+			if (show_smp) {
 					uicpu(&padsmp, &x, COLS, LINES, colour, thisres, show_raw);
-				}	/* if (show_smp)  */
-				if(show_verbose) {
-					mvwprintw(padverb,2, 0, "        -> CPU               %%busy %5.1f%%\t>80%%\t>90%%          ",cpu_busy);
-					if(cpu_busy > 90.0){
-						COLOUR wattrset(padverb,COLOR_PAIR(1));
-						mvwprintw(padverb,2, 0, " DANGER");
-					}
-					else if(cpu_busy > 80.0) {
-						COLOUR wattrset(padverb,COLOR_PAIR(4));
-						mvwprintw(padverb,2, 0, "Warning");
-					}
-					else  {
-						COLOUR wattrset(padverb,COLOR_PAIR(2));
-						mvwprintw(padverb,2, 0, "     OK");
-					}
-					COLOUR wattrset(padverb,COLOR_PAIR(0));
-				}	/* if(show_verbose && cursed) */
-			}	/* if (show_smp || show_verbose) */
+			}
+
 			if (show_memory) {
 				proc_read(P_MEMINFO);
 				proc_mem();
@@ -3177,32 +3161,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				}
 				DISPLAY(padmap,4 + disks/MAPWRAP);
 			}
-			if(show_verbose) {
-				top_disk_busy = 0.0;
-				top_disk_name = "";
-				for (i = 0,k=0; i < disks; i++) {
-					disk_busy = DKDELTA(dk_time) / elapsed;
-					if( disk_busy > top_disk_busy) {
-						top_disk_busy = disk_busy;
-						top_disk_name = p->dk[i].dk_name;
-					}
-				}
-				if(top_disk_busy > 80.0) {
-					COLOUR wattrset(padverb,COLOR_PAIR(1));
-					mvwprintw(padverb,3, 0, " DANGER");
-				}
-				else if(top_disk_busy > 60.0) {
-					COLOUR wattrset(padverb,COLOR_PAIR(4));
-					mvwprintw(padverb,3, 0, "Warning");
-				}
-				else  {
-					COLOUR wattrset(padverb,COLOR_PAIR(2));
-					mvwprintw(padverb,3, 0, "     OK");
-				}
-				COLOUR wattrset(padverb,COLOR_PAIR(0));
-				mvwprintw(padverb,3, 8, "-> Top Disk %8s %%busy %5.1f%%\t>40%%\t>60%%          ",top_disk_name,top_disk_busy);
-				move(x,0);
-			}
+
 			if (show_disk) {
 				if(show_disk) {
 					BANNER(paddisk,"Disk I/O");
@@ -3598,12 +3557,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				DISPLAY(padtop,3 + j);
 			}
 			
-			if(show_verbose) {
-				y=x;
-				x=1;
-				DISPLAY(padverb,4);
-				x=y;
-			}
 			/* underline the end of the stats area border */
 			if(x < LINES-2)mvwhline(stdscr, x, 1, ACS_HLINE,COLS-2);
 			

@@ -5,15 +5,14 @@
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
  *  
- *   forked from:
+ *   forked from (near complete rewrite):
  *   lmon.c -- Curses based Performance Monitor for Linux
  *   Developer: Nigel Griffiths.
+ *   (lmon15g.c dated 2015-07-13)
  */
 
 #include <stdio.h> // FILE
 #include <sys/time.h> // timeval
-
-#define VERSION "0.0"
 
 #define LARGEMEM 1
 /* This adds the following to the disk stats
