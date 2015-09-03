@@ -12,7 +12,7 @@
  */
 
 #define APPNAME "nmond"
-#define VERSION "0.0.1"
+#define VERSION "0.1"
 #define VERDATE "2015-08-18"
 #define APPURL "https://github.com/stollcri/nmond"
 
