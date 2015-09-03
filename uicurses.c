@@ -127,7 +127,7 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	mvwprintw(win, 14, 2, "[ n =                               ][                                   ]");
 	mvwprintw(win, 15, 2, "[ N =                               ][                                   ]");
 	mvwprintw(win, 16, 2, "[ q = Quit/Exit                     ][                                   ]");
-	mvwprintw(win, 18, 2, "             Chrisotpher Stoll, 2015 (%s)", APPURL);
+	mvwprintw(win, 18, 2, "             Christopher Stoll, 2015 (%s)", APPURL);
 
 	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
 	uidisplay(win, &x, cols, 20, rows);
