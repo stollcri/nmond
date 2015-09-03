@@ -152,7 +152,7 @@ struct sysrescpu {
 	double percentidle;
 	double percentnice;
 };
-#define SYSRESCPU_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0 }
+#define SYSRESCPU_INIT { 0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   0.0, 0.0, 0.0, 0.0 }
 
 struct sysres {
 	int cpucount;
@@ -168,7 +168,7 @@ struct sysres {
 	double loadavg5;
 	double loadavg15;
 };
-#define SYSRES_INIT { 0, SYSRESCPU_INIT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+#define SYSRES_INIT { 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
 
 extern void getsysresinfo(struct sysres *);
 

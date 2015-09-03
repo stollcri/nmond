@@ -19,7 +19,9 @@ LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
 CFILES = nmond.c mntent.c sysctlhelper.c sysinfo.c $(LANGFILES)
 
-CFLAGS_DBG = -O0 -g -Weverything
+#CFLAGS_DBG = -O0 -g -Weverything
+# be quiet, at least until I get further along with the update)
+CFLAGS_DBG = -O0 -g
 LFLAGS_DBG = -l ncurses
 AOFILE_DBG = ./bin/nmond
 CFILES_DBG = $(CFILES)

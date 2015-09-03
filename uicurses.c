@@ -36,6 +36,7 @@
  */
 
 #include "uicurses.h"
+#include <math.h>
 
 static inline void uibanner(WINDOW *win, int cols, char *string)
 {
@@ -67,7 +68,7 @@ static inline void uidisplay(WINDOW *win, int *xin, int cols, int rows, int line
 	*xin = x;
 }
 
-inline void uiheader(int *xin, int usecolor, int blinkon, char *hostname, double elapsed, time_t timer)
+void uiheader(int *xin, int usecolor, int blinkon, char *hostname, double elapsed, time_t timer)
 {
 	int x = *xin;
 	struct tm *tim = localtime(&timer);
@@ -165,89 +166,6 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	uidisplay(win, &x, cols, 20, rows);
 	
 	*xin = x;
-}
-
-void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syskern kern)
-{
-	WINDOW *win = *winin;
-	if (win == NULL) {
-		return;
-	}
-	int x = *xin;
-	uibanner(win, cols, "Kernel and Processor Details");
-	mvwprintw(win, 1, 2, "%s", kern.version);
-	mvwprintw(win, 2, 2, "Release  : %s", kern.osrelease);
-	mvwprintw(win, 3, 2, "Version  : %s", kern.osversion);
-	mvwprintw(win, 4, 2, "# of CPUs: %d", kern.corecount);
-	mvwprintw(win, 5, 2, "Nodename : %s", kern.hostname);
-	mvwprintw(win, 6, 2, "Domain   : %s", kern.domainname);
-	mvwprintw(win, 7, 2, "Booted   : %s", kern.boottimestring);
-	uidisplay(win, &x, cols, 8, rows);
-	
-	*xin = x;
-}
-
-void uiverbose(WINDOW **winin, int *xin, int cols, int rows)
-{
-	WINDOW *win = *winin;
-	if (win == NULL) {
-		return;
-	}
-	int x = *xin;
-
-	uibanner(win, cols, "Verbose Mode");
-	mvwprintw(win, 1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
-
-/*
-					mvwprintw(win, 2, 0, "        -> CPU               %%busy %5.1f%%\t>80%%\t>90%%          ",cpu_busy);
-					if(cpu_busy > 90.0){
-						COLOUR wattrset(win, COLOR_PAIR(1));
-						mvwprintw(win, 2, 0, " DANGER");
-					}
-					else if(cpu_busy > 80.0) {
-						COLOUR wattrset(win, COLOR_PAIR(4));
-						mvwprintw(win, 2, 0, "Warning");
-					}
-					else  {
-						COLOUR wattrset(win, COLOR_PAIR(2));
-						mvwprintw(win, 2, 0, "     OK");
-					}
-					COLOUR wattrset(win, COLOR_PAIR(0));
-
-#define DKDELTA(member) ( (q->dk[i].member > p->dk[i].member) ? 0 : (p->dk[i].member - q->dk[i].member))
-
-				top_disk_busy = 0.0;
-				top_disk_name = "";
-				for (i = 0, k = 0; i < disks; i++) {
-					disk_busy = DKDELTA(dk_time) / elapsed;
-					if( disk_busy > top_disk_busy) {
-						top_disk_busy = disk_busy;
-						top_disk_name = p->dk[i].dk_name;
-					}
-				}
-				if(top_disk_busy > 80.0) {
-					COLOUR wattrset(win, COLOR_PAIR(1));
-					mvwprintw(win, 3, 0, " DANGER");
-				} else if(top_disk_busy > 60.0) {
-					COLOUR wattrset(win, COLOR_PAIR(4));
-					mvwprintw(win, 3, 0, "Warning");
-				} else  {
-					COLOUR wattrset(win, COLOR_PAIR(2));
-					mvwprintw(win, 3, 0, "     OK");
-				}
-				COLOUR wattrset(win, COLOR_PAIR(0));
-				mvwprintw(win, 3, 8, "-> Top Disk %8s %%busy %5.1f%%\t>40%%\t>60%%          ",top_disk_name,top_disk_busy);
-				move(x,0);
-
-
-				y=x;
-				x=1;
-				DISPLAY(padverb,4);
-				x=y;
-*/
-	uidisplay(win, &x, cols, 4, rows);
-
-	*xin = x + 6;
 }
 
 void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double user, double sys, double idle, double nice)
@@ -477,4 +395,87 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 
 	*itterin = itteration;
 	*xin = x;
+}
+
+void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syskern kern)
+{
+	WINDOW *win = *winin;
+	if (win == NULL) {
+		return;
+	}
+	int x = *xin;
+	uibanner(win, cols, "Kernel and Processor Details");
+	mvwprintw(win, 1, 2, "%s", kern.version);
+	mvwprintw(win, 2, 2, "Release  : %s", kern.osrelease);
+	mvwprintw(win, 3, 2, "Version  : %s", kern.osversion);
+	mvwprintw(win, 4, 2, "# of CPUs: %d", kern.corecount);
+	mvwprintw(win, 5, 2, "Nodename : %s", kern.hostname);
+	mvwprintw(win, 6, 2, "Domain   : %s", kern.domainname);
+	mvwprintw(win, 7, 2, "Booted   : %s", kern.boottimestring);
+	uidisplay(win, &x, cols, 8, rows);
+	
+	*xin = x;
+}
+
+void uiverbose(WINDOW **winin, int *xin, int cols, int rows)
+{
+	WINDOW *win = *winin;
+	if (win == NULL) {
+		return;
+	}
+	int x = *xin;
+
+	uibanner(win, cols, "Verbose Mode");
+	mvwprintw(win, 1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
+
+/*
+					mvwprintw(win, 2, 0, "        -> CPU               %%busy %5.1f%%\t>80%%\t>90%%          ",cpu_busy);
+					if(cpu_busy > 90.0){
+						COLOUR wattrset(win, COLOR_PAIR(1));
+						mvwprintw(win, 2, 0, " DANGER");
+					}
+					else if(cpu_busy > 80.0) {
+						COLOUR wattrset(win, COLOR_PAIR(4));
+						mvwprintw(win, 2, 0, "Warning");
+					}
+					else  {
+						COLOUR wattrset(win, COLOR_PAIR(2));
+						mvwprintw(win, 2, 0, "     OK");
+					}
+					COLOUR wattrset(win, COLOR_PAIR(0));
+
+#define DKDELTA(member) ( (q->dk[i].member > p->dk[i].member) ? 0 : (p->dk[i].member - q->dk[i].member))
+
+				top_disk_busy = 0.0;
+				top_disk_name = "";
+				for (i = 0, k = 0; i < disks; i++) {
+					disk_busy = DKDELTA(dk_time) / elapsed;
+					if( disk_busy > top_disk_busy) {
+						top_disk_busy = disk_busy;
+						top_disk_name = p->dk[i].dk_name;
+					}
+				}
+				if(top_disk_busy > 80.0) {
+					COLOUR wattrset(win, COLOR_PAIR(1));
+					mvwprintw(win, 3, 0, " DANGER");
+				} else if(top_disk_busy > 60.0) {
+					COLOUR wattrset(win, COLOR_PAIR(4));
+					mvwprintw(win, 3, 0, "Warning");
+				} else  {
+					COLOUR wattrset(win, COLOR_PAIR(2));
+					mvwprintw(win, 3, 0, "     OK");
+				}
+				COLOUR wattrset(win, COLOR_PAIR(0));
+				mvwprintw(win, 3, 8, "-> Top Disk %8s %%busy %5.1f%%\t>40%%\t>60%%          ",top_disk_name,top_disk_busy);
+				move(x,0);
+
+
+				y=x;
+				x=1;
+				DISPLAY(padverb,4);
+				x=y;
+*/
+	uidisplay(win, &x, cols, 4, rows);
+
+	*xin = x + 6;
 }
