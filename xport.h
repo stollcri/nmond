@@ -1,5 +1,5 @@
-#ifndef NMOND_XPORT_H
-#define NMOND_XPORT_H
+#ifndef XPORT_H
+#define XPORT_H
 
 /**
  * nmond_xport.h -- Export data to file rather than displaying it on the screen
