@@ -1,27 +1,114 @@
-# Roadmap
-## MVP
-- Make the program run without /proc files
-	- Get data from sysctl
-	- Pull out UI elements
-- Check memory allocation and freeing
-## Phase 2
-- Update UI (layout, text, and color; see: http://elmon.sourceforge.net)
-- Change cursor location
-- Add GPU load stats
-- Read HDD/CPU/GPU temperature
-## Phase 3
-- For long-term CPU: use box-drawing characters (UTF-8 or VT100) for border instead of text characters (default option)
-- For long-term CPU: drop top-bar down (show gap) when cpu speed is decreased
-- Full logging system: automatically roll up data for different intervals (hour/day/week/month)
-- Pipe logged data in to stdin for replay (and generate averages at different intervals)
-## Phase 4
-- Use ncurses progress bars for vertical bars
-- For long-term CPU: follow processes, show their usage in the graph
-- For long-term CPU: generalize chart so that it can be used for other data sets
-- For long-term CPU: show last data (faded, behind) for each bar in the graph (doubles visible data points)
-- For long-term CPU: show candlestick chart instead of bar graph
+# nmond Roadmap
 
-# VT100 Tricks
+## v0.1 -- betas
+- Work-in-progress builds
+
+## v0.2 -- MVP
+- ☐ APP: Make [GUI portion of] the program run without /proc files
+	- ☐ Remove code for specail cases (IFDEFs)
+	- ☐ Get data from sysctl and other low-level C calls
+	- ☐ Pull out UI elements
+	- ☐ Streamline main()
+- ☐ APP: Create long output for: cpu, mem, disk, net
+- ☐ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
+	- ☐ Improve spacing
+		- ✓ CPU Load
+		- ✓ CPU Long-Term
+		- ☐ 
+	- ☐ Improve header line
+		- ☐ Remove version number
+		- ☐ Remove blinking "H for help" (prehaps replace with alert messages)
+		- ☐ Move hostname over and change wording
+		- ☐ Change refresh rate wording
+	- ☐ Display splash screen when nothing is selected
+	- ☐ Only update changed portions of windows rather than recreating entire windows each pass
+	- ✓ CPU Load: remove top/bottom graph bars
+	- ✓ CPU Load: increase number of divisions on scale
+	- ✓ CPU L-T: remove top/bottom graph bars, move legend to top line (begins with "CPU")
+	- ☐ Improve ncurses use (http://tldp.org/HOWTO/NCURSES-Programming-HOWTO/printw.html)
+	- ✗ Move titles to the left side
+- ☐ APP: restructure command options (lower-case for horizontal graph, upper-case for vertical graph)
+	- ☐      a -- All-in-one display (cpu long + disk + mem + net)
+	- ☐      A -- All-in-one raw data display
+	- ☐ b => b -- black & white mode
+	- ✓ c => c -- CPU Load
+	- ☐ l => C -- CPU Load, long-term
+	- ☐ d => d -- Disk I/O
+	- ☐      D -- Disk I/O, long-term
+	- ☐ j => f -- Filesystems (JFS)
+	- ☐ N => F -- Filesystems (NFS)
+	- ☐ g      -- (removed: user defined disk groups)
+	- ☐ h => h -- help
+	- ☐ H => H -- help
+	- ☐ r => i -- Info A
+	- ☐      I -- Info B
+	- ☐ k => k -- Kernel Stats
+	- ☐ L      -- (removed: large memory)
+	- ☐ m => m -- Memory & Swap
+	- ☐      M -- Memory & Swap
+	- ☐ n => n -- Network
+	- ☐      N -- Network, long-term
+	- ☐ o => o -- Disk busy map
+	- ☐ q => q -- quit
+	- ☐ t => t -- Top
+	- ☐ u => T -- Top, show command arguments
+	- ☐ V => v -- Virtual Memory
+	- ☐ v => w -- warn mode
+	- ☐ x      -- (removed: exit)
+	- ☐ 0 => z -- zero out peak markers
+	- ☐ 0 => 0 -- sort by
+	- ☐ 1 => 1 -- sort by
+	- ☐ 2 => 2 -- sort by
+	- ☐ 3 => 3 -- sort by
+	- ☐ 4 => 4 -- sort by
+	- ☐ 5 => 5 -- sort by
+	- ☐ + => + -- double refresh rate
+	- ☐ - => - -- half refresh rate
+	- ☐ .      -- (removed: minimal display)
+	- ☐ ? => ? -- help
+- ☐ APP: Static analysis
+	- ☐ malloc
+	- ☐ strcpy -- use strncpy or strlcpy (OpenBSD)
+	- ☐ strcat -- use strncat or strlcat (OpenBSD)
+	- ☐ printf
+	- ☐ scanf -- use fgets
+	- ☐ gets -- use fgets
+	- ☐ make sure variables are nulled after free to prevent double free (e.g. free(x); x = NULL;)
+
+## v0.4 -- Phase 2
+- GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
+	- Option for VT100 box drawings (https://en.wikipedia.org/wiki/Box-drawing_character#Unix.2C_CP.2FM.2C_BBS)
+	- Option for UTF8 box drawings (https://en.wikipedia.org/wiki/Box-drawing_character)
+	- Change cursor location
+- INF: Read/Display CPU frequency (vs min and max)
+- INF: Read/Display HDD/CPU/GPU temperature
+
+## v0.8 -- Phase 3
+- APP: Add 'logging to an external file' capabilities back
+- APP: Full logging system: automatically roll up data for different intervals (hour/day/week/month)
+- APP: Pipe logged data in to stdin for replay (and generate averages at different intervals)
+- APP: Visual/Audio alerts for alarm levels (temperature, sustained utliization, etc.)
+- GUI: Allow for window scrolling (up/down arrows and mouse)
+	- `scrollok()`
+	- `int wscrl(WINDOW *win, int n);`
+
+## v1.0 -- Phase 4
+- INF: Add GPU load stats
+- GUI: Optional log scale
+- GUI: add disk I/O below long CPU output
+- GUI: Use ncurses progress bars for vertical bars
+- GUI: CPU L-T: follow processes, show their usage in the graph
+- GUI: CPU L-T: drop top-bar down (show gap) when cpu speed is decreased
+- GUI: CPU L-T: generalize chart so that it can be used for other data sets
+- GUI: CPU L-T: show last data (faded, behind) for each bar in the graph (doubles visible data points)
+- GUI: CPU L-T: show candlestick chart instead of bar graph
+
+## v1.6 -- Phase 5
+- APP: Plugins
+
+# Development Notes
+
+## VT100 Tricks
 - Use double height text characters (the top half is printed on one line, the bottom half on another)
 	- `echo $'\e'#3abcdefg; echo $'\e'#4abcdefg`
 	- `echo -e "\033#3abcdefg"; echo -e "\033#4abcdefg"`
@@ -29,12 +116,9 @@
 	- `echo $'\e'\(0 "( abcdef | ghijklm | nopqrst | uvwxyz )" $'\e'\(B`
 	- `echo -e "\033(0 ( abcdef | ghijklm | nopqrst | uvwxyz ) \033(B"`
 
-# Data Fields
+## Data Fields
 
-## GPU stats
-Is it possible to get any GPU stats?
-
-## top
+### top
 - PID
 - USER
 - PR -- priority (0, 20)
@@ -48,8 +132,8 @@ Is it possible to get any GPU stats?
 - TIME+ -- total CPU time
 - COMMAND
 
-## nmon
-### r - Linux and Processor Details
+### nmon
+#### r - Linux and Processor Details
 - Linux: Linux version 3.2.0-80-virtual (buildd@batsu)
 - Build: (gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5) )
 - Release: 3.2.0-80-virtual
@@ -70,8 +154,8 @@ Is it possible to get any GPU stats?
 - lsb_release: Release: 12.04
 - lsb_release: Codename: precise
 
-### t -- Top Processes
-#### 3=Perf / 4=Size / 5=I/O
+#### t -- Top Processes
+##### 3=Perf / 4=Size / 5=I/O
 Each options shows the same output, the srot order is just changed
 - PID
 - %CPU / Used
@@ -84,7 +168,7 @@ Each options shows the same output, the srot order is just changed
 - Faults / Min
 - Faults / Maj
 - Command
-#### 1=Basic
+##### 1=Basic
 - PID
 - PPID
 - Pgrp
@@ -94,13 +178,13 @@ Each options shows the same output, the srot order is just changed
 - proc-Flag (0x00402100, 0x84208040)
 - ?
 - Command
-#### u (mode=3)
+##### u (mode=3)
 - PID
 - %CPU / Used
 - ResSize / KB
 - Command (full command path)
 
-### c -- CPU Utilizaton
+#### c -- CPU Utilizaton
 - one line per cpu
 - one line with average
 	- CPU -- cpu number
@@ -110,10 +194,10 @@ Each options shows the same output, the srot order is just changed
 	- Idle (Idle%)
 	- bar graph
 
-### l -- CPU (long-term)
+#### l -- CPU (long-term)
 - bar graph of cpu usage (user, sys, wait)
 
-### m -- Memory Stats
+#### m -- Memory Stats
 - Total MB
 - Free MB
 - Free Percent
@@ -133,7 +217,7 @@ Each options shows the same output, the srot order is just changed
 - Commit_AS
 - PageTables
 
-### j -- Filesystems
+#### j -- Filesystems
 - Filesystem
 - SizeMB
 - FreeMB
@@ -141,7 +225,7 @@ Each options shows the same output, the srot order is just changed
 - Type
 - MountPoint
 
-### n -- Network I/O
+#### n -- Network I/O
 - I/F Name
 - Recv=KB/s
 - Trans/KB/s
@@ -152,7 +236,7 @@ Each options shows the same output, the srot order is just changed
 - Peak->Recv
 - Trans
 
-### N -- Network Filesystems (NFS) I/O
+#### N -- Network Filesystems (NFS) I/O
 - Version 2
 - Client
 - Server
@@ -160,17 +244,17 @@ Each options shows the same output, the srot order is just changed
 - Client
 - Server
 
-### d -- Disk I/O
+#### d -- Disk I/O
 - DiskName
 - Busy
 - Read
 - Write
 - (bar graph)
 
-#### o -- Disk %Busy Map
+##### o -- Disk %Busy Map
 - (simplified bar graph)
 
-#### k -- Kernel Stats
+##### k -- Kernel Stats
 - RunQueue
 - ContextSwitch
 - Forks
@@ -184,12 +268,11 @@ Each options shows the same output, the srot order is just changed
 	- Idle
 	- Average CPU use
 
-#### V -- Virtual Memory
+##### V -- Virtual Memory
 (TODO: complete)
 
 # procs
 ```
-#ifdef DEBUGPROC
 	print_procs(int index)
 	{
 		printf("procs[%d].pid           =%d\n",index,procs[index].pi_pid);
@@ -211,11 +294,11 @@ Each options shows the same output, the srot order is just changed
 		printf("procs[%d].cstime       =%ld\n",index,procs[index].pi_cstime);
 		printf("procs[%d].pri           =%d\n",index,procs[index].pi_pri);
 		printf("procs[%d].nice          =%d\n",index,procs[index].pi_nice);
-#ifndef KERNEL_2_6_18
+		// #ifndef KERNEL_2_6_18
 		printf("procs[%d].junk          =%d\n",index,procs[index].junk);
-#else
+		// #else
 		printf("procs[%d].num_threads   =%ld\n",index,procs[index].num_threads);
-#endif
+		// #endif
 		printf("procs[%d].it_real_value =%lu\n",index,procs[index].pi_it_real_value);
 		printf("procs[%d].start_time    =%lu\n",index,procs[index].pi_start_time);
 		printf("procs[%d].vsize         =%lu\n",index,procs[index].pi_vsize);
@@ -235,12 +318,11 @@ Each options shows the same output, the srot order is just changed
 		printf("procs[%d].cnswap        =%lu\n",index,procs[index].pi_cnswap);
 		printf("procs[%d].exit_signal   =%d\n",index,procs[index].pi_exit_signal);
 		printf("procs[%d].cpu           =%d\n",index,procs[index].pi_cpu);
-#ifdef KERNEL_2_6_18
+		// #ifdef KERNEL_2_6_18
 		printf("procs[%d].rt_priority   =%lu\n",index,procs[index].pi_rt_priority);
 		printf("procs[%d].policy        =%lu\n",index,procs[index].pi_policy);
 		printf("procs[%d].delayacct_blkio_ticks=%llu\n",index,procs[index].pi_delayacct_blkio_ticks);
-#endif
+		// #endif // KERNEL_2_6_18
 		printf("OK\n");
 	}
-#endif /*DEBUG*/
 ```
