@@ -3,5 +3,6 @@
 dbg
 inc/Apple/xnu
 bin/nmond.dSYM
+tst/out/20*
 
 NOTES.md

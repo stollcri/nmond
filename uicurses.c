@@ -1,7 +1,38 @@
 /**
- * nmond_ui_curses.c -- Ncurses user interface elements of nmond
- *  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
- *   (for license, see included LICENSE file)
+ * uicurses.c -- Ncurses user interface elements of nmond
+ *
+ *
+ * nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
+ *  https://github.com/stollcri/nmond
+ * 
+ * 
+ * Copyright (c) 2015, Christopher Stoll
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * * Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * 
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ * 
+ * * Neither the name of nmond nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "uicurses.h"
@@ -42,12 +73,12 @@ inline void uiheader(int *xin, int usecolor, int blinkon, char *hostname, double
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvprintw(x, 2, APPNAME);
-	mvprintw(x, 8, VERSION);
+	mvprintw(x, 1, APPNAME);
+	mvprintw(x, 9, VERSION);
 	if(blinkon) {
-		mvprintw(x, 16, "[H for help]");
+		mvprintw(x, 15, "[H for help]");
 	}
-	mvprintw(x, 31, "%s", hostname);
+	mvprintw(x, 30, "%s", hostname);
 	mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
@@ -127,7 +158,13 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	mvwprintw(win, 14, 2, "[ n =                               ][                                   ]");
 	mvwprintw(win, 15, 2, "[ N =                               ][                                   ]");
 	mvwprintw(win, 16, 2, "[ q = Quit/Exit                     ][                                   ]");
+<<<<<<< HEAD
 	mvwprintw(win, 18, 2, "             Christopher Stoll, 2015 (%s)", APPURL);
+=======
+	mvwprintw(win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
+	mvwprintw(win, 19, 2, "              Chrisotpher Stoll, 2015 (%s)", APPURL);
+	
+>>>>>>> f86a3d2c0ad93d69ebc80d9e5b69771d9e37ff48
 
 	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
 	uidisplay(win, &x, cols, 20, rows);
