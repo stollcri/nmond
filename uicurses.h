@@ -40,6 +40,7 @@
 
 #include "sysinfo.h"
 #include <ncurses.h>
+#include <stdbool.h>
 #include <sys/time.h>
 
 #define APPNAME "nmond"
@@ -63,12 +64,44 @@
 #define MSG_ERR_FAILEDDIR "Directory attempted was:%s\n"
 #define MSG_ERR_NOPENFILE "nmond: failed to open output file"
 
+struct uiwinset {
+	WINDOW *win;
+	bool visible;
+};
+struct uiwinsets {
+	int visiblecount;
+
+	struct uiwinset welcome;
+	struct uiwinset help;
+	struct uiwinset cpu;
+	struct uiwinset cpulong;
+
+	/*
+	struct uiwinset top;
+	struct uiwinset mem;
+	struct uiwinset large;
+	struct uiwinset page;
+	struct uiwinset kstat;
+	struct uiwinset net;
+	struct uiwinset neterr;
+	struct uiwinset nfs;
+	struct uiwinset disk;
+	struct uiwinset dg;
+	struct uiwinset map;
+	struct uiwinset jfs;
+	*/
+	struct uiwinset sys;
+	struct uiwinset verb;
+};
+#define UIWINSETS_INIT { 0, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false} }
+
 extern void uiheader(int*, int, int, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int*, int, int);
-extern void uisys(WINDOW**, int*, int, int, struct syskern);
-extern void uiverbose(WINDOW**, int*, int, int);
 extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
 extern void uicpulong(WINDOW **padlong, int*, int, int, int*, int, struct sysres);
+
+extern void uisys(WINDOW**, int*, int, int, struct syskern);
+extern void uiverbose(WINDOW**, int*, int, int);
 
 #endif

@@ -41,9 +41,12 @@
  */
 
 #include "nmond.h"
+#include "nmond_clean.c"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
@@ -107,8 +110,6 @@ void *myrealloc(void *oldptr, int size, int line)
 #define FREE(argument) free(argument)
 #define REALLOC(argument1,argument2) realloc(argument1,argument2)
 #endif /* MALLOC_DEBUG */
-
-char version[] = VERSION;
 
 /* Windows moved here so they can be cleared when the screen mode changes */
 WINDOW *padwelcome = NULL;
@@ -2245,16 +2246,23 @@ int proc_procsinfo(int pid, int index)
 		//
 		// DEBUG -- stollcri
 		// 
+
+		struct nmondsettings settings = NMONDSETTINGS_INIT;
+		struct uiwinsets winsets = UIWINSETS_INIT;
+		readenvars(&winsets, &settings);
+
 		struct syshw thishw = getsyshwinfo();
 		struct syskern thiskern = getsyskerninfo();
 		struct sysres thisres = SYSRES_INIT;
 		getsysresinfo(&thisres);
 		int cpulongitter = 0;
-		int processcount = 0;
-		struct sysproc thisproc = getsysprocinfoall(&processcount);
+		size_t processcount = 0;
+		struct sysproc thisproc = getsysprocinfoall(processcount);
 
 		// getsysresinfo(&thisres);
 		// exit(15);
+
+
 
 		int secs;
 		double cpu_scaled_user;
@@ -2667,7 +2675,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			thiskern = getsyskerninfo();
 			getsysresinfo(&thisres);
 			processcount = 0;
-			thisproc = getsysprocinfoall(&processcount);
+			thisproc = getsysprocinfoall(processcount);
 
 			/* Save the time and work out how long we were actually asleep
 			 * Do this as early as possible and close to reading the CPU statistics in /proc/stat
