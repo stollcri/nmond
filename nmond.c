@@ -1248,44 +1248,6 @@ void init_pairs()
 	COLOUR init_pair((short)12,(short)0,(short)6); /* Cyan background, cyan text */
 }
 
-/* Signal handler
- * SIGUSR1 or 2 is used to stop nmon cleanly
- * SIGWINCH is used when the window size is changed
- */
-// void	interrupt(int signum)
-// {
-// 	int child_pid;
-// 	int waitstatus;
-// 	if (signum == SIGCHLD ) {
-// 		while((child_pid = waitpid(0, &waitstatus, 0)) == -1 ) {
-// 			if( errno == EINTR) // retry
-// 				continue;
-// 			return; // ECHLD, EFAULT 
-// 		}
-// 		if(child_pid == nmon_children[CHLD_SNAP])
-// 			nmon_children[CHLD_SNAP] = -1;
-// 		signal(SIGCHLD, interrupt);
-// 		return;
-// 	}
-// 	if (signum == SIGUSR1 || signum == SIGUSR2) {
-// 		maxloops = loop;
-// 		return;
-// 	}
-// 	if (signum == SIGWINCH) {
-// 		endwin(); // stop + start curses so it works out the # of row and cols
-// 		initscr();
-// 		cbreak();
-// 		signal(SIGWINCH, interrupt);
-// 		COLOUR colour = has_colors();
-// 		COLOUR start_color();
-// 		COLOUR init_pairs();
-// 		clear();
-// 		return;
-// 	}
-// 	endwin();
-// 	exit(0);
-// }
-
 
 /* only place the q=previous and p=currect pointers are modified */
 void switcher(void)
@@ -2142,87 +2104,7 @@ int proc_procsinfo(int pid, int index)
 		closedir(procdir);
 		return count;
 	}
-	/* --- */
-	
-	/* Start process as specified in cmd in a child process without waiting
-	 * for completion
-	 * not sure if want to prevent this funcitonality for root user
-	 * when: CHLD_START, CHLD_SNAP or CHLD_END
-	 * cmd:  pointer to command string - assumed to be cleansed ....
-	 * timestamp_type: 0 - T%04d, 1 - detailed time stamp
-	 * loop: loop id (0 for CHLD_START)
-	 * the_time: time to use for timestamp generation
-	 */
-// 	void child_start(int when,
-// 					 char *cmd,
-// 					 int timestamp_type,
-// 					 int loop,
-// 					 time_t the_time)
-// 	{
-// 		int i;
-// 		pid_t child_pid;
-// 		char time_stamp_str[20]="";
-// 		char *when_info="";
-// 		struct tm *tim; // used to work out the hour/min/second 
-		
-// #ifdef DEBUG2
-// 		fprintf(fp,"child start when=%d cmd=%s time=%d loop=%d\n",when,cmd,timestamp_type,loop);
-// #endif
-// 		// Validate parameter and initialize error text 
-// 		switch( when ) {
-// 			case CHLD_START:
-// 				when_info = "nmon fork exec failure CHLD_START";
-// 				break;
-// 			case CHLD_END:
-// 				when_info = "nmon fork exec failure CHLD_END";
-// 				break;
-				
-// 			case CHLD_SNAP:
-// 				// check if old child has finished - otherwise we do nothing 
-// 				if( nmon_children[CHLD_SNAP] != -1 ) {
-// 					kill( nmon_children[CHLD_SNAP],9);
-// 				}
-				
-// 				when_info = "nmon fork exec failure CHLD_SNAP";
-// 				break;
-// 		}
-		
-		
-// 		// now fork off a child process. 
-// 		switch (child_pid = fork()) {
-// 			case -1:        // fork failed. 
-// 				perror(when_info);
-// 				return;
-				
-// 			case 0:         // inside child process.  
-// 				// create requested timestamp 
-// 				if( timestamp_type == 1 ) {
-// 					tim = localtime(&the_time);
-// 					sprintf(time_stamp_str,"%02d:%02d:%02d,%02d,%02d,%04d",
-// 							tim->tm_hour, tim->tm_min, tim->tm_sec,
-// 							tim->tm_mday, tim->tm_mon + 1, tim->tm_year + 1900);
-// 				}
-// 				else {
-// 					sprintf(time_stamp_str,"T%04d", loop);
-// 				}
-				
-// 				// close all open file pointers except the defaults 
-// 				for( i=3; i<5; ++i )
-// 					close(i);
-				
-// 				// Now switch to the defined command 
-// 				execlp(cmd, cmd, time_stamp_str,(void *)0);
-				
-// 				// If we get here the specified command could not be started 
-// 				perror(when_info);
-// 				exit(1);                     // We can't do anything more 
-// 				// never reached 
-				
-// 			default:        // inside parent process. 
-// 				// In father - remember child pid for future 
-// 				nmon_children[when] = child_pid;
-// 		}
-// 	}
+
 	
 	int main(int argc, char **argv)
 	{
@@ -3557,11 +3439,5 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			}
 			
 			switcher();
-			
-			// if (loop >= maxloops) {
-			// 	endwin();
-			// 	fflush(NULL);
-			// 	exit(0);
-			// }
 		}
 	}
