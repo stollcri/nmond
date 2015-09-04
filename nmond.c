@@ -51,7 +51,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <ncurses.h>
-#include <signal.h>
 #include <pwd.h>
 #include <fcntl.h>
 #include <math.h>
@@ -60,7 +59,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -278,7 +276,6 @@ int	partitions = 0;  	/* number of partitions in system  */
 int	partitions_short = 0;  	/* partitions file data short form (i.e. data missing) */
 int	disks    = 0;  	/* number of disks in system  */
 int	seconds  = -1; 	/* pause interval */
-int	maxloops = -1;  /* stop after this number of updates */
 char	hostname[256];
 char	run_name[256];
 int	run_name_set = 0;
@@ -1233,20 +1230,6 @@ void snap_clear()
 	cpu_snap_all=0;
 }
 
-/* This puts the CPU usage on the screen and draws the CPU graphs or outputs to the file */
-
-void save_smp(WINDOW *pad, int cpu_no, int row, long user, long kernel, long iowait, long idle, long nice, long irq, long softirq, long steal)
-{
-	static int firsttime = 1;
-	mvwprintw(pad,row,0, "%3d usr=%4ld sys=%4ld wait=%4ld idle=%4ld steal=%2ld nice=%4ld irq=%2ld sirq=%2ld\n",
-			  cpu_no, user, kernel, iowait, idle, steal, nice, irq, softirq);
-	return;
-}
-
-#define CHLD_START 0
-#define CHLD_SNAP 1
-#define CHLD_END 2
-int nmon_children[3] = {-1,-1,-1};
 
 void init_pairs()
 {
@@ -1269,39 +1252,39 @@ void init_pairs()
  * SIGUSR1 or 2 is used to stop nmon cleanly
  * SIGWINCH is used when the window size is changed
  */
-void	interrupt(int signum)
-{
-	int child_pid;
-	int waitstatus;
-	if (signum == SIGCHLD ) {
-		while((child_pid = waitpid(0, &waitstatus, 0)) == -1 ) {
-			if( errno == EINTR) /* retry */
-				continue;
-			return; /* ECHLD, EFAULT */
-		}
-		if(child_pid == nmon_children[CHLD_SNAP])
-			nmon_children[CHLD_SNAP] = -1;
-		signal(SIGCHLD, interrupt);
-		return;
-	}
-	if (signum == SIGUSR1 || signum == SIGUSR2) {
-		maxloops = loop;
-		return;
-	}
-	if (signum == SIGWINCH) {
-		endwin(); /* stop + start curses so it works out the # of row and cols */
-		initscr();
-		cbreak();
-		signal(SIGWINCH, interrupt);
-		COLOUR colour = has_colors();
-		COLOUR start_color();
-		COLOUR init_pairs();
-		clear();
-		return;
-	}
-	endwin();
-	exit(0);
-}
+// void	interrupt(int signum)
+// {
+// 	int child_pid;
+// 	int waitstatus;
+// 	if (signum == SIGCHLD ) {
+// 		while((child_pid = waitpid(0, &waitstatus, 0)) == -1 ) {
+// 			if( errno == EINTR) // retry
+// 				continue;
+// 			return; // ECHLD, EFAULT 
+// 		}
+// 		if(child_pid == nmon_children[CHLD_SNAP])
+// 			nmon_children[CHLD_SNAP] = -1;
+// 		signal(SIGCHLD, interrupt);
+// 		return;
+// 	}
+// 	if (signum == SIGUSR1 || signum == SIGUSR2) {
+// 		maxloops = loop;
+// 		return;
+// 	}
+// 	if (signum == SIGWINCH) {
+// 		endwin(); // stop + start curses so it works out the # of row and cols
+// 		initscr();
+// 		cbreak();
+// 		signal(SIGWINCH, interrupt);
+// 		COLOUR colour = has_colors();
+// 		COLOUR start_color();
+// 		COLOUR init_pairs();
+// 		clear();
+// 		return;
+// 	}
+// 	endwin();
+// 	exit(0);
+// }
 
 
 /* only place the q=previous and p=currect pointers are modified */
@@ -1324,7 +1307,7 @@ void switcher(void)
 	else
 		flash_on = 1;
 	
-	/* Reset flags so /proc/... is re-read in next interval */
+	// Reset flags so /proc/... is re-read in next interval 
 	for(i=0;i<P_NUMBER;i++) {
 		proc[i].read_this_interval = 0;
 	}
@@ -1645,271 +1628,272 @@ int	disk_compare(const void *a, const void *b)
 }
 
 
+
 /* checkinput is the subroutine to handle user input */
-int checkinput(void)
-{
-	static int use_env = 1;
-	char	buf[1024];
-	int	bytes;
-	int	chars;
-	int	i;
-	char *p;
+// int checkinput(void)
+// {
+// 	static int use_env = 1;
+// 	char	buf[1024];
+// 	int	bytes;
+// 	int	chars;
+// 	int	i;
+// 	char *p;
 	
-	ioctl(fileno(stdin), FIONREAD, &bytes);
+// 	ioctl(fileno(stdin), FIONREAD, &bytes);
 	
-	if (bytes > 0 || use_env) {
-		if(use_env) {
-			use_env = 0;
-			p=getenv("NMON");
-			if(p!=0){
-				strcpy(buf,p);
-				chars = strlen(buf);
-			}
-			else chars = 0;
-		}
-		else
-			chars = read(fileno(stdin), buf, bytes);
-		if (chars > 0) {
-			welcome = 0;
-			for (i = 0; i < chars; i++) {
-				switch (buf[i]) {
-					case 'x':
-					case 'q':
-						nocbreak();
-						endwin();
-						exit(0);
+// 	if (bytes > 0 || use_env) {
+// 		if(use_env) {
+// 			use_env = 0;
+// 			p=getenv("NMON");
+// 			if(p!=0){
+// 				strcpy(buf,p);
+// 				chars = strlen(buf);
+// 			}
+// 			else chars = 0;
+// 		}
+// 		else
+// 			chars = read(fileno(stdin), buf, bytes);
+// 		if (chars > 0) {
+// 			welcome = 0;
+// 			for (i = 0; i < chars; i++) {
+// 				switch (buf[i]) {
+// 					case 'x':
+// 					case 'q':
+// 						nocbreak();
+// 						endwin();
+// 						exit(0);
 						
-					case '6':
-					case '7':
-					case '8':
-					case '9':
-						dotline = buf[i] - '0';
-						break;
-					case '+':
-						seconds = seconds * 2;
-						break;
-					case '-':
-						seconds = seconds / 2;
-						if (seconds < 1)
-							seconds = 1;
-						break;
-					case '.':
-						if (show_all)
-							show_all = 0;
-						else {
-							show_all = 1;
-							show_disk = SHOW_DISK_STATS;
-							show_top = 1;
-							show_topmode =3;
-						}
-						wclear(paddisk);
-						break;
-					case '?':
-					case 'h':
-					case 'H':
-						if (show_help)
-							show_help = 0;
-						else {
-							show_help = 1;
-							show_verbose = 0;
-						}
-						wclear(padhelp);
-						break;
-					case 'b':
-					case 'B':
-						FLIP(colour);
-						clear();
-						break;
-					case 'Z':
-						FLIP(show_raw);
-						show_smp=1;
-						wclear(padsmp);
-						break;
-					case 'l':
-						FLIP (show_longterm);
-						wclear(padlong);
-						//cpulongitter = 0;
-						break;
-					case 'V':
-						FLIP(show_vm);
-						wclear(padpage);
-						break;
-					case 'j':
-					case 'J':
-						FLIP(show_jfs);
-						jfs_load(show_jfs);
-						wclear(padjfs);
-						break;
-					case 'k':
-					case 'K':
-						FLIP(show_kernel);
-						wclear(padkstat);
-						break;
-					case 'm':
-					case 'M':
-						FLIP(show_memory);
-						wclear(padmem);
-						break;
-					case 'L':
-						FLIP(show_large);
-						wclear(padlarge);
-						break;
-					case 'D':
-						switch (show_disk) {
-							case SHOW_DISK_NONE:
-								show_disk = SHOW_DISK_STATS;
-								break;
-							case SHOW_DISK_STATS:
-								show_disk = SHOW_DISK_NONE;
-								break;
-							case SHOW_DISK_GRAPH:
-								show_disk = SHOW_DISK_STATS;
-								break;
-						}
-						wclear(paddisk);
-						break;
-					case 'd':
-						switch (show_disk) {
-							case SHOW_DISK_NONE:
-								show_disk = SHOW_DISK_GRAPH;
-								break;
-							case SHOW_DISK_STATS:
-								show_disk = SHOW_DISK_GRAPH;
-								break;
-							case SHOW_DISK_GRAPH:
-								show_disk = 0;
-								break;
-						}
-						wclear(paddisk);
-						break;
-					case 'o':
-					case 'O':
-						FLIP(show_diskmap);
-						wclear(padmap);
-						break;
-					case 'n':
-						if (show_net) {
-							show_net = 0;
-							show_neterror = 0;
-						} else {
-							show_net = 1;
-							show_neterror = 3;
-						}
-						wclear(padnet);
-						break;
-					case 'N':
-						if(show_nfs == 0)
-							show_nfs = 1;
-						else if(show_nfs == 1)
-							show_nfs = 2;
-						else if(show_nfs == 2)
-							show_nfs = 3;
-						else if(show_nfs == 3)
-							show_nfs = 0;
-						nfs_clear=1;
-						wclear(padnfs);
-						break;
-					case 'c':
-					case 'C':
-						FLIP(show_smp);
-						wclear(padsmp);
-						break;
-					case 'r':
-					case 'R':
-						FLIP(show_cpu);
-						wclear(padsys);
-						break;
-					case 't':
-						show_topmode = 3; /* Fall Through */
-					case 'T':
-						FLIP(show_top);
-						wclear(padtop);
-						break;
-					case 'v':
-						FLIP(show_verbose);
-						wclear(padverb);
-						break;
-					case 'u':
-						if (show_args == ARGS_NONE) {
-							args_load();
-							show_args = ARGS_ONLY;
-							show_top = 1;
-							if( show_topmode != 3 &&
-							   show_topmode != 4 &&
-							   show_topmode != 5 )
-								show_topmode = 3;
-						} else
-							show_args = ARGS_NONE;
-						wclear(padtop);
-						break;
-					case '1':
-						show_topmode = 1;
-						show_top = 1;
-						wclear(padtop);
-						break;
-						/*
-						 case '2':
-						 show_topmode = 2;
-						 show_top = 1;
-						 clear();
-						 break;
-						 */
-					case '3':
-						show_topmode = 3;
-						show_top = 1;
-						wclear(padtop);
-						break;
-					case '4':
-						show_topmode = 4;
-						show_top = 1;
-						wclear(padtop);
-						break;
-					case '5':
-						if(isroot) {
-							show_topmode = 5;
-							show_top = 1;
-							wclear(padtop);
-						}
-						break;
-					case '0':
-						for(i=0;i<(cpus+1);i++)
-							cpu_peak[i]=0;
-						for(i=0;i<networks;i++) {
-							net_read_peak[i]=0.0;
-							net_write_peak[i]=0.0;
-						}
-						for(i=0;i<disks;i++) {
-							disk_busy_peak[i]=0.0;
-							disk_rate_peak[i]=0.0;
-						}
-						snap_clear();
-						aiocount_max = 0;
-						aiotime_max = 0.0;
-						aiorunning_max = 0;
-						huge_peak = 0;
-						break;
-					case ' ':
-						clear();
-						break;
-					case 'G':
-						if(auto_dgroup) {
-							FLIP(disk_only_mode);
-							clear();
-						}
-						break;
-					case 'g':
-						FLIP(show_dgroup);
-						wclear(paddg);
-						break;
+// 					case '6':
+// 					case '7':
+// 					case '8':
+// 					case '9':
+// 						dotline = buf[i] - '0';
+// 						break;
+// 					case '+':
+// 						seconds = seconds * 2;
+// 						break;
+// 					case '-':
+// 						seconds = seconds / 2;
+// 						if (seconds < 1)
+// 							seconds = 1;
+// 						break;
+// 					case '.':
+// 						if (show_all)
+// 							show_all = 0;
+// 						else {
+// 							show_all = 1;
+// 							show_disk = SHOW_DISK_STATS;
+// 							show_top = 1;
+// 							show_topmode =3;
+// 						}
+// 						wclear(paddisk);
+// 						break;
+// 					case '?':
+// 					case 'h':
+// 					case 'H':
+// 						if (show_help)
+// 							show_help = 0;
+// 						else {
+// 							show_help = 1;
+// 							show_verbose = 0;
+// 						}
+// 						wclear(padhelp);
+// 						break;
+// 					case 'b':
+// 					case 'B':
+// 						FLIP(colour);
+// 						clear();
+// 						break;
+// 					case 'Z':
+// 						FLIP(show_raw);
+// 						show_smp=1;
+// 						wclear(padsmp);
+// 						break;
+// 					case 'l':
+// 						FLIP (show_longterm);
+// 						wclear(padlong);
+// 						//cpulongitter = 0;
+// 						break;
+// 					case 'V':
+// 						FLIP(show_vm);
+// 						wclear(padpage);
+// 						break;
+// 					case 'j':
+// 					case 'J':
+// 						FLIP(show_jfs);
+// 						jfs_load(show_jfs);
+// 						wclear(padjfs);
+// 						break;
+// 					case 'k':
+// 					case 'K':
+// 						FLIP(show_kernel);
+// 						wclear(padkstat);
+// 						break;
+// 					case 'm':
+// 					case 'M':
+// 						FLIP(show_memory);
+// 						wclear(padmem);
+// 						break;
+// 					case 'L':
+// 						FLIP(show_large);
+// 						wclear(padlarge);
+// 						break;
+// 					case 'D':
+// 						switch (show_disk) {
+// 							case SHOW_DISK_NONE:
+// 								show_disk = SHOW_DISK_STATS;
+// 								break;
+// 							case SHOW_DISK_STATS:
+// 								show_disk = SHOW_DISK_NONE;
+// 								break;
+// 							case SHOW_DISK_GRAPH:
+// 								show_disk = SHOW_DISK_STATS;
+// 								break;
+// 						}
+// 						wclear(paddisk);
+// 						break;
+// 					case 'd':
+// 						switch (show_disk) {
+// 							case SHOW_DISK_NONE:
+// 								show_disk = SHOW_DISK_GRAPH;
+// 								break;
+// 							case SHOW_DISK_STATS:
+// 								show_disk = SHOW_DISK_GRAPH;
+// 								break;
+// 							case SHOW_DISK_GRAPH:
+// 								show_disk = 0;
+// 								break;
+// 						}
+// 						wclear(paddisk);
+// 						break;
+// 					case 'o':
+// 					case 'O':
+// 						FLIP(show_diskmap);
+// 						wclear(padmap);
+// 						break;
+// 					case 'n':
+// 						if (show_net) {
+// 							show_net = 0;
+// 							show_neterror = 0;
+// 						} else {
+// 							show_net = 1;
+// 							show_neterror = 3;
+// 						}
+// 						wclear(padnet);
+// 						break;
+// 					case 'N':
+// 						if(show_nfs == 0)
+// 							show_nfs = 1;
+// 						else if(show_nfs == 1)
+// 							show_nfs = 2;
+// 						else if(show_nfs == 2)
+// 							show_nfs = 3;
+// 						else if(show_nfs == 3)
+// 							show_nfs = 0;
+// 						nfs_clear=1;
+// 						wclear(padnfs);
+// 						break;
+// 					case 'c':
+// 					case 'C':
+// 						FLIP(show_smp);
+// 						wclear(padsmp);
+// 						break;
+// 					case 'r':
+// 					case 'R':
+// 						FLIP(show_cpu);
+// 						wclear(padsys);
+// 						break;
+// 					case 't':
+// 						show_topmode = 3; /* Fall Through */
+// 					case 'T':
+// 						FLIP(show_top);
+// 						wclear(padtop);
+// 						break;
+// 					case 'v':
+// 						FLIP(show_verbose);
+// 						wclear(padverb);
+// 						break;
+// 					case 'u':
+// 						if (show_args == ARGS_NONE) {
+// 							args_load();
+// 							show_args = ARGS_ONLY;
+// 							show_top = 1;
+// 							if( show_topmode != 3 &&
+// 							   show_topmode != 4 &&
+// 							   show_topmode != 5 )
+// 								show_topmode = 3;
+// 						} else
+// 							show_args = ARGS_NONE;
+// 						wclear(padtop);
+// 						break;
+// 					case '1':
+// 						show_topmode = 1;
+// 						show_top = 1;
+// 						wclear(padtop);
+// 						break;
+// 						/*
+// 						 case '2':
+// 						 show_topmode = 2;
+// 						 show_top = 1;
+// 						 clear();
+// 						 break;
+// 						 */
+// 					case '3':
+// 						show_topmode = 3;
+// 						show_top = 1;
+// 						wclear(padtop);
+// 						break;
+// 					case '4':
+// 						show_topmode = 4;
+// 						show_top = 1;
+// 						wclear(padtop);
+// 						break;
+// 					case '5':
+// 						if(isroot) {
+// 							show_topmode = 5;
+// 							show_top = 1;
+// 							wclear(padtop);
+// 						}
+// 						break;
+// 					case '0':
+// 						for(i=0;i<(cpus+1);i++)
+// 							cpu_peak[i]=0;
+// 						for(i=0;i<networks;i++) {
+// 							net_read_peak[i]=0.0;
+// 							net_write_peak[i]=0.0;
+// 						}
+// 						for(i=0;i<disks;i++) {
+// 							disk_busy_peak[i]=0.0;
+// 							disk_rate_peak[i]=0.0;
+// 						}
+// 						snap_clear();
+// 						aiocount_max = 0;
+// 						aiotime_max = 0.0;
+// 						aiorunning_max = 0;
+// 						huge_peak = 0;
+// 						break;
+// 					case ' ':
+// 						clear();
+// 						break;
+// 					case 'G':
+// 						if(auto_dgroup) {
+// 							FLIP(disk_only_mode);
+// 							clear();
+// 						}
+// 						break;
+// 					case 'g':
+// 						FLIP(show_dgroup);
+// 						wclear(paddg);
+// 						break;
 						
-					default: return 0;
-				}
-			}
-			return 1;
-		}
-	}
-	return 0;
-}
+// 					default: return 0;
+// 				}
+// 			}
+// 			return 1;
+// 		}
+// 	}
+// 	return 0;
+// }
 
 void proc_net()
 {
@@ -2160,7 +2144,6 @@ int proc_procsinfo(int pid, int index)
 	}
 	/* --- */
 	
-	char cpu_line[] = "---------------------------+-------------------------------------------------+";
 	/* Start process as specified in cmd in a child process without waiting
 	 * for completion
 	 * not sure if want to prevent this funcitonality for root user
@@ -2170,76 +2153,76 @@ int proc_procsinfo(int pid, int index)
 	 * loop: loop id (0 for CHLD_START)
 	 * the_time: time to use for timestamp generation
 	 */
-	void child_start(int when,
-					 char *cmd,
-					 int timestamp_type,
-					 int loop,
-					 time_t the_time)
-	{
-		int i;
-		pid_t child_pid;
-		char time_stamp_str[20]="";
-		char *when_info="";
-		struct tm *tim; /* used to work out the hour/min/second */
+// 	void child_start(int when,
+// 					 char *cmd,
+// 					 int timestamp_type,
+// 					 int loop,
+// 					 time_t the_time)
+// 	{
+// 		int i;
+// 		pid_t child_pid;
+// 		char time_stamp_str[20]="";
+// 		char *when_info="";
+// 		struct tm *tim; // used to work out the hour/min/second 
 		
-#ifdef DEBUG2
-		fprintf(fp,"child start when=%d cmd=%s time=%d loop=%d\n",when,cmd,timestamp_type,loop);
-#endif
-		/* Validate parameter and initialize error text */
-		switch( when ) {
-			case CHLD_START:
-				when_info = "nmon fork exec failure CHLD_START";
-				break;
-			case CHLD_END:
-				when_info = "nmon fork exec failure CHLD_END";
-				break;
+// #ifdef DEBUG2
+// 		fprintf(fp,"child start when=%d cmd=%s time=%d loop=%d\n",when,cmd,timestamp_type,loop);
+// #endif
+// 		// Validate parameter and initialize error text 
+// 		switch( when ) {
+// 			case CHLD_START:
+// 				when_info = "nmon fork exec failure CHLD_START";
+// 				break;
+// 			case CHLD_END:
+// 				when_info = "nmon fork exec failure CHLD_END";
+// 				break;
 				
-			case CHLD_SNAP:
-				/* check if old child has finished - otherwise we do nothing */
-				if( nmon_children[CHLD_SNAP] != -1 ) {
-					kill( nmon_children[CHLD_SNAP],9);
-				}
+// 			case CHLD_SNAP:
+// 				// check if old child has finished - otherwise we do nothing 
+// 				if( nmon_children[CHLD_SNAP] != -1 ) {
+// 					kill( nmon_children[CHLD_SNAP],9);
+// 				}
 				
-				when_info = "nmon fork exec failure CHLD_SNAP";
-				break;
-		}
+// 				when_info = "nmon fork exec failure CHLD_SNAP";
+// 				break;
+// 		}
 		
 		
-		/* now fork off a child process. */
-		switch (child_pid = fork()) {
-			case -1:        /* fork failed. */
-				perror(when_info);
-				return;
+// 		// now fork off a child process. 
+// 		switch (child_pid = fork()) {
+// 			case -1:        // fork failed. 
+// 				perror(when_info);
+// 				return;
 				
-			case 0:         /* inside child process.  */
-				/* create requested timestamp */
-				if( timestamp_type == 1 ) {
-					tim = localtime(&the_time);
-					sprintf(time_stamp_str,"%02d:%02d:%02d,%02d,%02d,%04d",
-							tim->tm_hour, tim->tm_min, tim->tm_sec,
-							tim->tm_mday, tim->tm_mon + 1, tim->tm_year + 1900);
-				}
-				else {
-					sprintf(time_stamp_str,"T%04d", loop);
-				}
+// 			case 0:         // inside child process.  
+// 				// create requested timestamp 
+// 				if( timestamp_type == 1 ) {
+// 					tim = localtime(&the_time);
+// 					sprintf(time_stamp_str,"%02d:%02d:%02d,%02d,%02d,%04d",
+// 							tim->tm_hour, tim->tm_min, tim->tm_sec,
+// 							tim->tm_mday, tim->tm_mon + 1, tim->tm_year + 1900);
+// 				}
+// 				else {
+// 					sprintf(time_stamp_str,"T%04d", loop);
+// 				}
 				
-				/* close all open file pointers except the defaults */
-				for( i=3; i<5; ++i )
-					close(i);
+// 				// close all open file pointers except the defaults 
+// 				for( i=3; i<5; ++i )
+// 					close(i);
 				
-				/* Now switch to the defined command */
-				execlp(cmd, cmd, time_stamp_str,(void *)0);
+// 				// Now switch to the defined command 
+// 				execlp(cmd, cmd, time_stamp_str,(void *)0);
 				
-				/* If we get here the specified command could not be started */
-				perror(when_info);
-				exit(1);                     /* We can't do anything more */
-				/* never reached */
+// 				// If we get here the specified command could not be started 
+// 				perror(when_info);
+// 				exit(1);                     // We can't do anything more 
+// 				// never reached 
 				
-			default:        /* inside parent process. */
-				/* In father - remember child pid for future */
-				nmon_children[when] = child_pid;
-		}
-	}
+// 			default:        // inside parent process. 
+// 				// In father - remember child pid for future 
+// 				nmon_children[when] = child_pid;
+// 		}
+// 	}
 	
 	int main(int argc, char **argv)
 	{
@@ -2247,9 +2230,12 @@ int proc_procsinfo(int pid, int index)
 		// DEBUG -- stollcri
 		// 
 
+		setinterupthandlers();
+
 		struct nmondsettings settings = NMONDSETTINGS_INIT;
 		struct uiwinsets winsets = UIWINSETS_INIT;
-		readenvars(&winsets, &settings);
+		winsets.welcome.visible = true;
+		getenvars(&winsets, &settings);
 
 		struct syshw thishw = getsyshwinfo();
 		struct syskern thiskern = getsyskerninfo();
@@ -2298,7 +2284,6 @@ int proc_procsinfo(int pid, int index)
 		float	total_rbytes;	/* general totals */
 		float	total_wbytes;
 		float	total_xfers;
-		struct utsname uts;		/* UNIX name, version, etc */
 		double top_disk_busy = 0.0;
 		char *top_disk_name = "";
 		int disk_mb;
@@ -2336,16 +2321,6 @@ int proc_procsinfo(int pid, int index)
 		float v4s_total;
 		int errors=0;
 		
-		char  *nmon_start = (char *)NULL;
-		char  *nmon_end   = (char *)NULL;
-		char  *nmon_snap  = (char *)NULL;
-		char  *nmon_tmp   = (char *)NULL;
-		int   nmon_one_in  = 1;
-		/* Flag what kind of time stamp we give to started children
-		 * 0: "T%04d"
-		 * 1: "hh:mm:ss,dd,mm,yyyy"
-		 */
-		int   time_stamp_type =0;
 		unsigned long  pagesize = 1024*4; /* Default page size is 4 KB but newer servers compiled with 64 KB pages */
 		float average;
 		struct timeval nmon_tv; /* below is used to workout the nmon run, accumalate it and the
@@ -2383,41 +2358,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				progname = &progname[i+1];
 			}
 		
-		if(getenv("NMONDEBUG") != NULL)
-			debug=1;
-		
-		if ((nmon_start = getenv("NMON_START")) != NULL) {
-			nmon_start = check_call_string(nmon_start, "NMON_START");
-		}
-		
-		if ((nmon_end = getenv("NMON_END")) != NULL) {
-			nmon_end = check_call_string(nmon_end, "NMON_END");
-		}
-		
-		if ((nmon_tmp = getenv("NMON_ONE_IN")) != NULL) {
-			nmon_one_in = atoi(nmon_tmp);
-			if( errno != 0 ) {
-				fprintf(stderr, MSG_ERR_BAD_SHELL);
-				nmon_one_in = 1;
-			}
-		}
-		
-		if ((nmon_snap = getenv("NMON_SNAP")) != NULL) {
-			nmon_snap = check_call_string(nmon_snap, "NMON_SNAP");
-		}
-		
-		if ((nmon_tmp = getenv("NMON_TIMESTAMP")) != NULL) {
-			time_stamp_type = atoi(nmon_tmp);
-			if (time_stamp_type != 0 && time_stamp_type != 1 )
-				time_stamp_type = 1;
-		}
-#ifdef DEBUG2
-		printf("NMON_START=%s.\n",nmon_start);
-		printf("NMON_END=%s.\n",nmon_end);
-		printf("NMON_SNAP=%s.\n",nmon_snap);
-		printf("ONE_IN=%d.\n",nmon_one_in);
-		printf("TIMESTAMP=%d.\n",time_stamp_type);
-#endif
 		
 		for(i=0; i<CMDMAX;i++) {
 			sprintf(cmdstr,"NMONCMD%d",i);
@@ -2438,7 +2378,6 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			isroot=1;
 		
 		/* Check the version of OS */
-		uname(&uts);
 		if(sysconf(_SC_PAGESIZE) > 1024*4) /* Check if we have the large 64 KB memory page sizes compiled in to the kernel */
 			pagesize = sysconf(_SC_PAGESIZE);
 		proc_init();
@@ -2461,7 +2400,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 					colour = 0;
 					break;
 				case 'c':
-					maxloops = atoi(optarg);
+					// maxloops = atoi(optarg);
 					break;
 				case 'N':
 					show_nfs = 1;
@@ -2564,8 +2503,8 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			}
 		}
 		/* Set parameters if not set by above */
-		if (maxloops == -1)
-			maxloops = 9999999;
+		// if (maxloops == -1)
+		// 	maxloops = 9999999;
 		if (seconds  == -1)
 			seconds = 2;
 			show_dgroup = 0;
@@ -2627,14 +2566,7 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 
 		/* Set the pointer ready for the next round */
 		switcher();
-		
-		/* Initialise signal handlers so we can tidy up curses on exit */
-		signal(SIGUSR1, interrupt);
-		signal(SIGUSR2, interrupt);
-		signal(SIGINT, interrupt);
-		signal(SIGWINCH, interrupt);
-		signal(SIGCHLD, interrupt);
-		
+				
 		initscr();
 		cbreak();
 		move(0, 0);
@@ -2695,11 +2627,11 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			
 			uiheader(&x, colour, flash_on, hostname, elapsed, timer);
 			
-			if(welcome && getenv("NMON") == 0) {
+			if(winsets.welcome.visible) {
 				uiwelcome(&padwelcome, &x, COLS, LINES, colour, thishw);
 			}
 
-			if (show_help) {
+			if (winsets.help.visible) {
 				uihelp(&padhelp, &x, COLS, LINES);
 			}
 
@@ -2711,11 +2643,11 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 				uisys(&padsys, &x, COLS, LINES, thiskern);
 			}
 			
-			if (show_longterm ) {
+			if (winsets.cpulong.visible) {
 				uicpulong(&padlong, &x, COLS, LINES, &cpulongitter, colour, thisres);
 			}
 			
-			if (show_smp) {
+			if (winsets.cpu.visible) {
 					uicpu(&padsmp, &x, COLS, LINES, colour, thisres, show_raw);
 			}
 
@@ -3606,9 +3538,13 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			
 			for (i = 0; i < seconds; i++) {
 				sleep(1);
-				if (checkinput())
+
+				// stollcri - move to top of program loop
+				if(getinput(&winsets, &settings)) {
 					break;
+				}
 			}
+
 			if(x<LINES-2) mvwhline(stdscr, x, 1, ' ', COLS-2);
 			if(first_key_pressed == 0){
 				first_key_pressed=1;
@@ -3622,16 +3558,10 @@ mvwprintw(stdscr,LINES-1, 10, MSG_WRN_NOT_SHOWN); \
 			
 			switcher();
 			
-			if (loop >= maxloops) {
-				endwin();
-				if (nmon_end) {
-					child_start(CHLD_END, nmon_end, time_stamp_type, loop, timer);
-					/* Give the end - processing some time - 5s for now */
-					sleep(5);
-				}
-				
-				fflush(NULL);
-				exit(0);
-			}
+			// if (loop >= maxloops) {
+			// 	endwin();
+			// 	fflush(NULL);
+			// 	exit(0);
+			// }
 		}
 	}
