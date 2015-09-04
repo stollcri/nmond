@@ -74,6 +74,7 @@
 	- ☐ scanf -- use fgets
 	- ☐ gets -- use fgets
 	- ☐ make sure variables are nulled after free to prevent double free (e.g. free(x); x = NULL;)
+- ☐ APP: Create a manpage
 
 ## v0.4 -- Phase 2
 - GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
