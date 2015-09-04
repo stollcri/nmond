@@ -123,6 +123,9 @@ static void setwinstate(struct uiwinsets *winsets, struct nmondsettings *setting
 		case 'o':
 			break;
 		case 'q':
+			nocbreak();
+			endwin();
+			exit(0); // TODO: maybe some sort of shutdown sequence?
 			break;
 		case 't':
 			break;
