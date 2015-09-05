@@ -5,9 +5,9 @@
 
 ## v0.2 -- MVP
 - ☐ APP: Make [GUI portion of] the program run without /proc files
-	- ☐ Remove code for specail cases (IFDEFs)
+	- ✓ Remove code for specail cases (IFDEFs)
 	- ☐ Get data from sysctl and other low-level C calls
-	- ☐ Pull out UI elements
+	- ✓ Pull out UI elements
 	- ☐ Streamline main()
 - ☐ APP: Create long output for: cpu, mem, disk, net
 - ☐ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
