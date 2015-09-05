@@ -43,9 +43,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// #include <stdio.h>
-// #include <sys/time.h>
+#include <stdbool.h>
 
+struct nmondstate {
+	bool pendingchanges;
+	
+	int refresh;
+	double timenow;
+	double timelast;
+	double elapsed;
+	int neterrors;
 
+	bool debug;
+};
+#define NMONDSTATE_INIT { false, 2, false }
 
 #endif
