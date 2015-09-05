@@ -15,14 +15,18 @@
 // DEINFES AND STRUCTS
 //
 
-struct nmondsettings {
+struct nmondstate {
 	bool pendingchanges;
-
+	
 	int refresh;
+	double timenow;
+	double timelast;
+	double elapsed;
+	int neterrors;
 
 	bool debug;
 };
-#define NMONDSETTINGS_INIT { false, false }
+#define NMONDSETTINGS_INIT { false, 2, false }
 
 //
 // FUNCTIONS
@@ -60,7 +64,7 @@ static void setinterupthandlers()
 	signal(SIGCHLD, interupthundler);
 }
 
-static void setwinstate(struct uiwinsets *winsets, struct nmondsettings *settings, char input)
+static void setwinstate(struct uiwinsets *winsets, struct nmondstate *settings, char input)
 {
 	switch (input) {
 		case 'a':
@@ -167,7 +171,7 @@ static void setwinstate(struct uiwinsets *winsets, struct nmondsettings *setting
 	}
 }
 
-static void getenvars(struct uiwinsets *winsets, struct nmondsettings *settings)
+static void getenvars(struct uiwinsets *winsets, struct nmondstate *settings)
 {
 	if(getenv("NMONDEBUG") != NULL) {
 		settings->debug = true;
@@ -197,7 +201,7 @@ static void getenvars(struct uiwinsets *winsets, struct nmondsettings *settings)
 	}
 }
 
-static int getinput(struct uiwinsets *winsets, struct nmondsettings *settings)
+static int getinput(struct uiwinsets *winsets, struct nmondstate *settings)
 {
 	int result = 0;
 
@@ -218,7 +222,7 @@ static int getinput(struct uiwinsets *winsets, struct nmondsettings *settings)
 	return result;
 }
 
-static void setappstate(struct nmondsettings *settings, char input)
+static void setappstate(struct nmondstate *settings, char input)
 {
 	if(settings->pendingchanges) {
 

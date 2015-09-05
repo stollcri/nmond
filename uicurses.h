@@ -76,22 +76,21 @@ struct uiwinsets {
 	struct uiwinset cpu;
 	struct uiwinset cpulong;
 
-	/*
+	struct uiwinset disks;
+	struct uiwinset diskgroup;
+	struct uiwinset diskmap;
+	struct uiwinset filesys;
+	struct uiwinset kernel;
+	struct uiwinset memory;
+	struct uiwinset memlarge;
+	struct uiwinset memvirtual;
+	struct uiwinset neterrors;
+	struct uiwinset netfilesys;
+	struct uiwinset network;
 	struct uiwinset top;
-	struct uiwinset mem;
-	struct uiwinset large;
-	struct uiwinset page;
-	struct uiwinset kstat;
-	struct uiwinset net;
-	struct uiwinset neterr;
-	struct uiwinset nfs;
-	struct uiwinset disk;
-	struct uiwinset dg;
-	struct uiwinset map;
-	struct uiwinset jfs;
-	*/
+
 	struct uiwinset sys;
-	struct uiwinset verb;
+	struct uiwinset warn;
 };
 #define UIWINSETS_INIT { 0, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false} }
 
@@ -101,7 +100,19 @@ extern void uihelp(WINDOW**, int*, int, int);
 extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
 extern void uicpulong(WINDOW **padlong, int*, int, int, int*, int, struct sysres);
 
+extern void uidisks(WINDOW**, int*, int, int);
+extern void uidiskgroup(WINDOW**, int*, int, int);
+extern void uidiskmap(WINDOW**, int*, int, int);
+extern void uifilesys(WINDOW**, int*, int, int);
+extern void uikernel(WINDOW**, int*, int, int);
+extern void uimemory(WINDOW**, int*, int, int);
+extern void uimemlarge(WINDOW**, int*, int, int);
+extern void uimemvirtual(WINDOW**, int*, int, int);
+extern void uineterrors(WINDOW**, int*, int, int);
+extern void uinetfilesys(WINDOW**, int*, int, int);
+extern void uinetwork(WINDOW**, int*, int, int);
+extern void uitop(WINDOW**, int*, int, int);
 extern void uisys(WINDOW**, int*, int, int, struct syskern);
-extern void uiverbose(WINDOW**, int*, int, int);
+extern void uiwarn(WINDOW**, int*, int, int);
 
 #endif
