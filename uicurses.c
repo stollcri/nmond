@@ -628,6 +628,9 @@ extern void uidiskgroup(WINDOW **winin, int *xin, int cols, int rows)
 extern void uidiskmap(WINDOW **winin, int *xin, int cols, int rows)
 {
 /*
+// for Disk Busy rain style output covering 100's of diskss on one screen
+const char disk_busy_map_ch[] =
+"_____.....----------++++++++++oooooooooo0000000000OOOOOOOOOO8888888888XXXXXXXXXX##########@@@@@@@@@@*";
 				BANNER(padmap,"Disk %%Busy Map");
 				mvwprintw(padmap,0, 18,"Key: @=90 #=80 X=70 8=60 O=50 0=40 o=30 +=20 -=10 .=5 _=0%%");
 				mvwprintw(padmap,1, 0,"             Disk No.  1         2         3         4         5         6   ");
