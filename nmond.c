@@ -51,8 +51,10 @@
 #include "uicli.h"
 #include "uicurses.h"
 
+static inline void exitapp() __attribute__ ((noreturn));
 static inline void exitapp()
 {
+	nocbreak();
 	endwin();
 	exit(0);
 }
@@ -85,7 +87,7 @@ static inline void setinterupthandlers()
 	signal(SIGWINCH, handleinterupt);
 }
 
-static void setwinstate(struct uiwins *wins, struct nmondstate *state, char input)
+static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 {
 	switch (input) {
 		case 'a':
@@ -149,10 +151,8 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, char inpu
 		case 'o':
 			break;
 		case 'q':
-			nocbreak();
-			endwin();
-			exit(0); // TODO: maybe some sort of shutdown sequence?
-			break;
+			exitapp();
+			//break;
 		case 't':
 			break;
 		case 'T':
@@ -200,29 +200,18 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 	if(getenv("NMONDEBUG") != NULL) {
 		state->debug = true;
 	}
-
-	char *envar;
-	if(getenv("NMON") != NULL) {
-		// TODO: need to convert NMON state into NMOND state
-		// envar = getenv("NMON");
-	}
+	/* TODO: this is broken
+	char *envar = getenv("NMON");
 	// NMOND over rides NMON
 	if(getenv("NMOND") != NULL) {
 		envar = getenv("NMOND");
 	}
 
 	char envarstr[16];
-	int	envarlen = 0;
-	if(envar != 0) {
-		// strcpy(envarstr, envar); // TODO: FIXME, not memory safe, and seg faults :-()
-		// envarlen = strlen(envarstr);
-	} else {
-		envarlen = 0;
-	}
-
-	for (int i = 0; i < envarlen; ++i) {
+	for (unsigned long i = 0; i < strlen(envar); ++i) {
 		setwinstate(wins, state, envarstr[i]);
 	}
+	*/
 }
 
 //~~~~~~
@@ -285,7 +274,7 @@ int main(int argc, char **argv)
 	int y;
 
 	// initialzie window data structures
-	struct uiwins wins = UIWINSETS_INIT;
+	struct uiwins wins = UIWINS_INIT;
 	wins.welcome.win = newpad(24, MAXCOLS);
 	wins.welcome.visible = true;
 	wins.help.win = newpad(24, MAXCOLS);
