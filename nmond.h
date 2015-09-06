@@ -7,7 +7,7 @@
  * 
  * nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  https://github.com/stollcri/nmond
- *  forked from (near complete rewrite):
+ *  forked from (near complete rewrite of):
  *   lmon.c -- Curses based Performance Monitor for Linux
  *   Developer: Nigel Griffiths.
  *   (lmon15g.c dated 2015-07-13)
@@ -45,17 +45,22 @@
 
 #include <stdbool.h>
 
+#define MINIMUM_REFRESH_RATE 1
+#define MINIMUM_TIME_ELAPSED 0.5
+
 struct nmondstate {
-	bool pendingchanges;
-	
+	int color;
 	int refresh;
+	int refreshms;
+	int neterrors;
+
 	double timenow;
 	double timelast;
 	double elapsed;
-	int neterrors;
 
+	bool pendingchanges;
 	bool debug;
 };
-#define NMONDSTATE_INIT { false, 2, false }
+#define NMONDSTATE_INIT { 0, 2, 2000, 0, 0.0, 0.0, 0.0, false, false }
 
 #endif

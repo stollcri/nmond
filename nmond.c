@@ -4,7 +4,7 @@
  * 
  * nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  https://github.com/stollcri/nmond
- *  forked from (near complete rewrite):
+ *  forked from (near complete rewrite of):
  *   lmon.c -- Curses based Performance Monitor for Linux
  *   Developer: Nigel Griffiths.
  *   (lmon15g.c dated 2015-07-13)
@@ -46,13 +46,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/errno.h>
 #include <sys/ioctl.h>
 #include "sysinfo.h"
 #include "uicli.h"
 #include "uicurses.h"
 
-static void handleinterupt(int signum)
+static inline void exitapp()
+{
+	endwin();
+	exit(0);
+}
+
+static inline void handleinterupt(int signum)
 {
 	// window size change
 	// TODO: clean up
@@ -66,22 +71,21 @@ static void handleinterupt(int signum)
 		// COLOUR init_pairs();
 		clear();
 		return;
+	// all other interupts
+	} else {
+		exitapp();
 	}
-
-	endwin();
-	exit(0);
 }
 
-static void setinterupthandlers()
+static inline void setinterupthandlers()
 {
 	signal(SIGUSR1, handleinterupt);
 	signal(SIGUSR2, handleinterupt);
 	signal(SIGINT, handleinterupt);
 	signal(SIGWINCH, handleinterupt);
-	signal(SIGCHLD, handleinterupt);
 }
 
-static void setwinstate(struct uiwinsets *winsets, struct nmondstate *settings, char input)
+static void setwinstate(struct uiwins *wins, struct nmondstate *state, char input)
 {
 	switch (input) {
 		case 'a':
@@ -89,23 +93,24 @@ static void setwinstate(struct uiwinsets *winsets, struct nmondstate *settings, 
 		case 'A':
 			break;
 		case 'b':
+			state->color = state->color ? 0 : 1;
 			break;
 		case 'c':
-			if(winsets->cpu.visible) {
-				winsets->cpu.visible = false;
-				winsets->visiblecount -= 1;
+			if(wins->cpu.visible) {
+				wins->cpu.visible = false;
+				wins->visiblecount -= 1;
 			} else {
-				winsets->cpu.visible = true;
-				winsets->visiblecount += 1;
+				wins->cpu.visible = true;
+				wins->visiblecount += 1;
 			}
 			break;
 		case 'C':
-			if(winsets->cpulong.visible) {
-				winsets->cpulong.visible = false;
-				winsets->visiblecount -= 1;
+			if(wins->cpulong.visible) {
+				wins->cpulong.visible = false;
+				wins->visiblecount -= 1;
 			} else {
-				winsets->cpulong.visible = true;
-				winsets->visiblecount += 1;
+				wins->cpulong.visible = true;
+				wins->visiblecount += 1;
 			}
 			break;
 		case 'd':
@@ -119,12 +124,12 @@ static void setwinstate(struct uiwinsets *winsets, struct nmondstate *settings, 
 		case 'h':
 		case 'H':
 		case '?':
-			if(winsets->help.visible) {
-				winsets->help.visible = false;
-				winsets->visiblecount -= 1;
+			if(wins->help.visible) {
+				wins->help.visible = false;
+				wins->visiblecount -= 1;
 			} else {
-				winsets->help.visible = true;
-				winsets->visiblecount += 1;
+				wins->help.visible = true;
+				wins->visiblecount += 1;
 			}
 			break;
 		case 'i':
@@ -171,32 +176,34 @@ static void setwinstate(struct uiwinsets *winsets, struct nmondstate *settings, 
 		case '5':
 			break;
 		case '+':
-			settings->refresh = settings->refresh * 2;
-			settings->pendingchanges = true;
+			state->refresh = state->refresh * 2;
+			state->refreshms = state->refresh * 1000;
+			state->pendingchanges = true;
 			break;
 		case '-':
-			if(settings->refresh > 1) {
-				settings->refresh = settings->refresh / 2;
-				settings->pendingchanges = true;
+			if(state->refresh > MINIMUM_REFRESH_RATE) {
+				state->refresh = state->refresh / 2;
+				state->refreshms = state->refresh * 1000;
+				state->pendingchanges = true;
 			}
 			break;
 	}
-	if(winsets->visiblecount) {
-		winsets->welcome.visible = false;
+	if(wins->visiblecount) {
+		wins->welcome.visible = false;
 	} else {
-		winsets->welcome.visible = true;
+		wins->welcome.visible = true;
 	}
 }
 
-static void processenvars(struct uiwinsets *winsets, struct nmondstate *settings)
+static void processenvars(struct uiwins *wins, struct nmondstate *state)
 {
 	if(getenv("NMONDEBUG") != NULL) {
-		settings->debug = true;
+		state->debug = true;
 	}
 
 	char *envar;
 	if(getenv("NMON") != NULL) {
-		// need to convert NMON settings into NMOND settings
+		// TODO: need to convert NMON state into NMOND state
 		// envar = getenv("NMON");
 	}
 	// NMOND over rides NMON
@@ -214,35 +221,7 @@ static void processenvars(struct uiwinsets *winsets, struct nmondstate *settings
 	}
 
 	for (int i = 0; i < envarlen; ++i) {
-		setwinstate(winsets, settings, envarstr[i]);
-	}
-}
-
-static int processinput(struct uiwinsets *winsets, struct nmondstate *settings)
-{
-	int result = 0;
-
-	int	bytes;
-	char inputstr[64];
-	int inputlen = 0;
-
-	ioctl(fileno(stdin), FIONREAD, &bytes);
-	
-	if(bytes) {
-		inputlen = read(fileno(stdin), inputstr, bytes);
-		for (int i = 0; i < inputlen; ++i) {
-			setwinstate(winsets, settings, inputstr[i]);
-		}
-		result = 1;
-	}
-
-	return result;
-}
-
-static void setappstate(struct nmondstate *settings, char input)
-{
-	if(settings->pendingchanges) {
-
+		setwinstate(wins, state, envarstr[i]);
 	}
 }
 
@@ -276,14 +255,17 @@ int main(int argc, char **argv)
 	}
 	// read input character by character
 	cbreak();
-	// make reading characters (getch) no-blocking
-	//nodelay(w, TRUE);
 	// move the cursor to the top left
 	move(0, 0);
 
-	// initialize system information data structures
+	// initialize the app state
 	struct nmondstate currentstate = NMONDSTATE_INIT;
-	struct uiwinsets winsets = UIWINSETS_INIT;
+	currentstate.color = has_colors();
+	currentstate.timenow = time(NULL);
+	// set wait time for getch()
+	timeout(currentstate.refreshms);
+
+	// initialize system information data structures
 	struct syshw thishw = getsyshwinfo();
 	struct syskern thiskern = getsyskerninfo();
 	struct sysres thisres = SYSRES_INIT;
@@ -292,45 +274,42 @@ int main(int argc, char **argv)
 	struct sysproc thisproc = getsysprocinfoall(processcount);
 
 	// initialize main() variables
-	int cpulongitter = 0;
-	char hostname[256];
+	char hostname[32];
 	gethostname(hostname, sizeof(hostname));
-
-	// legacy vaiables which should be considered for removal
-	int	first_key_pressed = 0;
+	int pressedkey = 0;
+	int cpulongitter = -1;
 	int	networks = 0;
-	int	loop = 0;
 	int	flash_on = 0;
 	int	show_raw = 0;
-	int	color = has_colors();
 	int x;
 	int y;
 
 	// initialzie window data structures
-	winsets.welcome.win = newpad(24, MAXCOLS);
-	winsets.welcome.visible = true;
-	winsets.help.win = newpad(24, MAXCOLS);
-	winsets.cpu.win = newpad(MAXROWS, MAXCOLS);
-	winsets.cpulong.win = newpad(MAXROWS, MAXCOLS);
-	winsets.disks.win = newpad(MAXROWS, MAXCOLS);
-	winsets.diskgroup.win = newpad(MAXROWS, MAXCOLS);
-	winsets.diskmap.win = newpad(24, MAXCOLS);
-	winsets.filesys.win = newpad(MAXROWS, MAXCOLS);
-	winsets.kernel.win = newpad(5, MAXCOLS);
-	winsets.memory.win = newpad(20, MAXCOLS);
-	winsets.memlarge.win = newpad(20, MAXCOLS);
-	winsets.memvirtual.win = newpad(20, MAXCOLS);
-	winsets.neterrors.win = newpad(MAXROWS, MAXCOLS);
-	winsets.netfilesys.win = newpad(25, MAXCOLS);
-	winsets.network.win = newpad(MAXROWS, MAXCOLS);
-	winsets.top.win = newpad(MAXROWS, (MAXCOLS * 2));
-	winsets.sys.win = newpad(20, MAXCOLS);
-	winsets.warn.win = newpad(8, MAXCOLS);
+	struct uiwins wins = UIWINSETS_INIT;
+	wins.welcome.win = newpad(24, MAXCOLS);
+	wins.welcome.visible = true;
+	wins.help.win = newpad(24, MAXCOLS);
+	wins.cpu.win = newpad(MAXROWS, MAXCOLS);
+	wins.cpulong.win = newpad(MAXROWS, MAXCOLS);
+	wins.disks.win = newpad(MAXROWS, MAXCOLS);
+	wins.diskgroup.win = newpad(MAXROWS, MAXCOLS);
+	wins.diskmap.win = newpad(24, MAXCOLS);
+	wins.filesys.win = newpad(MAXROWS, MAXCOLS);
+	wins.kernel.win = newpad(5, MAXCOLS);
+	wins.memory.win = newpad(20, MAXCOLS);
+	wins.memlarge.win = newpad(20, MAXCOLS);
+	wins.memvirtual.win = newpad(20, MAXCOLS);
+	wins.neterrors.win = newpad(MAXROWS, MAXCOLS);
+	wins.netfilesys.win = newpad(25, MAXCOLS);
+	wins.network.win = newpad(MAXROWS, MAXCOLS);
+	wins.top.win = newpad(MAXROWS, (MAXCOLS * 2));
+	wins.sys.win = newpad(20, MAXCOLS);
+	wins.warn.win = newpad(8, MAXCOLS);
 
 	// change settings based upon environment variables
-	processenvars(&winsets, &currentstate);
+	processenvars(&wins, &currentstate);
 	// repaint on next refresh
-	clear();printf("asldkfjalskdf\n");
+	clear();
 	// refresh the display
 	refresh();
 
@@ -340,64 +319,76 @@ int main(int argc, char **argv)
 		x = 0;
 		y = 0;
 
-		// TODO: only check statistics which are used
-		thishw = getsyshwinfo();
-		thiskern = getsyskerninfo();
-		getsysresinfo(&thisres);
-		processcount = 0;
-		thisproc = getsysprocinfoall(processcount);
-
-		// don't assume actual sleep time matches refresh rate
-		currentstate.timelast = currentstate.timenow;
+		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
-		currentstate.elapsed = currentstate.timenow - currentstate.timenow;
+		currentstate.elapsed = currentstate.timenow - currentstate.timelast;
+		if ((currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
+			currentstate.timelast = time(NULL);
 
-		uiheader(&x, color, flash_on, hostname, currentstate.elapsed, time(0));
-		
-		if(winsets.welcome.visible) {
-			uiwelcome(&winsets.welcome.win, &x, COLS, LINES, color, thishw);
+			// TODO: only check statistics which are used
+			// update system information data structures
+			thishw = getsyshwinfo();
+			thiskern = getsyskerninfo();
+			getsysresinfo(&thisres);
+			processcount = 0;
+			thisproc = getsysprocinfoall(processcount);
+
+			// flash on/off once per itteration
+			flash_on = flash_on ? false : true;
+
+			if (wins.cpulong.visible) {
+				++cpulongitter;
+			}
 		}
-		if (winsets.help.visible) {
-			uihelp(&winsets.help.win, &x, COLS, LINES);
+
+		// update the header
+		uiheader(&x, currentstate.color, flash_on, hostname, currentstate.refresh, time(0));
+
+		// update the in-use panes
+		if(wins.welcome.visible) {
+			uiwelcome(&wins.welcome.win, &x, COLS, LINES, currentstate.color, thishw);
 		}
-		if (winsets.cpulong.visible) {
-			uicpulong(&winsets.cpulong.win, &x, COLS, LINES, &cpulongitter, color, thisres);
+		if (wins.help.visible) {
+			uihelp(&wins.help.win, &x, COLS, LINES);
 		}
-		if (winsets.cpu.visible) {
-			uicpu(&winsets.cpu.win, &x, COLS, LINES, color, thisres, show_raw);
+		if (wins.cpulong.visible) {
+			uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres);
+		}
+		if (wins.cpu.visible) {
+			uicpu(&wins.cpu.win, &x, COLS, LINES, currentstate.color, thisres, show_raw);
 		}
 
 
 
-		if (winsets.disks.visible) {
-			uidisks(&winsets.disks.win, &x, COLS, LINES);
+		if (wins.disks.visible) {
+			uidisks(&wins.disks.win, &x, COLS, LINES);
 		}
-		if (winsets.diskgroup.visible) {
-			uidiskgroup(&winsets.diskgroup.win, &x, COLS, LINES);
+		if (wins.diskgroup.visible) {
+			uidiskgroup(&wins.diskgroup.win, &x, COLS, LINES);
 		}
-		if (winsets.diskmap.visible) {
-			uidiskmap(&winsets.diskmap.win, &x, COLS, LINES);
+		if (wins.diskmap.visible) {
+			uidiskmap(&wins.diskmap.win, &x, COLS, LINES);
 		}
-		if (winsets.filesys.visible) {
-			uifilesys(&winsets.filesys.win, &x, COLS, LINES);
+		if (wins.filesys.visible) {
+			uifilesys(&wins.filesys.win, &x, COLS, LINES);
 		}
-		if (winsets.kernel.visible) {
-			uikernel(&winsets.kernel.win, &x, COLS, LINES);
+		if (wins.kernel.visible) {
+			uikernel(&wins.kernel.win, &x, COLS, LINES);
 		}
-		if (winsets.memory.visible) {
-			uimemory(&winsets.memory.win, &x, COLS, LINES);
+		if (wins.memory.visible) {
+			uimemory(&wins.memory.win, &x, COLS, LINES);
 		}
-		if (winsets.memlarge.visible) {
-			uimemlarge(&winsets.memlarge.win, &x, COLS, LINES);
+		if (wins.memlarge.visible) {
+			uimemlarge(&wins.memlarge.win, &x, COLS, LINES);
 		}
-		if (winsets.memvirtual.visible) {
-			uimemvirtual(&winsets.memvirtual.win, &x, COLS, LINES);
+		if (wins.memvirtual.visible) {
+			uimemvirtual(&wins.memvirtual.win, &x, COLS, LINES);
 		}
-		if (winsets.netfilesys.visible) {
-			uinetfilesys(&winsets.netfilesys.win, &x, COLS, LINES);
+		if (wins.netfilesys.visible) {
+			uinetfilesys(&wins.netfilesys.win, &x, COLS, LINES);
 		}
-		if (winsets.network.visible) {
-			uinetwork(&winsets.network.win, &x, COLS, LINES);
+		if (wins.network.visible) {
+			uinetwork(&wins.network.win, &x, COLS, LINES);
 			
 			int errors = 0;
 			for (int i = 0; i < networks; i++) {
@@ -410,49 +401,47 @@ int main(int argc, char **argv)
 			}
 
 			if (currentstate.neterrors) {
-				uineterrors(&winsets.neterrors.win, &x, COLS, LINES);
+				uineterrors(&wins.neterrors.win, &x, COLS, LINES);
 			}
 		}
-		if (winsets.sys.visible) {
-			uisys(&winsets.sys.win, &x, COLS, LINES, thiskern);
+		if (wins.sys.visible) {
+			uisys(&wins.sys.win, &x, COLS, LINES, thiskern);
 		}
-		if (winsets.top.visible) {
-			uitop(&winsets.top.win, &x, COLS, LINES);
+		if (wins.top.visible) {
+			uitop(&wins.top.win, &x, COLS, LINES);
 		}
-		if (winsets.warn.visible) {
-			uiwarn(&winsets.warn.win, &x, COLS, LINES);
+		if (wins.warn.visible) {
+			uiwarn(&wins.warn.win, &x, COLS, LINES);
 		}
-
 		
-
-		
-		/* underline the end of the stats area border */
-		if(x < LINES-2)mvwhline(stdscr, x, 1, ACS_HLINE,COLS-2);
-		
-		wmove(stdscr,0, 0);
+		// underline the end of the stats area border
+		if(x < LINES-2) {
+			mvwhline(stdscr, x, 1, ACS_HLINE, COLS-2);
+		}
+		wmove(stdscr, 0, 0);
 		wrefresh(stdscr);
 		doupdate();
 		
-		for (int i = 0; i < currentstate.refresh; i++) {
-			sleep(1);
-
-			// stollcri - move to top of program loop
-			if(processinput(&winsets, &currentstate)) {
-				break;
-			}
+		// handle input
+		pressedkey = getch();
+		if(pressedkey) {
+			// move the cursor back
+			wmove(stdscr, 0, 0);
+			// update app state
+			setwinstate(&wins, &currentstate, pressedkey);
+			// reset variable
+			pressedkey = 0;
 		}
 
-		if(x<LINES-2) mvwhline(stdscr, x, 1, ' ', COLS-2);
-		if(first_key_pressed == 0){
-			first_key_pressed=1;
-			wmove(stdscr,0, 0);
-			wclear(stdscr);
-			wmove(stdscr,0,0);
-			wclrtobot(stdscr);
-			wrefresh(stdscr);
-			doupdate();
+		// handle app state changes
+		if(currentstate.pendingchanges) {
+			timeout(currentstate.refreshms);
+			currentstate.pendingchanges = false;
 		}
-		
-		flash_on = flash_on ? false : true;
+
+		// un-underline the end of the stats area border
+		if(x < LINES-2) {
+			mvwhline(stdscr, x, 1, ' ', COLS-2);
+		}
 	}
 }
