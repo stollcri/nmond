@@ -166,7 +166,7 @@ void getsysresinfo(struct sysres *inres)
 	size_t length = sizeof(thisload);
 	error = sysctl(mib, 2, &thisload, &length, NULL, 0);
 	if(!error) {
-		newcpucount = intFromSysctlByName("hw.ncpu");
+		newcpucount = (int)intFromSysctlByName("hw.ncpu");
 		thisres.loadavg1 = thisload.ldavg[0] / thisload.fscale;
 		thisres.loadavg5 = thisload.ldavg[1] / thisload.fscale;
 		thisres.loadavg15 = thisload.ldavg[2] / thisload.fscale;
@@ -198,16 +198,16 @@ void getsysresinfo(struct sysres *inres)
 			thisres.cpus[cpuno].oldnice = thisres.cpus[cpuno].nice;
 			thisres.cpus[cpuno].oldtotal = thisres.cpus[cpuno].total;
 
-			thisres.cpus[cpuno].user = r_load[cpuno].cpu_ticks[CPU_STATE_USER];
-			thisres.cpus[cpuno].sys = r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
-			thisres.cpus[cpuno].idle = r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
-			thisres.cpus[cpuno].nice = r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
+			thisres.cpus[cpuno].user = (int)r_load[cpuno].cpu_ticks[CPU_STATE_USER];
+			thisres.cpus[cpuno].sys = (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
+			thisres.cpus[cpuno].idle = (int)r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
+			thisres.cpus[cpuno].nice = (int)r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
 			thisres.cpus[cpuno].total = 
-				r_load[cpuno].cpu_ticks[CPU_STATE_USER] + r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] + 
-				r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
+				(int)r_load[cpuno].cpu_ticks[CPU_STATE_USER] + (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] + 
+				(int)r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + (int)r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
 
 			total = (double)(thisres.cpus[cpuno].total - thisres.cpus[cpuno].oldtotal);
-			
+
 			thisres.cpus[cpuno].percentuser = 
 				(double)(thisres.cpus[cpuno].user - thisres.cpus[cpuno].olduser) / total * 100;
 			thisres.cpus[cpuno].percentsys = 

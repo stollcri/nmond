@@ -106,6 +106,7 @@ struct syskern { // CTL_KERN
 	unsigned int updateinterval; // KERN_UPDATEINTERVAL
 
 	unsigned int corecount; // machdep.cpu.core_count
+	unsigned int dummy;
 
 	char *ostype; // KERN_OSTYPE ("Darwin")
 	char *osrelease; // KERN_OSRELEASE ("14.5.0")
@@ -126,7 +127,11 @@ struct syskern { // CTL_KERN
 	// KERN_PROC
 	// KERN_PROF
 };
-#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, { 0, 0 }, { 0, 0 } }
+#define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, \
+0, 0, 0, 0, 0, \
+0, 0, \
+STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, \
+{ 0, 0 }, { 0, 0 } }
 
 extern struct syskern getsyskerninfo(void);
 

@@ -168,7 +168,7 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	*xin = x;
 }
 
-void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double user, double sys, double idle, double nice)
+static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double user, double sys, double idle, double nice)
 {
 	if(cpuno == -1) {
 		mvwprintw(win, row, 0, "Avg");
@@ -377,7 +377,7 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 					--nicequant;
 				} else {
 					wattrset(win, COLOR_PAIR(0));
-					wprintw(win, "metermark");
+					wprintw(win, metermark);
 				}
 			}
 		}

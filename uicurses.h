@@ -80,10 +80,12 @@ struct uiwins {
 	struct uiwin diskgroup;
 	struct uiwin diskmap;
 	struct uiwin filesys;
+
 	struct uiwin kernel;
 	struct uiwin memory;
 	struct uiwin memlarge;
 	struct uiwin memvirtual;
+
 	struct uiwin neterrors;
 	struct uiwin netfilesys;
 	struct uiwin network;
@@ -92,7 +94,12 @@ struct uiwins {
 	struct uiwin sys;
 	struct uiwin warn;
 };
-#define UIWINSETS_INIT { 0, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false} }
+#define UIWINS_INIT { 0, \
+{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
+{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
+{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
+{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
+{NULL, false}, {NULL, false} }
 
 extern void uiheader(int*, int, int, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
