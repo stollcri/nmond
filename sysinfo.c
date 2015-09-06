@@ -207,7 +207,7 @@ void getsysresinfo(struct sysres *inres)
 				r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
 
 			total = (double)(thisres.cpus[cpuno].total - thisres.cpus[cpuno].oldtotal);
-
+			
 			thisres.cpus[cpuno].percentuser = 
 				(double)(thisres.cpus[cpuno].user - thisres.cpus[cpuno].olduser) / total * 100;
 			thisres.cpus[cpuno].percentsys = 

@@ -80,7 +80,7 @@ void uiheader(int *xin, int usecolor, int blinkon, char *hostname, double elapse
 		mvprintw(x, 15, "[H for help]");
 	}
 	mvprintw(x, 30, "%s", hostname);
-	mvprintw(x, 52, "Refresh=%2.0fsecs ", elapsed);
+	mvprintw(x, 55, "Refresh%2.0fs", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
 
@@ -377,7 +377,7 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 					--nicequant;
 				} else {
 					wattrset(win, COLOR_PAIR(0));
-					wprintw(win, metermark);
+					wprintw(win, "metermark");
 				}
 			}
 		}
@@ -388,9 +388,8 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 	}
 	uidisplay(win, &x, cols, 21, rows);
 
-	++itteration;
-	if(itteration > graphcols) {
-		itteration = 0;
+	if(itteration >= graphcols) {
+		itteration = -1;
 	}
 
 	*itterin = itteration;

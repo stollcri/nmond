@@ -45,7 +45,7 @@
 
 #define APPNAME "nmond"
 #define VERSION "0.1"
-#define VERDATE "2015-08-18"
+#define VERDATE "2015-09-06"
 #define APPURL "https://github.com/stollcri/nmond"
 
 #define MAXROWS 256
@@ -64,33 +64,33 @@
 #define MSG_ERR_FAILEDDIR "Directory attempted was:%s\n"
 #define MSG_ERR_NOPENFILE "nmond: failed to open output file"
 
-struct uiwinset {
+struct uiwin {
 	WINDOW *win;
 	bool visible;
 };
-struct uiwinsets {
+struct uiwins {
 	int visiblecount;
 
-	struct uiwinset welcome;
-	struct uiwinset help;
-	struct uiwinset cpu;
-	struct uiwinset cpulong;
+	struct uiwin welcome;
+	struct uiwin help;
+	struct uiwin cpu;
+	struct uiwin cpulong;
 
-	struct uiwinset disks;
-	struct uiwinset diskgroup;
-	struct uiwinset diskmap;
-	struct uiwinset filesys;
-	struct uiwinset kernel;
-	struct uiwinset memory;
-	struct uiwinset memlarge;
-	struct uiwinset memvirtual;
-	struct uiwinset neterrors;
-	struct uiwinset netfilesys;
-	struct uiwinset network;
-	struct uiwinset top;
+	struct uiwin disks;
+	struct uiwin diskgroup;
+	struct uiwin diskmap;
+	struct uiwin filesys;
+	struct uiwin kernel;
+	struct uiwin memory;
+	struct uiwin memlarge;
+	struct uiwin memvirtual;
+	struct uiwin neterrors;
+	struct uiwin netfilesys;
+	struct uiwin network;
+	struct uiwin top;
 
-	struct uiwinset sys;
-	struct uiwinset warn;
+	struct uiwin sys;
+	struct uiwin warn;
 };
 #define UIWINSETS_INIT { 0, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false} }
 
