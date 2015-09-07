@@ -37,6 +37,7 @@
 
 #include "uicurses.h"
 #include <math.h>
+#include <string.h>
 
 static inline void uibanner(WINDOW *win, int cols, char *string)
 {
@@ -61,26 +62,30 @@ static inline void uidisplay(WINDOW *win, int *xin, int cols, int rows, int line
 	}
 
 	x = x + rows;
-	if((x + 4) > lines) {
+	if((x + 1) > lines) {
 		mvwprintw(stdscr, lines-1, 10, MSG_WRN_NOT_SHOWN);
 	}
 
 	*xin = x;
 }
 
-void uiheader(int *xin, int usecolor, int blinkon, char *hostname, double elapsed, time_t timer)
+void uiheader(int *xin, int usecolor, int blinkon, char *hostname, char *message, double elapsed, time_t timer)
 {
 	int x = *xin;
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvprintw(x, 1, APPNAME);
-	mvprintw(x, 9, VERSION);
+	mvprintw(x, 2, APPNAME);
+	mvprintw(x, 10, "%s", hostname);
 	if(blinkon) {
-		mvprintw(x, 15, "[H for help]");
+		if(strlen(message)) {
+			attrset(COLOR_PAIR(8));
+			// TODO: should limit to 26 characters
+			mvprintw(x, 35, "%s", message);
+			attrset(COLOR_PAIR(0));
+		}
 	}
-	mvprintw(x, 30, "%s", hostname);
-	mvprintw(x, 55, "Refresh%2.0fs", elapsed);
+	mvprintw(x, 64, "%1.0fs", elapsed);
 	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
 
@@ -287,7 +292,7 @@ void uicpu(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct sy
 	*xin = x;
 }
 
-void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int usecolor, struct sysres thisres)
+void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int usecolor, struct sysres thisres, bool updategraph)
 {
 	WINDOW *win = *winin;
 	if (win == NULL) {
@@ -327,70 +332,75 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 	mvwprintw(win, 19, 1, "10%%-|");
 	mvwprintw(win, 20, 1, " 5%%-|");
 	
-	int graphcols = 70;
-	int graphrows = 20;
-	int offset = 6;
+	if(updategraph) {
+		int graphcols = 70;
+		int graphrows = 20;
+		int offset = 6;
 
-	char *metermark = (char*)malloc(sizeof(char));
-	char *leadermark = (char*)malloc(sizeof(char));
+		char *metermark = (char*)malloc(sizeof(char));
+		char *blankmark = (char*)malloc(sizeof(char));
+		char *leadermark = (char*)malloc(sizeof(char));
 
-	int userquant = (int)(round(thisres.avgpercentuser) / 5);
-	int systquant = (int)(round(thisres.avgpercentsys) / 5);
-	int nicequant = (int)(round(thisres.avgpercentnice) / 5);
+		int userquant = (int)(round(thisres.avgpercentuser) / 5);
+		int systquant = (int)(round(thisres.avgpercentsys) / 5);
+		int nicequant = (int)(round(thisres.avgpercentnice) / 5);
 
-	for (int i = graphrows; i > 0; --i) {
-		wmove(win, i, itteration+offset);
-		
-		if((i > 1) && (((i - 1) % 4) == 0)) {
-			metermark = "-";
-			leadermark = "+";
-		} else {
-			metermark = " ";
-			leadermark = "|";
-		}
-
-		if(userquant) {
-			if(usecolor) {
-				wattrset(win, COLOR_PAIR(10));
-				wprintw(win, metermark);
+		for (int i = graphrows; i > 0; --i) {
+			wmove(win, i, itteration+offset);
+			
+			if((i > 1) && (((i - 1) % 4) == 0)) {
+				metermark = "+";
+				blankmark = "-";
+				leadermark = "+";
 			} else {
-				wprintw(win, "U");
+				metermark = "|";
+				blankmark = " ";
+				leadermark = "|";
 			}
-			--userquant;
-		} else {
-			if(systquant) {
+
+			if(userquant) {
 				if(usecolor) {
-					wattrset(win, COLOR_PAIR(8));
+					wattrset(win, COLOR_PAIR(10));
 					wprintw(win, metermark);
 				} else {
-					wprintw(win, "S");
+					wprintw(win, "U");
 				}
-				--systquant;
+				--userquant;
 			} else {
-				if(nicequant) {
+				if(systquant) {
 					if(usecolor) {
-						wattrset(win, COLOR_PAIR(9));
+						wattrset(win, COLOR_PAIR(8));
 						wprintw(win, metermark);
 					} else {
-						wprintw(win, "N");
+						wprintw(win, "S");
 					}
-					--nicequant;
+					--systquant;
 				} else {
-					wattrset(win, COLOR_PAIR(0));
-					wprintw(win, metermark);
+					if(nicequant) {
+						if(usecolor) {
+							wattrset(win, COLOR_PAIR(9));
+							wprintw(win, metermark);
+						} else {
+							wprintw(win, "N");
+						}
+						--nicequant;
+					} else {
+						wattrset(win, COLOR_PAIR(0));
+						wprintw(win, blankmark);
+					}
 				}
 			}
+			wattrset(win, COLOR_PAIR(0));
+			wmove(win, i, itteration+offset+1);
+			wprintw(win, leadermark);
 		}
 
-		wattrset(win, COLOR_PAIR(0));
-		wmove(win, i, itteration+offset+1);
-		wprintw(win, leadermark);
+		++itteration;
+		if(itteration > graphcols) {
+			itteration = 0;
+		}
 	}
 	uidisplay(win, &x, cols, 21, rows);
-
-	if(itteration >= graphcols) {
-		itteration = -1;
-	}
 
 	*itterin = itteration;
 	*xin = x;
