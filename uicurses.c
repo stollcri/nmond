@@ -109,6 +109,7 @@ void uiwelcome(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struc
 	mvwprintw(win, x+4, 1, "  / / / // / / / / // /_/ // / / // /_/ /  ");
 	mvwprintw(win, x+5, 1, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
 	mvwprintw(win, x+6, 1, "=======================================    ");
+
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(0));
 	}

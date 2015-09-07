@@ -228,14 +228,15 @@ int main(int argc, char **argv)
 	// initialize color windows, if available
 	if(has_colors()) {
 		start_color();
-		init_pair((short)0,  COLOR_WHITE,   COLOR_BLACK);
-		init_pair((short)1,  COLOR_RED,     COLOR_BLACK);
-		init_pair((short)2,  COLOR_GREEN,   COLOR_BLACK);
-		init_pair((short)3,  COLOR_YELLOW,  COLOR_BLACK);
-		init_pair((short)4,  COLOR_BLUE,    COLOR_BLACK);
-		init_pair((short)5,  COLOR_MAGENTA, COLOR_BLACK);
-		init_pair((short)6,  COLOR_CYAN,    COLOR_BLACK);
-		init_pair((short)7,  COLOR_WHITE,   COLOR_BLACK); 
+		use_default_colors();
+		init_pair((short)0,  COLOR_WHITE,   -1);
+		init_pair((short)1,  COLOR_RED,     -1);
+		init_pair((short)2,  COLOR_GREEN,   -1);
+		init_pair((short)3,  COLOR_YELLOW,  -1);
+		init_pair((short)4,  COLOR_BLUE,    -1);
+		init_pair((short)5,  COLOR_MAGENTA, -1);
+		init_pair((short)6,  COLOR_CYAN,    -1);
+		init_pair((short)7,  COLOR_WHITE,   -1); 
 		init_pair((short)8,  COLOR_WHITE,   COLOR_RED);
 		init_pair((short)9,  COLOR_WHITE,   COLOR_GREEN);
 		init_pair((short)10, COLOR_WHITE,   COLOR_BLUE);
