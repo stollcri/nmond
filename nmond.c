@@ -228,19 +228,19 @@ int main(int argc, char **argv)
 	// initialize color windows, if available
 	if(has_colors()) {
 		start_color();
-		init_pair((short)0,(short)7,(short)0); /* White */
-		init_pair((short)1,(short)1,(short)0); /* Red */
-		init_pair((short)2,(short)2,(short)0); /* Green */
-		init_pair((short)3,(short)3,(short)0); /* Yellow */
-		init_pair((short)4,(short)4,(short)0); /* Blue */
-		init_pair((short)5,(short)5,(short)0); /* Magenta */
-		init_pair((short)6,(short)6,(short)0); /* Cyan */
-		init_pair((short)7,(short)7,(short)0); /* White */
-		init_pair((short)8,(short)0,(short)1); /* Red background, red text */
-		init_pair((short)9,(short)0,(short)2); /* Green background, green text */
-		init_pair((short)10,(short)0,(short)4); /* Blue background, blue text */
-		init_pair((short)11,(short)0,(short)3); /* Yellow background, yellow text */
-		init_pair((short)12,(short)0,(short)6); /* Cyan background, cyan text */
+		init_pair((short)0,  COLOR_WHITE,   COLOR_BLACK);
+		init_pair((short)1,  COLOR_RED,     COLOR_BLACK);
+		init_pair((short)2,  COLOR_GREEN,   COLOR_BLACK);
+		init_pair((short)3,  COLOR_YELLOW,  COLOR_BLACK);
+		init_pair((short)4,  COLOR_BLUE,    COLOR_BLACK);
+		init_pair((short)5,  COLOR_MAGENTA, COLOR_BLACK);
+		init_pair((short)6,  COLOR_CYAN,    COLOR_BLACK);
+		init_pair((short)7,  COLOR_WHITE,   COLOR_BLACK); 
+		init_pair((short)8,  COLOR_WHITE,   COLOR_RED);
+		init_pair((short)9,  COLOR_WHITE,   COLOR_GREEN);
+		init_pair((short)10, COLOR_WHITE,   COLOR_BLUE);
+		init_pair((short)11, COLOR_BLACK,   COLOR_YELLOW);
+		init_pair((short)12, COLOR_BLACK,   COLOR_CYAN);
 	}
 	// read input character by character
 	cbreak();
@@ -263,10 +263,11 @@ int main(int argc, char **argv)
 	struct sysproc thisproc = getsysprocinfoall(processcount);
 
 	// initialize main() variables
-	char hostname[32];
+	char hostname[22];
 	gethostname(hostname, sizeof(hostname));
+	bool pendingdata = false;
 	int pressedkey = 0;
-	int cpulongitter = -1;
+	int cpulongitter = 0;
 	int	networks = 0;
 	int	flash_on = 0;
 	int	show_raw = 0;
@@ -275,11 +276,11 @@ int main(int argc, char **argv)
 
 	// initialzie window data structures
 	struct uiwins wins = UIWINS_INIT;
-	wins.welcome.win = newpad(24, MAXCOLS);
+	wins.welcome.win = newpad(22, MAXCOLS);
 	wins.welcome.visible = true;
-	wins.help.win = newpad(24, MAXCOLS);
-	wins.cpu.win = newpad(MAXROWS, MAXCOLS);
-	wins.cpulong.win = newpad(MAXROWS, MAXCOLS);
+	wins.help.win = newpad(20, MAXCOLS);
+	wins.cpu.win = newpad((thisres.cpucount+3), MAXCOLS);
+	wins.cpulong.win = newpad(21, MAXCOLS);
 	wins.disks.win = newpad(MAXROWS, MAXCOLS);
 	wins.diskgroup.win = newpad(MAXROWS, MAXCOLS);
 	wins.diskmap.win = newpad(24, MAXCOLS);
@@ -322,16 +323,15 @@ int main(int argc, char **argv)
 			processcount = 0;
 			thisproc = getsysprocinfoall(processcount);
 
+			// data changes are pending gui update
+			pendingdata = true;
+
 			// flash on/off once per itteration
 			flash_on = flash_on ? false : true;
-
-			if (wins.cpulong.visible) {
-				++cpulongitter;
-			}
 		}
 
 		// update the header
-		uiheader(&x, currentstate.color, flash_on, hostname, currentstate.refresh, time(0));
+		uiheader(&x, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
 
 		// update the in-use panes
 		if(wins.welcome.visible) {
@@ -341,7 +341,7 @@ int main(int argc, char **argv)
 			uihelp(&wins.help.win, &x, COLS, LINES);
 		}
 		if (wins.cpulong.visible) {
-			uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres);
+			uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
 		}
 		if (wins.cpu.visible) {
 			uicpu(&wins.cpu.win, &x, COLS, LINES, currentstate.color, thisres, show_raw);
@@ -402,6 +402,10 @@ int main(int argc, char **argv)
 		if (wins.warn.visible) {
 			uiwarn(&wins.warn.win, &x, COLS, LINES);
 		}
+
+
+		// all data changes posted by here
+		pendingdata = false;
 		
 		// underline the end of the stats area border
 		if(x < LINES-2) {
@@ -410,7 +414,7 @@ int main(int argc, char **argv)
 		wmove(stdscr, 0, 0);
 		wrefresh(stdscr);
 		doupdate();
-		
+
 		// handle input
 		pressedkey = getch();
 		if(pressedkey) {
@@ -420,17 +424,17 @@ int main(int argc, char **argv)
 			setwinstate(&wins, &currentstate, pressedkey);
 			// reset variable
 			pressedkey = 0;
+
+			// un-underline the end of the stats area border
+			if(x < LINES-2) {
+				mvwhline(stdscr, x, 1, ' ', COLS-2);
+			}
 		}
 
 		// handle app state changes
 		if(currentstate.pendingchanges) {
 			timeout(currentstate.refreshms);
 			currentstate.pendingchanges = false;
-		}
-
-		// un-underline the end of the stats area border
-		if(x < LINES-2) {
-			mvwhline(stdscr, x, 1, ' ', COLS-2);
 		}
 	}
 }

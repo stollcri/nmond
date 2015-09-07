@@ -101,11 +101,11 @@ struct uiwins {
 {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
 {NULL, false}, {NULL, false} }
 
-extern void uiheader(int*, int, int, char*, double, time_t);
+extern void uiheader(int*, int, int, char*, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int*, int, int);
 extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
-extern void uicpulong(WINDOW **padlong, int*, int, int, int*, int, struct sysres);
+extern void uicpulong(WINDOW **padlong, int*, int, int, int*, int, struct sysres, bool);
 
 extern void uidisks(WINDOW**, int*, int, int);
 extern void uidiskgroup(WINDOW**, int*, int, int);
