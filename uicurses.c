@@ -1159,7 +1159,7 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syshw hw, struct
 		return;
 	}
 	int x = *xin;
-	uibanner(win, cols, "Kernel and Processor Details");
+	uibanner(win, cols, "About This Mac");
 	mvwprintw(win, 1, 2, "%s", hw.model);
 	mvwprintw(win, 2, 2, "%s", hw.cpubrand);
 	mvwprintw(win, 3, 2, "%s", kern.version);
