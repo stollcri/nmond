@@ -38,6 +38,16 @@
 #include "uicurses.h"
 #include <math.h>
 #include <string.h>
+#include "heapsort.h"
+
+static inline double bytestogb(int inbytes)
+{
+	return (double)inbytes / BYTES_IN_GB;
+}
+static inline double bytestogb64(int64_t inbytes)
+{
+	return (double)inbytes / BYTES_IN_GB;
+}
 
 static inline void uibanner(WINDOW *win, int cols, char *string)
 {
@@ -1142,7 +1152,7 @@ extern void uinetwork(WINDOW **winin, int *xin, int cols, int rows)
 */
 }
 
-void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syskern kern)
+void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syshw hw, struct syskern kern)
 {
 	WINDOW *win = *winin;
 	if (win == NULL) {
@@ -1150,14 +1160,15 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syskern kern)
 	}
 	int x = *xin;
 	uibanner(win, cols, "Kernel and Processor Details");
-	mvwprintw(win, 1, 2, "%s", kern.version);
-	mvwprintw(win, 2, 2, "Release  : %s", kern.osrelease);
-	mvwprintw(win, 3, 2, "Version  : %s", kern.osversion);
-	mvwprintw(win, 4, 2, "# of CPUs: %d", kern.corecount);
-	mvwprintw(win, 5, 2, "Nodename : %s", kern.hostname);
-	mvwprintw(win, 6, 2, "Domain   : %s", kern.domainname);
-	mvwprintw(win, 7, 2, "Booted   : %s", kern.boottimestring);
-	uidisplay(win, &x, cols, 8, rows);
+	mvwprintw(win, 1, 2, "%s", hw.model);
+	mvwprintw(win, 2, 2, "%s", hw.cpubrand);
+	mvwprintw(win, 3, 2, "%s", kern.version);
+	mvwprintw(win, 4, 2, "OS Release: %s / OS Version: %s", kern.osrelease, kern.osversion);
+	mvwprintw(win, 5, 2, "CPUs: %d (%d cores, %d physical, %d logical)", hw.cpucount, kern.corecount, hw.physicalcpucount, hw.logicalcpucount);
+	mvwprintw(win, 7, 2, "Memory: %4.2f GB (%4.2f GB non-kernel in use)", bytestogb64(hw.memorysize), bytestogb(hw.usermemory));
+	mvwprintw(win, 8, 2, "Domain   : %s", kern.domainname);
+	mvwprintw(win, 9, 2, "Booted   : %s", kern.boottimestring);
+	uidisplay(win, &x, cols, 10, rows);
 	
 	*xin = x;
 }

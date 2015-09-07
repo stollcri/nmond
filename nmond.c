@@ -135,6 +135,13 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 			}
 			break;
 		case 'i':
+			if(wins->sys.visible) {
+				wins->sys.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				wins->sys.visible = true;
+				wins->visiblecount += 1;
+			}
 			break;
 		case 'I':
 			break;
@@ -294,7 +301,7 @@ int main(int argc, char **argv)
 	wins.netfilesys.win = newpad(25, MAXCOLS);
 	wins.network.win = newpad(MAXROWS, MAXCOLS);
 	wins.top.win = newpad(MAXROWS, (MAXCOLS * 2));
-	wins.sys.win = newpad(20, MAXCOLS);
+	wins.sys.win = newpad(10, MAXCOLS);
 	wins.warn.win = newpad(8, MAXCOLS);
 
 	// change settings based upon environment variables
@@ -340,6 +347,9 @@ int main(int argc, char **argv)
 		}
 		if (wins.help.visible) {
 			uihelp(&wins.help.win, &x, COLS, LINES);
+		}
+		if (wins.sys.visible) {
+			uisys(&wins.sys.win, &x, COLS, LINES, thishw, thiskern);
 		}
 		if (wins.cpulong.visible) {
 			uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
@@ -393,9 +403,6 @@ int main(int argc, char **argv)
 			if (currentstate.neterrors) {
 				uineterrors(&wins.neterrors.win, &x, COLS, LINES);
 			}
-		}
-		if (wins.sys.visible) {
-			uisys(&wins.sys.win, &x, COLS, LINES, thiskern);
 		}
 		if (wins.top.visible) {
 			uitop(&wins.top.win, &x, COLS, LINES);
