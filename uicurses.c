@@ -1161,7 +1161,7 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syshw hw, struct
 	int x = *xin;
 	uibanner(win, cols, "About This Mac");
 	mvwprintw(win, 1, 2, "%s", hw.model);
-	mvwprintw(win, 2, 2, "%s", hw.cpubrand);
+	mvwprintw(win, 2, 2, "%s %s", hw.cpuvendor, hw.cpubrand);
 	mvwprintw(win, 3, 2, "%s", kern.version);
 	mvwprintw(win, 4, 2, "OS Release: %s / OS Version: %s", kern.osrelease, kern.osversion);
 	mvwprintw(win, 5, 2, "CPUs: %d (%d cores, %d physical, %d logical)", hw.cpucount, kern.corecount, hw.physicalcpucount, hw.logicalcpucount);
