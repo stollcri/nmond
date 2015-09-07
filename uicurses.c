@@ -265,13 +265,13 @@ void uicpu(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct sy
 	uibanner(win, cols, "CPU Load");
 	mvwprintw(win, 1, 0, "CPU");
 	if(usecolor) {
-		wattrset(win, COLOR_PAIR(COLOR_BLUE));
+		wattrset(win, COLOR_PAIR(4));
 		mvwprintw(win, 1, 4, "User%%");
-		wattrset(win, COLOR_PAIR(COLOR_RED));
+		wattrset(win, COLOR_PAIR(1));
 		mvwprintw(win, 1, 10, "Sys %%");
-		wattrset(win, COLOR_PAIR(COLOR_GREEN));
+		wattrset(win, COLOR_PAIR(2));
 		mvwprintw(win, 1, 16, "Nice%%");
-		wattrset(win, COLOR_PAIR(COLOR_WHITE));
+		wattrset(win, COLOR_PAIR(0));
 		mvwprintw(win, 1, 22, "Idle");
 	} else {
 		mvwprintw(win, 1, 4, "User%%");
