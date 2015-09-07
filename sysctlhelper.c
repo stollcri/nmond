@@ -167,7 +167,20 @@ unsigned int intFromSysctlByName(char *name)
 }
 
 /*
- * Get a character string from sysctl (level 2)
+ * Get a 64bit integer from sysctlbyname
+ */
+int64_t int64FromSysctlByName(char *name)
+{
+	int64_t result = 0;
+
+	size_t length = sizeof(result);
+	sysctlbyname(name, &result, &length, NULL, 0);
+
+	return result;
+}
+
+/*
+ * Get a time value from sysctl (level 2)
  */
 struct timeval timevalFromSysctl(int mib0, int mib1)
 {

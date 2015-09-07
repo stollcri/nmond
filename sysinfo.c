@@ -70,7 +70,7 @@ struct syshw getsyshwinfo()
 	thissys.logicalcpumax = intFromSysctlByName("hw.logicalcpu_max");
 	
 	thissys.byteorder = intFromSysctl(CTL_HW, HW_BYTEORDER);
-	thissys.memorysize = intFromSysctl(CTL_HW, HW_MEMSIZE);
+	thissys.memorysize = int64FromSysctlByName("hw.memsize");
 	thissys.usermemory = intFromSysctl(CTL_HW, HW_USERMEM);
 	thissys.pagesize = intFromSysctl(CTL_HW, HW_PAGESIZE);
 

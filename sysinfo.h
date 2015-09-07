@@ -61,7 +61,6 @@ struct syshw { // CTL_HW
 	unsigned int hyperthreads;
 	
 	unsigned int byteorder; // HW_BYTEORDER
-	unsigned int memorysize; // HW_MEMSIZE (total memory, 64bit int)
 	unsigned int usermemory; // HW_USERMEM (non-kernel memory)
 	unsigned int pagesize; // HW_PAGESIZE
 	unsigned int l1icachesize;
@@ -74,13 +73,18 @@ struct syshw { // CTL_HW
 	unsigned int thermallevelgpu; // machdep.xcpm.gpu_thermal_level
 	unsigned int thermallevelio; // machdep.xcpm.io_thermal_level
 
+	int64_t memorysize; // HW_MEMSIZE (total memory, 64bit int)
+
 	char *architecture; // HW_MACHINE_ARCH
 	char *cpuvendor; // machdep.cpu.vendor ("GenuineIntel")
 	char *cpubrand; // machdep.cpu.brand_string ("Intel(R) Core(TM) i7-4650U CPU @ 1.70GHz")
 	char *machine; // HW_MACHINE ("x86_64")
 	char *model; // HW_MODEL ("MacbookAir6,2")
 };
-#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
+#define SYSHW_INIT { 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, \
+0, 0, 0, 0, 0, 0, 0, \
+0, 0, 0, 0, 0, \
+STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
 
 extern struct syshw getsyshwinfo(void);
 

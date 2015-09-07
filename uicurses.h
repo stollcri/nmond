@@ -48,6 +48,8 @@
 #define VERDATE "2015-09-06"
 #define APPURL "https://github.com/stollcri/nmond"
 
+#define BYTES_IN_GB 1073741824
+
 #define MAXROWS 256
 #define MAXCOLS 150
 
@@ -119,7 +121,7 @@ extern void uineterrors(WINDOW**, int*, int, int);
 extern void uinetfilesys(WINDOW**, int*, int, int);
 extern void uinetwork(WINDOW**, int*, int, int);
 extern void uitop(WINDOW**, int*, int, int);
-extern void uisys(WINDOW**, int*, int, int, struct syskern);
+extern void uisys(WINDOW**, int*, int, int, struct syshw, struct syskern);
 extern void uiwarn(WINDOW**, int*, int, int);
 
 #endif
