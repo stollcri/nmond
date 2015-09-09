@@ -46,10 +46,6 @@ analysis:
 	$(SCAN_BUILD_EXISTS)
 	scan-build -o tst/out -v -V make debug
 
-nmond:
-	@mkdir -p ./bin/
-	$(CC) $(CFLAGS) $(LFLAGS) -o $(AOFILE) $(CFILES)
-
 run:
 	bin/nmond
 
@@ -58,4 +54,13 @@ clean:
 	rm -r dbg
 	rm -r tst/out/20*
 
-.PHONY: default, test, debug, analysis, nmond, run, clean
+nmond:
+	@mkdir -p ./bin/
+	$(CC) $(CFLAGS) $(LFLAGS) -o $(AOFILE) $(CFILES)
+
+install:
+	cp bin/nmond /usr/bin/nmond
+	chown root:wheel /usr/bin/nmond
+	chmod 4555 /usr/bin/nmond
+
+.PHONY: default, test, debug, analysis, run, clean, nmond, install

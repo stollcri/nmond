@@ -6,4 +6,12 @@ Since there is already a working version for Linux (and some UNIX distributions)
 
 ## Building
 
-Just type `make` in the nmond direectory to build nmond. It can be installed by issuing the `make install` command. However, the pre
+Just type `make` in the nmond direectory to build nmond. It can be installed by issuing the `sudo make install` command.
+
+## A Note on Security
+In order to get complete process information, without requiring the use of sudo, this program is owned by root and has its setuid bit set. This is also beta software. As a general rule, it is not wise to allow beta software to have elevated permissions on your system. However, the program does not actively involve itself with remote connections, so this should only be a concern if untrusted users are given command access to the computer on which nmond is installed. The program will operate without the setuid bit (`sudo chmod u-s /usr/bin/nmond`), but the information it displays will be inacurate due to lack of access; that can be mitigated by invoking it with the sudo command.
+
+Please consider your environment before installing this application, and be sure to read and understand the license agreement.
+
+### Potential Related Problems
+Some systems have restrictions on the use of setuid programs. If the program does not give complete process infromation when run from a home directory, then the home directories disk may be mounted with the nosuid option. Mounting the home disk with nosuid is a sensible choice, the application should be installed to the /usr/bin directory.
