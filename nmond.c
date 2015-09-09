@@ -161,6 +161,13 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 			exitapp();
 			//break;
 		case 't':
+			if(wins->top.visible) {
+				wins->top.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				wins->top.visible = true;
+				wins->visiblecount += 1;
+			}
 			break;
 		case 'T':
 			break;
@@ -268,7 +275,7 @@ int main(int argc, char **argv)
 	struct sysres thisres = SYSRES_INIT;
 	getsysresinfo(&thisres);
 	size_t processcount = 0;
-	struct sysproc thisproc = getsysprocinfoall(processcount);
+	struct sysproc *thisproc = getsysprocinfoall(&processcount);
 
 	// initialize main() variables
 	char hostname[22];
@@ -282,6 +289,7 @@ int main(int argc, char **argv)
 	int x;
 	int y;
 
+	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
 	struct uiwins wins = UIWINS_INIT;
 	wins.welcome.win = newpad(22, MAXCOLS);
@@ -329,7 +337,7 @@ int main(int argc, char **argv)
 			thiskern = getsyskerninfo();
 			getsysresinfo(&thisres);
 			processcount = 0;
-			thisproc = getsysprocinfoall(processcount);
+			thisproc = getsysprocinfoall(&processcount);
 
 			// data changes are pending gui update
 			pendingdata = true;
@@ -405,7 +413,7 @@ int main(int argc, char **argv)
 			}
 		}
 		if (wins.top.visible) {
-			uitop(&wins.top.win, &x, COLS, LINES);
+			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount);
 		}
 		if (wins.warn.visible) {
 			uiwarn(&wins.warn.win, &x, COLS, LINES);

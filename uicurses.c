@@ -38,7 +38,6 @@
 #include "uicurses.h"
 #include <math.h>
 #include <string.h>
-#include "heapsort.h"
 
 static inline double bytestogb(int inbytes)
 {
@@ -1159,13 +1158,15 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syshw hw, struct
 		return;
 	}
 	int x = *xin;
+
 	uibanner(win, cols, "About This Mac");
 	mvwprintw(win, 1, 2, "%s", hw.model);
 	mvwprintw(win, 2, 2, "%s %s", hw.cpuvendor, hw.cpubrand);
 	mvwprintw(win, 3, 2, "%s", kern.version);
 	mvwprintw(win, 4, 2, "OS Release: %s / OS Version: %s", kern.osrelease, kern.osversion);
 	mvwprintw(win, 5, 2, "CPUs: %d (%d cores, %d physical, %d logical)", hw.cpucount, kern.corecount, hw.physicalcpucount, hw.logicalcpucount);
-	mvwprintw(win, 7, 2, "Memory: %4.2f GB (%4.2f GB non-kernel in use)", bytestogb64(hw.memorysize), bytestogb(hw.usermemory));
+	mvwprintw(win, 6, 2, "Memory: %4.2f GB (%4.2f GB non-kernel in use)", bytestogb64(hw.memorysize), bytestogb(hw.usermemory));
+	
 	mvwprintw(win, 8, 2, "Domain   : %s", kern.domainname);
 	mvwprintw(win, 9, 2, "Booted   : %s", kern.boottimestring);
 	uidisplay(win, &x, cols, 10, rows);
@@ -1173,11 +1174,71 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syshw hw, struct
 	*xin = x;
 }
 
-void uitop(WINDOW **winin, int *xin, int cols, int rows)
+static int comparepercentasc(const void *val1, const void *val2)
 {
+	struct sysproc *percent1 = (struct sysproc *)val1;
+	struct sysproc *percent2 = (struct sysproc *)val2;
+
+	// return (int)(percent1->percentage - percent2->percentage);
+	if (percent1->percentage < percent2->percentage) {
+		return -1;
+	} else if (percent1->percentage > percent2->percentage) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static int comparepercentdes(const void *val1, const void *val2)
+{
+	struct sysproc *percent1 = (struct sysproc *)val1;
+	struct sysproc *percent2 = (struct sysproc *)val2;
+
+	// return (int)(percent2->percentage - percent1->percentage);
+	if (percent1->percentage > percent2->percentage) {
+		return -1;
+	} else if (percent1->percentage < percent2->percentage) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, int processcount)
+{
+	WINDOW *win = *winin;
+	if (win == NULL) {
+		return;
+	}
+	int x = *xin;
+
+	wmove(win,1, 1);
+	wclrtobot(win);
+
+	// TODO: this is not working???
+	uibanner(win, cols, "Top Processes");
+	heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
+
+	mvwprintw(win, 1, 1, "  PID      PPID  Pgrp Nice Prior Status    proc-Flag Command");
+	for (int j = 0; j < processcount; j++) {
+		mvwprintw(win, (j + 2), 1, "%7d %5s %f  %7u %7u %7u %7u %7u %7u  %s", 
+			procs[j].pid, procs[j].statustext, procs[j].percentage,
+			procs[j].utime, procs[j].stime, procs[j].totaltime, procs[j].oldtotaltime, procs[j].billedtime, procs[j].idlewakeups,
+			procs[j].name);
+		// mvwprintw(win, j + 2, 1, "%7d %7d %6s %4d %4d %9s 0x%08x %1s %-32s",
+		// 				procs[j].pid,
+		// 				procs[j].parentpid,
+		// 				"pgrp",//procs[j].pgrp,
+		// 				0,//procs[j].pi_nice,
+		// 				0,//procs[j].pi_pri,
+		// 				"state",//(topper[j].time * 100 / elapsed) ? "Running " : get_state(procs[j].pi_state),
+		// 				0,//procs[j].pi_flags,
+		// 				(procs[j].ttydev ? "F" : " "),
+		// 				9);//procs[j].pi_comm);
+	}
+	uidisplay(win, &x, cols, 26/*lines to show*/, rows);
+	//DISPLAY(winin,3 + j);
 /*
-				wmove(padtop,1, 1);
-				wclrtobot(padtop);
 				// Get the details of the running processes 
 				skipped = 0;
 				n = getprocs(0);
@@ -1220,19 +1281,19 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows)
 					case 5: qsort((void *) & topper[0], max_sorted, sizeof(struct topper ), &disk_compare );
 						break;
 				}
-				BANNER(padtop,"Top Processes");
+				//BANNER(winin,"Top Processes");
 				if(isroot) {
-					mvwprintw(padtop,0, 15, "Procs=%d mode=%d (1=Basic, 3=Perf 4=Size 5=I/O)", n, show_topmode);
+					mvwprintw(winin,0, 15, "Procs=%d mode=%d (1=Basic, 3=Perf 4=Size 5=I/O)", n, show_topmode);
 				} else {
-					mvwprintw(padtop,0, 15, "Procs=%d mode=%d (1=Basic, 3=Perf 4=Size 5=(root-only))", n, show_topmode);
+					mvwprintw(winin,0, 15, "Procs=%d mode=%d (1=Basic, 3=Perf 4=Size 5=(root-only))", n, show_topmode);
 				}
 				if(top_first_time) {
 					top_first_time = 0;
-					mvwprintw(padtop,1, 1, "Please wait - information being collected");
+					mvwprintw(winin,1, 1, "Please wait - information being collected");
 				} else {
 					switch (show_topmode) {
 						case 1:
-							mvwprintw(padtop,1, 1, "  PID      PPID  Pgrp Nice Prior Status    proc-Flag Command");
+							mvwprintw(winin,1, 1, "  PID      PPID  Pgrp Nice Prior Status    proc-Flag Command");
 							for (j = 0; j < max_sorted; j++) {
 								i = topper[j].index;
 								if (p->procs[i].pi_pgrp == p->procs[i].pi_pid)
@@ -1244,7 +1305,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows)
 									break;
 								if( x + j + 2 - skipped > LINES+2) // +2 to for safety :-) 
 									break;
-								mvwprintw(padtop,j + 2 - skipped, 1, "%7d %7d %6s %4d %4d %9s 0x%08x %1s %-32s",
+								mvwprintw(winin,j + 2 - skipped, 1, "%7d %7d %6s %4d %4d %9s 0x%08x %1s %-32s",
 												p->procs[i].pi_pid,
 												p->procs[i].pi_ppid,
 												pgrp,
@@ -1275,7 +1336,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows)
 								else
 									formatstring = "  PID    %%CPU  Size   Res   Res   Res   Res Shared   Faults  Command";
 							}
-							mvwprintw(padtop,1, y, formatstring);
+							mvwprintw(winin,1, y, formatstring);
 							
 							if(show_args == ARGS_ONLY) {
 								formatstring = "         Used      KB                                                        ";
@@ -1290,7 +1351,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows)
 								else
 									formatstring = "         Used    KB   Set  Text  Data   Lib    KB  Min  Maj ";
 							}
-							mvwprintw(padtop,2, 1, formatstring);
+							mvwprintw(winin,2, 1, formatstring);
 							for (j = 0; j < max_sorted; j++) {
 								i = topper[j].index;
 								if(!show_all) { 
@@ -1307,7 +1368,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows)
 									continue;
 								}
 								if(show_args == ARGS_ONLY){
-									mvwprintw(padtop,j + 3 - skipped, 1, 
+									mvwprintw(winin,j + 3 - skipped, 1, 
 											  "%7d %5.1f %7lu %-120s",
 											  p->procs[i].pi_pid,
 											  topper[j].time / elapsed,
@@ -1321,7 +1382,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows)
 									else
 										formatstring = "%7d %5.1f %5lu %5lu %5lu %5lu %5lu %5lu %4d %4d %-32s";
 									
-									mvwprintw(padtop,j + 3 - skipped, 1, formatstring,
+									mvwprintw(winin,j + 3 - skipped, 1, formatstring,
 											  p->procs[i].pi_pid,
 											  topper[j].time/elapsed,
 											  // topper[j].time /1000.0 / elapsed,
@@ -1339,7 +1400,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows)
 							break;
 					}
 				}
-				DISPLAY(padtop,3 + j);
+				DISPLAY(winin,3 + j);
 */
 }
 

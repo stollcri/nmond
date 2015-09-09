@@ -37,6 +37,7 @@
 
 #include "sysinfo.h"
 #include <assert.h>
+#include <errno.h>
 #include <libproc.h>
 #include <pwd.h>
 #include <stdlib.h>
@@ -243,72 +244,99 @@ static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int co
 {
 	struct sysproc *result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
 	
-	// int error = 0;
-	// struct rusage_info_v3 rusage;
+	int error = 0;
+	struct rusage_info_v3 rusage;
+	double total = 0;
 	// int totalutime = 0;
 	
 	for (int i = 0; i < count; ++i) {
-		struct sysproc currentresult = result[i];
-		
-		// S* process status
-		currentresult.status = processes[i].kp_proc.p_stat;
-		switch(currentresult.status){
-			case SIDL:
-				currentresult.statustext = "IDLE";
-				break;
-			case SRUN:
-				currentresult.statustext = "RUN";
-				break;
-			case SSLEEP:
-				currentresult.statustext = "SLEEP";
-				break;
-			case SSTOP:
-				currentresult.statustext = "STOP";
-				break;
-			case SZOMB:
-				currentresult.statustext = "ZOMB";
-				break;
-		}		
 		// Process identifier.
-		currentresult.pid = processes[i].kp_proc.p_pid;
+		result[i].pid = processes[i].kp_proc.p_pid;
+		// Process group identifier.
+		result[i].pgid = processes[i].kp_eproc.e_pgid;
+		// parent process id
+		result[i].parentpid = processes[i].kp_eproc.e_ppid;
+		// S* process status
+		result[i].status = processes[i].kp_proc.p_stat;
+		// controlling tty dev
+		result[i].ttydev = processes[i].kp_eproc.e_tdev;
+		// Process priority.
+		result[i].priority = processes[i].kp_proc.p_priority;
+		// process credentials, real user id
+		result[i].realuid = processes[i].kp_eproc.e_pcred.p_ruid;
+		// current credentials, effective user id
+		result[i].effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
 		// Process name
-		currentresult.name = processes[i].kp_proc.p_comm;
+		result[i].name = processes[i].kp_proc.p_comm;
 		// process path
 		char path[PROC_PIDPATHINFO_MAXSIZE];
-		proc_pidpath(currentresult.pid, path, sizeof(path));
-		currentresult.path = path;
-		// Process priority.
-		currentresult.priority = processes[i].kp_proc.p_priority;
-		// parent process id
-		currentresult.parentpid = processes[i].kp_eproc.e_ppid;
-		// controlling tty dev
-		currentresult.ttydev = processes[i].kp_eproc.e_tdev;
-		// process credentials, real user id
-		currentresult.realuid = processes[i].kp_eproc.e_pcred.p_ruid;
-		struct passwd *realuser = getpwuid(currentresult.realuid);
-		currentresult.realusername = realuser->pw_name;
-		// current credentials, effective user id
-		currentresult.effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
+		proc_pidpath(result[i].pid, path, sizeof(path));
+		result[i].path = path;
+		// status text
+		switch(result[i].status){
+			case SIDL:
+				result[i].statustext = "IDLE";
+				break;
+			case SRUN:
+				result[i].statustext = "RUN";
+				break;
+			case SSLEEP:
+				result[i].statustext = "SLEEP";
+				break;
+			case SSTOP:
+				result[i].statustext = "STOP";
+				break;
+			case SZOMB:
+				result[i].statustext = "ZOMB";
+				break;
+		}		
+		// real username
+		struct passwd *realuser = getpwuid(result[i].realuid);
+		result[i].realusername = realuser->pw_name;
+		// effectiver user, name
 		struct passwd *effectiveuser = getpwuid(processes[i].kp_eproc.e_ucred.cr_uid);
-		currentresult.effectiveusername = effectiveuser->pw_name;
+		result[i].effectiveusername = effectiveuser->pw_name;
+		// setlogin() name
+		result[i].setloginname = processes[i].kp_eproc.e_login;
 
-		// printf("%5d -- %s (%s) \n", currentresult.pid, currentresult.name, currentresult.realusername);
-		// error = proc_pid_rusage(currentresult.pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
-		// if(!error) {
-		// 	printf("      -- %ud, %d\n", rusage.ri_user_time, CPU_TIME_DENOMINATOR);
-		// 	printf("      -- %ud\n", rusage.ri_user_time);
-		// 	printf("      -- %ud\n", rusage.ri_system_time);
-		// 	printf("      -- %ud\n", rusage.ri_billed_system_time);
-		// 	printf("      -- %ud\n", rusage.ri_serviced_system_time);
-		// 	//currentresult.utime = rusage.ri_user_time / CPU_TIME_DENOMINATOR;
-		// 	//totalutime += currentresult.utime;
-		// }
-		// else {
-		// 	printf("      -- ERROR: %d\n", error);
-		// }
-		// printf("%5d -- %f\n", currentresult.pid, currentresult.utime);
+		// get additional info not available from sysctl
+		error = proc_pid_rusage(result[i].pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
+		if(!error) {
+			result[i].utime = rusage.ri_user_time;
+			result[i].stime = rusage.ri_system_time;
+			result[i].oldtotaltime = result[i].totaltime;
+			result[i].totaltime = rusage.ri_user_time + rusage.ri_system_time;
+			result[i].billedtime = rusage.ri_billed_system_time;
+			result[i].idlewakeups = rusage.ri_pkg_idle_wkups;
+
+			result[i].wiredmem = rusage.ri_wired_size;
+			result[i].residentmem = rusage.ri_resident_size;
+			result[i].physicalmem = rusage.ri_phys_footprint;
+
+			result[i].diskior = rusage.ri_diskio_bytesread;
+			result[i].diskiow = rusage.ri_diskio_byteswritten;
+
+			total += (double)result[i].totaltime;
+		} else {
+			result[i].name = strerror(errno);
+			result[i].stime = 0;
+			result[i].oldtotaltime = 0;
+			result[i].totaltime = 0;
+			result[i].billedtime = 0;
+			result[i].idlewakeups = 0;
+
+			result[i].wiredmem = 0;
+			result[i].residentmem = 0;
+			result[i].physicalmem = 0;
+
+			result[i].diskior = 0;
+			result[i].diskiow = 0;
+		}
 	}
-	// thisres.user = (double)totalutime;
+
+	for (int i = 0; i < count; ++i) {
+		result[i].percentage = (double)(result[i].totaltime - result[i].oldtotaltime) / total * 100;
+	}
 
 	return result;
 }
@@ -316,7 +344,7 @@ static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int co
 /*
  * Get all process information from sysctl
  */
-static struct sysproc getsysprocinfo(int processinfotype, int criteria, size_t *length)
+static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length)
 {
 	struct sysproc *result = NULL;
 	struct kinfo_proc *processlist = NULL;
@@ -369,14 +397,14 @@ static struct sysproc getsysprocinfo(int processinfotype, int criteria, size_t *
 	}
 
 	*length = (size_t)processcount;
-	return *result;
+	return result;
 }
 
-struct sysproc getsysprocinfoall(size_t length)
+struct sysproc *getsysprocinfoall(size_t *length)
 {
-	return getsysprocinfo(KERN_PROC_ALL, 0, &length);
+	return getsysprocinfo(KERN_PROC_ALL, 0, length);
 }
-
+/*
 struct sysproc getsysprocinfobypid(int processid, size_t length)
 {
 	struct sysres thisres = SYSRES_INIT;
@@ -406,3 +434,4 @@ struct sysproc getsysprocinfobyruid(int realuserid, size_t length)
 	struct sysres thisres = SYSRES_INIT;
 	return getsysprocinfo(KERN_PROC_RUID, realuserid, &length);
 }
+*/
