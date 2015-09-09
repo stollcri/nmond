@@ -52,7 +52,7 @@ struct syshw { // CTL_HW
 	unsigned int cpufrequency; // hw.cpufrequency
 	unsigned int cpufrequencymin; // hw.cpufrequency_min
 	unsigned int cpufrequencymax; // hw.cpufrequency_max
-	unsigned int cpucount; // hw.ncpu
+	unsigned int cpucount; // hw.ncpu -- DEPRECATED
 	unsigned int cpuactive; // hw.activecpu
 	unsigned int physicalcpucount; // hw.physicalcpu
 	unsigned int physicalcpumax; // hw.physicalcpu_max
@@ -81,7 +81,7 @@ struct syshw { // CTL_HW
 	char *machine; // HW_MACHINE ("x86_64")
 	char *model; // HW_MODEL ("MacbookAir6,2")
 };
-#define SYSHW_INIT { 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, \
+#define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
 0, 0, 0, 0, 0, 0, 0, \
 0, 0, 0, 0, 0, \
 STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
@@ -161,7 +161,7 @@ struct sysrescpu {
 	double percentidle;
 	double percentnice;
 };
-#define SYSRESCPU_INIT { 0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   0.0, 0.0, 0.0, 0.0 }
+#define SYSRESCPU_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0 }
 
 struct sysres {
 	int cpucount;
@@ -187,6 +187,7 @@ extern void getsysresinfo(struct sysres *);
 
 struct sysproc {
 	int pid;
+	int pgid;
 	int parentpid;
 	int status;
 	int ttydev;
@@ -195,23 +196,45 @@ struct sysproc {
 	unsigned int realuid;
 	unsigned int effectiveuid;
 	
-	int utime;
-	int stime;
+	unsigned int utime;
+	unsigned int stime;
+	unsigned int totaltime;
+	unsigned int billedtime;
+	unsigned int idlewakeups;
+
+	unsigned int wiredmem;
+	unsigned int residentmem;
+	unsigned int physicalmem;
+
+	unsigned int diskior;
+	unsigned int diskiow;
+
+	unsigned int oldtotaltime;
+	double percentage;
 
 	char *name;
 	char *path;
 	char *statustext;
 	char *realusername;
 	char *effectiveusername;
+	char *setloginname;
 };
-#define SYSPROC_INIT { 0, 0, 0, 0, 0, 0, 0, 0, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
+#define SYSPROC_INIT { 0, 0, 0, 0, 0, 0, \
+0, 0, \
+0, 0, 0, 0, 0, \
+0, 0, 0, \
+0, 0, \
+0, 0, \
+STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
-extern struct sysproc getsysprocinfoall(size_t);
+extern struct sysproc *getsysprocinfoall(size_t*);
+/*
 extern struct sysproc getsysprocinfobypid(int, size_t);
 extern struct sysproc getsysprocinfobypgrp(int, size_t);
 extern struct sysproc getsysprocinfobytty(int, size_t);
 extern struct sysproc getsysprocinfobyuid(int, size_t);
 extern struct sysproc getsysprocinfobyruid(int, size_t);
+*/
 
 //
 // Mem
