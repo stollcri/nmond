@@ -235,43 +235,6 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 int main(int argc, char **argv)
 {
-	struct hashitem *myhashtable = hashtnew();
-
-	char *ta = "a";
-	hashtadd(myhashtable, 3157, ta);
-
-	char *tb = "b";
-	hashtadd(myhashtable, 268, tb);
-
-	char *tc = "c";
-	hashtadd(myhashtable, 1379, tc);
-
-	char *td = "d";
-	hashtadd(myhashtable, 1268, td);
-
-	char *te = "e";
-	hashtadd(myhashtable, 11223, te);
-
-	char *tf = "f";
-	hashtadd(myhashtable, 3268, tf);
-
-	char *tg = "g";
-	hashtadd(myhashtable, 2468, tg);
-
-
-	printf("\n");
-	printf("%s\n", (char *)hashtget(myhashtable, 3157));
-	printf("%s\n", (char *)hashtget(myhashtable, 268));
-	printf("%s\n", (char *)hashtget(myhashtable, 1379));
-	printf("%s\n", (char *)hashtget(myhashtable, 1268));
-	printf("%s\n", (char *)hashtget(myhashtable, 11223));
-	printf("%s\n", (char *)hashtget(myhashtable, 3268));
-	printf("%s\n", (char *)hashtget(myhashtable, 2468));
-	
-
-
-	exit(37);
-
 	// first thing, prepare to be interupted
 	setinterupthandlers();
 
