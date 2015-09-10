@@ -49,7 +49,6 @@ struct hashitem {
 	int value;
 	void *valptr;
 };
-#define HASHITEM_INIT { NULL, 0, 0, NULL }
 
 extern struct hashitem *hashtnew();
 extern void hashtadd(struct hashitem *hashtable, int value, void *valptr);

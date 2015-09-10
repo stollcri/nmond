@@ -240,7 +240,7 @@ void getsysresinfo(struct sysres *inres)
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count)
+static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct hashitem *hashtable)
 {
 	struct sysproc *result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
 	
@@ -332,6 +332,8 @@ static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int co
 			result[i].diskior = 0;
 			result[i].diskiow = 0;
 		}
+
+		// TODO: add/update PIDs to hashtable
 	}
 
 	for (int i = 0; i < count; ++i) {
@@ -344,7 +346,7 @@ static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int co
 /*
  * Get all process information from sysctl
  */
-static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length)
+static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length, struct hashitem *hashtable)
 {
 	struct sysproc *result = NULL;
 	struct kinfo_proc *processlist = NULL;
@@ -384,7 +386,7 @@ static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t 
 		// fill the sysproc struct from the returned information
 		if(!error) {
 			processcount = (unsigned int)templength / sizeof(struct kinfo_proc);
-			result = sysprocfromkinfoproc(processlist, processcount);
+			result = sysprocfromkinfoproc(processlist, processcount, hashtable);
 			complete = 1;
 		} else {
 			assert(processlist != NULL);
@@ -400,9 +402,9 @@ static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t 
 	return result;
 }
 
-struct sysproc *getsysprocinfoall(size_t *length)
+struct sysproc *getsysprocinfoall(size_t *length, struct hashitem *hashtable)
 {
-	return getsysprocinfo(KERN_PROC_ALL, 0, length);
+	return getsysprocinfo(KERN_PROC_ALL, 0, length, hashtable);
 }
 /*
 struct sysproc getsysprocinfobypid(int processid, size_t length)

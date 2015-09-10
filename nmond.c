@@ -276,7 +276,8 @@ int main(int argc, char **argv)
 	struct sysres thisres = SYSRES_INIT;
 	getsysresinfo(&thisres);
 	size_t processcount = 0;
-	struct sysproc *thisproc = getsysprocinfoall(&processcount);
+	struct hashitem *hashmap = hashtnew();
+	struct sysproc *thisproc = getsysprocinfoall(&processcount, hashmap);
 
 	// initialize main() variables
 	char hostname[22];
@@ -338,7 +339,7 @@ int main(int argc, char **argv)
 			thiskern = getsyskerninfo();
 			getsysresinfo(&thisres);
 			processcount = 0;
-			thisproc = getsysprocinfoall(&processcount);
+			thisproc = getsysprocinfoall(&processcount, hashmap);
 
 			// data changes are pending gui update
 			pendingdata = true;
