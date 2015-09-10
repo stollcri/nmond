@@ -17,7 +17,7 @@ CC = cc
 CFLAGS = -O3 -Wall -D NDEBUG
 LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
-CFILES = nmond.c mntent.c sysctlhelper.c sysinfo.c $(LANGFILES)
+CFILES = nmond.c mntent.c sysctlhelper.c sysinfo.c pidhash.c $(LANGFILES)
 
 #CFLAGS_DBG = -O0 -g -Weverything
 # be quiet, at least until I get further along with the update)
