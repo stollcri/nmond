@@ -56,7 +56,7 @@ struct hashitem *hashtnew()
 	// return hashtab;
 	return (struct hashitem *)calloc(sizeof(struct hashitem), HASH_TABLE_SIZE);
 }
-#include <stdio.h>
+
 void hashtadd(struct hashitem *hashtable, int value, void *valptr)
 {
 	struct hashitem *thishashitem = (struct hashitem *)malloc(sizeof(struct hashitem));
@@ -75,7 +75,6 @@ void hashtadd(struct hashitem *hashtable, int value, void *valptr)
 		hitem->next = thishashitem;
 	// the head of the linked list
 	} else {
-		// hitem = thishashitem;
 		hashtable[thishashitem->key] = *thishashitem;
 	}
 }

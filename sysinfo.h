@@ -39,7 +39,8 @@
  */
 
 #include <stdlib.h>
-
+#include "pidhash.h"
+ 
 #define STR_INIT "-"
 #define DATE_FORMAT "%Y-%m-%d %H:%M:%S"
 #define CPU_TIME_DENOMINATOR 1000000
@@ -227,7 +228,7 @@ struct sysproc {
 0, 0, \
 STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
-extern struct sysproc *getsysprocinfoall(size_t*);
+extern struct sysproc *getsysprocinfoall(size_t*, struct hashitem*);
 /*
 extern struct sysproc getsysprocinfobypid(int, size_t);
 extern struct sysproc getsysprocinfobypgrp(int, size_t);
