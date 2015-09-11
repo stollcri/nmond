@@ -40,7 +40,7 @@
 
 #include <stdlib.h>
 #include "pidhash.h"
- 
+
 #define STR_INIT "-"
 #define DATE_FORMAT "%Y-%m-%d %H:%M:%S"
 #define CPU_TIME_DENOMINATOR 1000000
@@ -87,7 +87,7 @@ struct syshw { // CTL_HW
 0, 0, 0, 0, 0, \
 STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
 
-extern struct syshw getsyshwinfo(void);
+extern void getsyshwinfo(struct syshw*);
 
 //
 // Kernel based information
@@ -138,7 +138,7 @@ struct syskern { // CTL_KERN
 STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, \
 { 0, 0 }, { 0, 0 } }
 
-extern struct syskern getsyskerninfo(void);
+extern void getsyskerninfo(struct syskern*);
 
 //
 // System resource utilization information
@@ -210,7 +210,6 @@ struct sysproc {
 	unsigned int diskior;
 	unsigned int diskiow;
 
-	unsigned int oldtotaltime;
 	double percentage;
 
 	char *name;
@@ -228,7 +227,7 @@ struct sysproc {
 0, 0, \
 STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
-extern struct sysproc *getsysprocinfoall(size_t*, struct hashitem*);
+extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**);
 /*
 extern struct sysproc getsysprocinfobypid(int, size_t);
 extern struct sysproc getsysprocinfobypgrp(int, size_t);

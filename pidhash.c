@@ -40,12 +40,24 @@
 
 static int hash(int value)
 {
+	// PIDs 0 - 999
 	if(value < HASH_TABLE_SIZE) {
 		return value;
 	}
 
+	// PIDs 1,000 - infinity
 	while(value >= HASH_TABLE_SIZE) {
-		value = value - HASH_TABLE_SIZE;
+		if(value < HASH_TABLE_SIZE_X10) {
+			value = value - HASH_TABLE_SIZE;
+		// PIDs 10,000 - infinity
+		} else {
+			if(value < HASH_TABLE_SIZE_X100) {
+				value = value - HASH_TABLE_SIZE_X10;
+			// PIDs 100,000 - infinity
+			} else {
+				value = value - HASH_TABLE_SIZE_X100;
+			}
+		}
 	}
 	return value;
 }
@@ -57,44 +69,44 @@ struct hashitem *hashtnew()
 	return (struct hashitem *)calloc(sizeof(struct hashitem), HASH_TABLE_SIZE);
 }
 
-void hashtadd(struct hashitem *hashtable, int value, void *valptr)
+void hashtadd(struct hashitem *hashtable, int key, int value)
 {
 	struct hashitem *thishashitem = (struct hashitem *)malloc(sizeof(struct hashitem));
 	thishashitem->next = NULL;
-	thishashitem->key = hash(value);
+	thishashitem->keyhash = hash(key);
+	thishashitem->key = key;
 	thishashitem->value = value;
-	thishashitem->valptr = valptr;
 
-	struct hashitem *hitem = &hashtable[thishashitem->key];
+	struct hashitem *hitem = &hashtable[thishashitem->keyhash];
 	// go to the last linked list item
 	while(hitem->next) {
 		hitem = hitem->next;
 	}
 	// this linked list item is already assigned
-	if(hitem->valptr) {
+	if(hitem->value) {
 		hitem->next = thishashitem;
 	// the head of the linked list
 	} else {
-		hashtable[thishashitem->key] = *thishashitem;
+		hashtable[thishashitem->keyhash] = *thishashitem;
 	}
 }
 
-void *hashtget(struct hashitem *hashtable, int value)
+int hashtget(struct hashitem *hashtable, int key)
 {
-	int key = hash(value);
+	int keyhash = hash(key);
 
-	struct hashitem *hitem = &hashtable[key];
-	if(hitem->value != value) {
+	struct hashitem *hitem = &hashtable[keyhash];
+	if(hitem->key != key) {
 		while(hitem->next) {
 			hitem = hitem->next;
-			if(hitem->value == value) {
+			if(hitem->key == key) {
 				break;
 			}
 		}
-		if(hitem->value != value) {
-			return NULL;
+		if(hitem->key != key) {
+			return -1;
 		}
 	}
 
-	return hitem->valptr;
+	return hitem->value;
 }

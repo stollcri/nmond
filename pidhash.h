@@ -39,19 +39,21 @@
  */
 
 // you cannot change this without modifing the hashing algorithm
-#define HASH_TABLE_SIZE 1000
-#define HASH_TABLE_MAX 999
 #define HASH_TABLE_MIN 0
+#define HASH_TABLE_MAX 999
+#define HASH_TABLE_SIZE 1000
+#define HASH_TABLE_SIZE_X10 10000
+#define HASH_TABLE_SIZE_X100 100000
 
 struct hashitem {
 	struct hashitem *next;
+	int keyhash;
 	int key;
 	int value;
-	void *valptr;
 };
 
 extern struct hashitem *hashtnew();
-extern void hashtadd(struct hashitem *hashtable, int value, void *valptr);
-extern void *hashtget(struct hashitem *hashtable, int value);
+extern void hashtadd(struct hashitem*, int, int);
+extern int hashtget(struct hashitem*, int);
 
 #endif
