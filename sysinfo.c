@@ -56,97 +56,91 @@
 /*
  * Get all hardware information from sysctl
  */
-struct syshw getsyshwinfo()
+void getsyshwinfo(struct syshw *hw)
 {
-	struct syshw thissys = SYSHW_INIT;
-
-	thissys.cpufrequency = intFromSysctl(CTL_HW, HW_CPU_FREQ);
-	thissys.cpufrequencymin = intFromSysctlByName("hw.cpufrequency_min");
-	thissys.cpufrequencymax = intFromSysctlByName("hw.cpufrequency_max");
-	thissys.cpucount = intFromSysctlByName("hw.ncpu");
-	thissys.cpuactive = intFromSysctlByName("hw.activecpu");
-	thissys.physicalcpucount = intFromSysctlByName("hw.physicalcpu");
-	thissys.physicalcpumax = intFromSysctlByName("hw.physicalcpu_max");
-	thissys.logicalcpucount = intFromSysctlByName("hw.logicalcpu");
-	thissys.logicalcpumax = intFromSysctlByName("hw.logicalcpu_max");
+	hw->cpufrequency = intFromSysctl(CTL_HW, HW_CPU_FREQ);
+	hw->cpufrequencymin = intFromSysctlByName("hw.cpufrequency_min");
+	hw->cpufrequencymax = intFromSysctlByName("hw.cpufrequency_max");
+	hw->cpucount = intFromSysctlByName("hw.ncpu");
+	hw->cpuactive = intFromSysctlByName("hw.activecpu");
+	hw->physicalcpucount = intFromSysctlByName("hw.physicalcpu");
+	hw->physicalcpumax = intFromSysctlByName("hw.physicalcpu_max");
+	hw->logicalcpucount = intFromSysctlByName("hw.logicalcpu");
+	hw->logicalcpumax = intFromSysctlByName("hw.logicalcpu_max");
 	
-	thissys.byteorder = intFromSysctl(CTL_HW, HW_BYTEORDER);
-	thissys.memorysize = int64FromSysctlByName("hw.memsize");
-	thissys.usermemory = intFromSysctl(CTL_HW, HW_USERMEM);
-	thissys.pagesize = intFromSysctl(CTL_HW, HW_PAGESIZE);
+	hw->byteorder = intFromSysctl(CTL_HW, HW_BYTEORDER);
+	hw->memorysize = int64FromSysctlByName("hw.memsize");
+	hw->usermemory = intFromSysctl(CTL_HW, HW_USERMEM);
+	hw->pagesize = intFromSysctl(CTL_HW, HW_PAGESIZE);
 
-	thissys.thermalsensor = intFromSysctlByName("machdep.cpu.thermal.sensor");
-	thissys.thermallevelcpu = intFromSysctlByName("machdep.xcpm.cpu_thermal_level");
-	thissys.thermallevelgpu = intFromSysctlByName("machdep.xcpm.gpu_thermal_level");
-	thissys.thermallevelio = intFromSysctlByName("machdep.xcpm.io_thermal_level");
+	hw->thermalsensor = intFromSysctlByName("machdep.cpu.thermal.sensor");
+	hw->thermallevelcpu = intFromSysctlByName("machdep.xcpm.cpu_thermal_level");
+	hw->thermallevelgpu = intFromSysctlByName("machdep.xcpm.gpu_thermal_level");
+	hw->thermallevelio = intFromSysctlByName("machdep.xcpm.io_thermal_level");
 
-	thissys.architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
-	thissys.cpuvendor = stringFromSysctlByName("machdep.cpu.vendor"); 
-	thissys.cpubrand = stringFromSysctlByName("machdep.cpu.brand_string");
-	thissys.machine = stringFromSysctl(CTL_HW, HW_MACHINE);
-	thissys.model = stringFromSysctl(CTL_HW, HW_MODEL);
+	hw->architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
+	hw->cpuvendor = stringFromSysctlByName("machdep.cpu.vendor"); 
+	hw->cpubrand = stringFromSysctlByName("machdep.cpu.brand_string");
+	hw->machine = stringFromSysctl(CTL_HW, HW_MACHINE);
+	hw->model = stringFromSysctl(CTL_HW, HW_MODEL);
 
-	if(thissys.logicalcpucount>thissys.physicalcpucount) {
-		thissys.hyperthreads=thissys.logicalcpucount/thissys.physicalcpucount;
+	if(hw->logicalcpucount > hw->physicalcpucount) {
+		hw->hyperthreads=hw->logicalcpucount/hw->physicalcpucount;
 	} else {
-		thissys.hyperthreads=0;
+		hw->hyperthreads=0;
 	}
-	thissys.cpucount = thissys.cpucount / thissys.logicalcpucount;
-
-	return thissys;
+	hw->cpucount = hw->cpucount / hw->logicalcpucount;
 }
 
 /*
  * Get all hernel information from sysctl
  */
-struct syskern getsyskerninfo()
+void getsyskerninfo(struct syskern *kern)
 {
-	struct syskern thissys = SYSKERN_INIT;
+	// struct syskern thissys = SYSKERN_INIT;
 
-	thissys.hostid = intFromSysctl(CTL_KERN, KERN_HOSTID);
-	thissys.jobcontrol = intFromSysctl(CTL_KERN, KERN_JOB_CONTROL);
-	thissys.maxarguments = intFromSysctl(CTL_KERN, KERN_ARGMAX);
-	thissys.maxfiles = intFromSysctl(CTL_KERN, KERN_MAXFILES);
-	thissys.maxfilespercpu = intFromSysctl(CTL_KERN, KERN_MAXFILESPERPROC);
-	thissys.maxprocesses = intFromSysctl(CTL_KERN, KERN_MAXPROC);
-	thissys.maxprocessespercpu = intFromSysctl(CTL_KERN, KERN_MAXPROCPERUID);
-	thissys.maxvnodes = intFromSysctl(CTL_KERN, KERN_MAXVNODES);
-	thissys.maxgroups = intFromSysctl(CTL_KERN, KERN_NGROUPS);
+	kern->hostid = intFromSysctl(CTL_KERN, KERN_HOSTID);
+	kern->jobcontrol = intFromSysctl(CTL_KERN, KERN_JOB_CONTROL);
+	kern->maxarguments = intFromSysctl(CTL_KERN, KERN_ARGMAX);
+	kern->maxfiles = intFromSysctl(CTL_KERN, KERN_MAXFILES);
+	kern->maxfilespercpu = intFromSysctl(CTL_KERN, KERN_MAXFILESPERPROC);
+	kern->maxprocesses = intFromSysctl(CTL_KERN, KERN_MAXPROC);
+	kern->maxprocessespercpu = intFromSysctl(CTL_KERN, KERN_MAXPROCPERUID);
+	kern->maxvnodes = intFromSysctl(CTL_KERN, KERN_MAXVNODES);
+	kern->maxgroups = intFromSysctl(CTL_KERN, KERN_NGROUPS);
 	
-	thissys.osdate = intFromSysctl(CTL_KERN, KERN_OSRELDATE);
-	thissys.osrevision = intFromSysctl(CTL_KERN, KERN_OSREV);
-	thissys.posixversion = intFromSysctl(CTL_KERN, KERN_POSIX1);
-	thissys.securitylevel = intFromSysctl(CTL_KERN, KERN_SECURELVL);
-	thissys.updateinterval = intFromSysctl(CTL_KERN, KERN_UPDATEINTERVAL);
+	kern->osdate = intFromSysctl(CTL_KERN, KERN_OSRELDATE);
+	kern->osrevision = intFromSysctl(CTL_KERN, KERN_OSREV);
+	kern->posixversion = intFromSysctl(CTL_KERN, KERN_POSIX1);
+	kern->securitylevel = intFromSysctl(CTL_KERN, KERN_SECURELVL);
+	kern->updateinterval = intFromSysctl(CTL_KERN, KERN_UPDATEINTERVAL);
 
-	thissys.corecount = intFromSysctlByName("machdep.cpu.core_count");
+	kern->corecount = intFromSysctlByName("machdep.cpu.core_count");
 
-	thissys.ostype = stringFromSysctl(CTL_KERN, KERN_OSTYPE);
-	thissys.osrelease = stringFromSysctl(CTL_KERN, KERN_OSRELEASE);
-	thissys.osversion = stringFromSysctl(CTL_KERN, KERN_OSVERSION);
-	thissys.version = stringFromSysctl(CTL_KERN, KERN_VERSION);
-	thissys.bootfile = stringFromSysctl(CTL_KERN, KERN_BOOTFILE);
-	thissys.hostname = stringFromSysctl(CTL_KERN, KERN_HOSTNAME);
-	thissys.domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
+	kern->ostype = stringFromSysctl(CTL_KERN, KERN_OSTYPE);
+	kern->osrelease = stringFromSysctl(CTL_KERN, KERN_OSRELEASE);
+	kern->osversion = stringFromSysctl(CTL_KERN, KERN_OSVERSION);
+	kern->version = stringFromSysctl(CTL_KERN, KERN_VERSION);
+	kern->bootfile = stringFromSysctl(CTL_KERN, KERN_BOOTFILE);
+	kern->hostname = stringFromSysctl(CTL_KERN, KERN_HOSTNAME);
+	kern->domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
 
-	thissys.boottime = timevalFromSysctl(CTL_KERN, KERN_BOOTTIME);
+	kern->boottime = timevalFromSysctl(CTL_KERN, KERN_BOOTTIME);
 	// now store it as a string for quick printing
-	time_t timet = thissys.boottime.tv_sec;
+	time_t timet = kern->boottime.tv_sec;
 	struct tm *ptm = localtime(&timet);
 	char boottimestring[64];
 	strftime(boottimestring, sizeof(boottimestring), DATE_FORMAT, ptm);
-	thissys.boottimestring = boottimestring;
+	kern->boottimestring = boottimestring;
 
 	// struct timeval tv;
 	// gettimeofday(&tv, NULL);
-	// thissys.uptime = sinfo.uptime;
-	// timet = thissys.uptime.tv_sec - thissys.boottime.tv_sec;
+	// kern->uptime = sinfo.uptime;
+	// timet = kern->uptime.tv_sec - kern->boottime.tv_sec;
 	// ptm = localtime(&timet);
 	// char uptimestring[64];
 	// strftime(uptimestring, sizeof(uptimestring), "%Y-%m-%d %H:%M:%S", ptm);
-	// thissys.uptimestring = uptimestring;
-
-	return thissys;
+	// kern->uptimestring = uptimestring;
 }
 
 //
@@ -240,115 +234,117 @@ void getsysresinfo(struct sysres *inres)
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-static struct sysproc *sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct hashitem *hashtable)
+static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable)
 {
-	struct sysproc *result = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
-	
+	if(*procsin == NULL) {
+		*procsin = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
+	}
+	struct sysproc *procs = *procsin;
+
 	int error = 0;
 	struct rusage_info_v3 rusage;
 	double total = 0;
 	// int totalutime = 0;
-	
+
 	for (int i = 0; i < count; ++i) {
 		// Process identifier.
-		result[i].pid = processes[i].kp_proc.p_pid;
+		procs[i].pid = processes[i].kp_proc.p_pid;
 		// Process group identifier.
-		result[i].pgid = processes[i].kp_eproc.e_pgid;
+		procs[i].pgid = processes[i].kp_eproc.e_pgid;
 		// parent process id
-		result[i].parentpid = processes[i].kp_eproc.e_ppid;
+		procs[i].parentpid = processes[i].kp_eproc.e_ppid;
 		// S* process status
-		result[i].status = processes[i].kp_proc.p_stat;
+		procs[i].status = processes[i].kp_proc.p_stat;
 		// controlling tty dev
-		result[i].ttydev = processes[i].kp_eproc.e_tdev;
+		procs[i].ttydev = processes[i].kp_eproc.e_tdev;
 		// Process priority.
-		result[i].priority = processes[i].kp_proc.p_priority;
+		procs[i].priority = processes[i].kp_proc.p_priority;
 		// process credentials, real user id
-		result[i].realuid = processes[i].kp_eproc.e_pcred.p_ruid;
+		procs[i].realuid = processes[i].kp_eproc.e_pcred.p_ruid;
 		// current credentials, effective user id
-		result[i].effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
+		procs[i].effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
 		// Process name
-		result[i].name = processes[i].kp_proc.p_comm;
+		procs[i].name = processes[i].kp_proc.p_comm;
 		// process path
 		char path[PROC_PIDPATHINFO_MAXSIZE];
-		proc_pidpath(result[i].pid, path, sizeof(path));
-		result[i].path = path;
+		proc_pidpath(procs[i].pid, path, sizeof(path));
+		procs[i].path = path;
 		// status text
-		switch(result[i].status){
+		switch(procs[i].status){
 			case SIDL:
-				result[i].statustext = "IDLE";
+				procs[i].statustext = "IDLE";
 				break;
 			case SRUN:
-				result[i].statustext = "RUN";
+				procs[i].statustext = "RUN";
 				break;
 			case SSLEEP:
-				result[i].statustext = "SLEEP";
+				procs[i].statustext = "SLEEP";
 				break;
 			case SSTOP:
-				result[i].statustext = "STOP";
+				procs[i].statustext = "STOP";
 				break;
 			case SZOMB:
-				result[i].statustext = "ZOMB";
+				procs[i].statustext = "ZOMB";
 				break;
 		}		
 		// real username
-		struct passwd *realuser = getpwuid(result[i].realuid);
-		result[i].realusername = realuser->pw_name;
+		struct passwd *realuser = getpwuid(procs[i].realuid);
+		procs[i].realusername = realuser->pw_name;
 		// effectiver user, name
 		struct passwd *effectiveuser = getpwuid(processes[i].kp_eproc.e_ucred.cr_uid);
-		result[i].effectiveusername = effectiveuser->pw_name;
+		procs[i].effectiveusername = effectiveuser->pw_name;
 		// setlogin() name
-		result[i].setloginname = processes[i].kp_eproc.e_login;
+		procs[i].setloginname = processes[i].kp_eproc.e_login;
 
 		// get additional info not available from sysctl
-		error = proc_pid_rusage(result[i].pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
+		error = proc_pid_rusage(procs[i].pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
 		if(!error) {
-			result[i].utime = rusage.ri_user_time;
-			result[i].stime = rusage.ri_system_time;
-			result[i].oldtotaltime = result[i].totaltime;
-			result[i].totaltime = rusage.ri_user_time + rusage.ri_system_time;
-			result[i].billedtime = rusage.ri_billed_system_time;
-			result[i].idlewakeups = rusage.ri_pkg_idle_wkups;
+			procs[i].utime = rusage.ri_user_time;
+			procs[i].stime = rusage.ri_system_time;
+			procs[i].totaltime = rusage.ri_user_time + rusage.ri_system_time;
+			procs[i].billedtime = rusage.ri_billed_system_time;
+			procs[i].idlewakeups = rusage.ri_pkg_idle_wkups;
 
-			result[i].wiredmem = rusage.ri_wired_size;
-			result[i].residentmem = rusage.ri_resident_size;
-			result[i].physicalmem = rusage.ri_phys_footprint;
+			procs[i].wiredmem = rusage.ri_wired_size;
+			procs[i].residentmem = rusage.ri_resident_size;
+			procs[i].physicalmem = rusage.ri_phys_footprint;
 
-			result[i].diskior = rusage.ri_diskio_bytesread;
-			result[i].diskiow = rusage.ri_diskio_byteswritten;
+			procs[i].diskior = rusage.ri_diskio_bytesread;
+			procs[i].diskiow = rusage.ri_diskio_byteswritten;
 
-			total += (double)result[i].totaltime;
+			total += (double)procs[i].totaltime;
 		} else {
-			result[i].name = strerror(errno);
-			result[i].stime = 0;
-			result[i].oldtotaltime = 0;
-			result[i].totaltime = 0;
-			result[i].billedtime = 0;
-			result[i].idlewakeups = 0;
+			procs[i].name = strerror(errno);
+			procs[i].stime = 0;
+			procs[i].totaltime = 0;
+			procs[i].billedtime = 0;
+			procs[i].idlewakeups = 0;
 
-			result[i].wiredmem = 0;
-			result[i].residentmem = 0;
-			result[i].physicalmem = 0;
+			procs[i].wiredmem = 0;
+			procs[i].residentmem = 0;
+			procs[i].physicalmem = 0;
 
-			result[i].diskior = 0;
-			result[i].diskiow = 0;
+			procs[i].diskior = 0;
+			procs[i].diskiow = 0;
 		}
 
 		// TODO: add/update PIDs to hashtable
+		if(hashtget(*hashtable, procs[i].pid) == -1) {
+			// hashtadd(*hashtable, procs->pid, procs[i].totaltime);
+		}
 	}
 
-	for (int i = 0; i < count; ++i) {
-		result[i].percentage = (double)(result[i].totaltime - result[i].oldtotaltime) / total * 100;
-	}
-
-	return result;
+	// for (int i = 0; i < count; ++i) {
+	// 	procs[i].percentage = (double)(procs[i].totaltime - procs[i].oldtotaltime) / total * 100;
+	// }
+	**procsin = *procs;
 }
 
 /*
  * Get all process information from sysctl
  */
-static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t *length, struct hashitem *hashtable)
+static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable)
 {
-	struct sysproc *result = NULL;
 	struct kinfo_proc *processlist = NULL;
 
 	int mib[4];
@@ -386,7 +382,9 @@ static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t 
 		// fill the sysproc struct from the returned information
 		if(!error) {
 			processcount = (unsigned int)templength / sizeof(struct kinfo_proc);
-			result = sysprocfromkinfoproc(processlist, processcount, hashtable);
+			sysprocfromkinfoproc(processlist, processcount, procs, hashtable);
+			free(processlist);
+			processlist = NULL;
 			complete = 1;
 		} else {
 			assert(processlist != NULL);
@@ -397,14 +395,12 @@ static struct sysproc *getsysprocinfo(int processinfotype, int criteria, size_t 
 			error = 0;
 		}
 	}
-
 	*length = (size_t)processcount;
-	return result;
 }
 
-struct sysproc *getsysprocinfoall(size_t *length, struct hashitem *hashtable)
+void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable)
 {
-	return getsysprocinfo(KERN_PROC_ALL, 0, length, hashtable);
+	return getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable);
 }
 /*
 struct sysproc getsysprocinfobypid(int processid, size_t length)

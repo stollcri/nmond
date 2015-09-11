@@ -249,6 +249,7 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 			}
 		}
 	}
+	// free(metermark);
 	wattrset(win, COLOR_PAIR(0));
 	mvwprintw(win, row, 77, "|");
 }
@@ -404,6 +405,9 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 			wmove(win, i, itteration+offset+1);
 			wprintw(win, leadermark);
 		}
+		// free(metermark);
+		// free(blankmark);
+		// free(leadermark);
 
 		++itteration;
 		if(itteration > graphcols) {
@@ -1223,7 +1227,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 	for (int j = 0; j < processcount; j++) {
 		mvwprintw(win, (j + 2), 1, "%7d %5s %f  %7u %7u %7u %7u %7u %7u  %s", 
 			procs[j].pid, procs[j].statustext, procs[j].percentage,
-			procs[j].utime, procs[j].stime, procs[j].totaltime, procs[j].oldtotaltime, procs[j].billedtime, procs[j].idlewakeups,
+			procs[j].utime, procs[j].stime, procs[j].totaltime, procs[j].totaltime, procs[j].billedtime, procs[j].idlewakeups,
 			procs[j].name);
 		// mvwprintw(win, j + 2, 1, "%7d %7d %6s %4d %4d %9s 0x%08x %1s %-32s",
 		// 				procs[j].pid,

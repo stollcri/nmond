@@ -47,7 +47,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
- #include "pidhash.h"
+#include "pidhash.h"
 #include "sysinfo.h"
 #include "uicli.h"
 #include "uicurses.h"
@@ -271,13 +271,17 @@ int main(int argc, char **argv)
 	timeout(currentstate.refreshms);
 
 	// initialize system information data structures
-	struct syshw thishw = getsyshwinfo();
-	struct syskern thiskern = getsyskerninfo();
+	struct syshw thishw = SYSHW_INIT;
+	getsyshwinfo(&thishw);
+	struct syskern thiskern = SYSKERN_INIT;
+	getsyskerninfo(&thiskern);
 	struct sysres thisres = SYSRES_INIT;
 	getsysresinfo(&thisres);
 	size_t processcount = 0;
-	struct hashitem *hashmap = hashtnew();
-	struct sysproc *thisproc = getsysprocinfoall(&processcount, hashmap);
+	struct sysproc *thisproc = NULL;
+	struct hashitem *thishash = hashtnew();
+	getsysprocinfoall(&processcount, &thisproc, &thishash);
+	printf("a done\n");
 
 	// initialize main() variables
 	char hostname[22];
@@ -335,11 +339,11 @@ int main(int argc, char **argv)
 
 			// TODO: only check statistics which are used
 			// update system information data structures
-			thishw = getsyshwinfo();
-			thiskern = getsyskerninfo();
+			getsyshwinfo(&thishw);
+			getsyskerninfo(&thiskern);
 			getsysresinfo(&thisres);
 			processcount = 0;
-			thisproc = getsysprocinfoall(&processcount, hashmap);
+			getsysprocinfoall(&processcount, &thisproc, &thishash);
 
 			// data changes are pending gui update
 			pendingdata = true;
