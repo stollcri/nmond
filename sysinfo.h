@@ -43,7 +43,8 @@
 
 #define STR_INIT "-"
 #define DATE_FORMAT "%Y-%m-%d %H:%M:%S"
-#define CPU_TIME_DENOMINATOR 1000000
+//#define CPU_TIME_DENOMINATOR 1000000
+#define COUNT_HYPERTHREADS_IN_CPU_AVG 0
 
 //
 // Hardware based information
@@ -166,8 +167,11 @@ struct sysrescpu {
 
 struct sysres {
 	int cpucount;
+	int cpuhyperthreadmod;
 
 	struct sysrescpu *cpus;
+
+	double percentallcpu;
 
 	double avgpercentuser;
 	double avgpercentsys;
@@ -178,7 +182,7 @@ struct sysres {
 	double loadavg5;
 	double loadavg15;
 };
-#define SYSRES_INIT { 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+#define SYSRES_INIT { 0, 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
 
 extern void getsysresinfo(struct sysres *);
 
@@ -210,7 +214,11 @@ struct sysproc {
 	unsigned int diskior;
 	unsigned int diskiow;
 
+	unsigned int lasttotaltime;
 	double percentage;
+
+	unsigned int tmptotal;
+	double tmp;
 
 	char *name;
 	char *path;
@@ -227,7 +235,7 @@ struct sysproc {
 0, 0, \
 STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
-extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**);
+extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double);
 /*
 extern struct sysproc getsysprocinfobypid(int, size_t);
 extern struct sysproc getsysprocinfobypgrp(int, size_t);

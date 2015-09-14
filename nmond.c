@@ -280,7 +280,7 @@ int main(int argc, char **argv)
 	size_t processcount = 0;
 	struct sysproc *thisproc = NULL;
 	struct hashitem *thishash = hashtnew();
-	getsysprocinfoall(&processcount, &thisproc, &thishash);
+	getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu);
 	printf("a done\n");
 
 	// initialize main() variables
@@ -343,7 +343,7 @@ int main(int argc, char **argv)
 			getsyskerninfo(&thiskern);
 			getsysresinfo(&thisres);
 			processcount = 0;
-			getsysprocinfoall(&processcount, &thisproc, &thishash);
+			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu);
 
 			// data changes are pending gui update
 			pendingdata = true;
@@ -419,7 +419,7 @@ int main(int argc, char **argv)
 			}
 		}
 		if (wins.top.visible) {
-			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount);
+			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount, pendingdata);
 		}
 		if (wins.warn.visible) {
 			uiwarn(&wins.warn.win, &x, COLS, LINES);

@@ -120,7 +120,7 @@ extern void uimemvirtual(WINDOW**, int*, int, int);
 extern void uineterrors(WINDOW**, int*, int, int);
 extern void uinetfilesys(WINDOW**, int*, int, int);
 extern void uinetwork(WINDOW**, int*, int, int);
-extern void uitop(WINDOW**, int*, int, int, struct sysproc*, int);
+extern void uitop(WINDOW**, int*, int, int, struct sysproc*, int, bool);
 extern void uisys(WINDOW**, int*, int, int, struct syshw, struct syskern);
 extern void uiwarn(WINDOW**, int*, int, int);
 

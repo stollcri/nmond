@@ -407,7 +407,7 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 		}
 		// free(metermark);
 		// free(blankmark);
-		// free(leadermark);
+	// free(leadermark);
 
 		++itteration;
 		if(itteration > graphcols) {
@@ -1208,7 +1208,7 @@ static int comparepercentdes(const void *val1, const void *val2)
 	}
 }
 
-void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, int processcount)
+void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, int processcount, bool updateddata)
 {
 	WINDOW *win = *winin;
 	if (win == NULL) {
@@ -1221,14 +1221,25 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 
 	// TODO: this is not working???
 	uibanner(win, cols, "Top Processes");
-	heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
+	if(updateddata) {
+		heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
+	}
 
-	mvwprintw(win, 1, 1, "  PID      PPID  Pgrp Nice Prior Status    proc-Flag Command");
+	mvwprintw(win, 1, 1, "ID      NAME             %%CPU");
 	for (int j = 0; j < processcount; j++) {
-		mvwprintw(win, (j + 2), 1, "%7d %5s %f  %7u %7u %7u %7u %7u %7u  %s", 
-			procs[j].pid, procs[j].statustext, procs[j].percentage,
-			procs[j].utime, procs[j].stime, procs[j].totaltime, procs[j].totaltime, procs[j].billedtime, procs[j].idlewakeups,
-			procs[j].name);
+		//mvwprintw(win, (j + 2), 1, "%-7d %-16.16s %4.1f  %10.10u - %-10.10u = %9.9u / %9.9u = %8.8f * %8.8f", 
+		mvwprintw(win, (j + 2), 1, "%-5d %-8.8s %4.1f  %10.10u - %-10.10u = %9.9u / %9.9u = %8.8f * %8.8f", 
+			procs[j].pid, procs[j].name, procs[j].percentage
+			, procs[j].totaltime, procs[j].lasttotaltime
+			, (procs[j].totaltime - procs[j].lasttotaltime)
+			, procs[j].tmptotal
+			, ((double)(procs[j].totaltime - procs[j].lasttotaltime) / procs[j].tmptotal)
+			, procs[j].tmp
+			);
+			// procs[j].pid, procs[j].statustext, procs[j].percentage,
+			// procs[j].lasttotaltime, procs[j].totaltime, (procs[j].totaltime - procs[j].lasttotaltime), 
+			// /*procs[j].utime,*/ procs[j].stime, procs[j].billedtime, procs[j].idlewakeups,
+			// procs[j].name);
 		// mvwprintw(win, j + 2, 1, "%7d %7d %6s %4d %4d %9s 0x%08x %1s %-32s",
 		// 				procs[j].pid,
 		// 				procs[j].parentpid,
