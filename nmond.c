@@ -343,6 +343,8 @@ int main(int argc, char **argv)
 			getsyskerninfo(&thiskern);
 			getsysresinfo(&thisres);
 			processcount = 0;
+			free(thisproc);
+			thisproc = NULL;
 			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu);
 
 			// data changes are pending gui update

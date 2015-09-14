@@ -231,19 +231,22 @@ void getsysresinfo(struct sysres *inres)
 			}
 		}
 
+		thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / 100;
 		// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / (thisres.cpucount * 100);
 		if(COUNT_HYPERTHREADS_IN_CPU_AVG) {
 			thisres.avgpercentuser /= thisres.cpucount;
 			thisres.avgpercentsys /= thisres.cpucount;
 			thisres.avgpercentidle /= thisres.cpucount;
 			thisres.avgpercentnice /= thisres.cpucount;
+			// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) * thisres.cpucount / 100;
 		} else {
 			thisres.avgpercentuser /= (thisres.cpucount / thisres.cpuhyperthreadmod);
 			thisres.avgpercentsys /= (thisres.cpucount / thisres.cpuhyperthreadmod);
 			thisres.avgpercentidle /= (thisres.cpucount / thisres.cpuhyperthreadmod);
 			thisres.avgpercentnice /= (thisres.cpucount / thisres.cpuhyperthreadmod);
+			// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) * (thisres.cpucount / thisres.cpuhyperthreadmod) * 100;
 		}
-		thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / 100;
+		// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / 100;
 	}
 
 	*inres = thisres;
