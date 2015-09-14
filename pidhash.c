@@ -91,6 +91,26 @@ void hashtadd(struct hashitem *hashtable, int key, int value)
 	}
 }
 
+void hashtset(struct hashitem *hashtable, int key, int value)
+{
+	int keyhash = hash(key);
+
+	struct hashitem *hitem = &hashtable[keyhash];
+	if(hitem->key != key) {
+		while(hitem->next) {
+			hitem = hitem->next;
+			if(hitem->key == key) {
+				hitem->value = value;
+				break;
+			}
+		}
+		// automatically jump to add it when not found
+		hashtadd(hashtable, key, value);
+	} else {
+		hitem->value = value;
+	}
+}
+
 int hashtget(struct hashitem *hashtable, int key)
 {
 	int keyhash = hash(key);

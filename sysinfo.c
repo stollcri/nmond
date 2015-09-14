@@ -171,6 +171,10 @@ void getsysresinfo(struct sysres *inres)
 	if (!thisres.cpucount || (newcpucount != thisres.cpucount)) {
 		thisres.cpucount = newcpucount;
 		thisres.cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)thisres.cpucount);
+
+		int physcpu = (int)intFromSysctlByName("hw.physicalcpu");
+		int logicpu = (int)intFromSysctlByName("hw.logicalcpu");
+		thisres.cpuhyperthreadmod = logicpu / physcpu;
 	}
 
 	double total = 0;
@@ -212,16 +216,34 @@ void getsysresinfo(struct sysres *inres)
 			thisres.cpus[cpuno].percentnice = 
 				(double)(thisres.cpus[cpuno].nice - thisres.cpus[cpuno].oldnice) / total * 100;
 
-			thisres.avgpercentuser += thisres.cpus[cpuno].percentuser;
-			thisres.avgpercentsys += thisres.cpus[cpuno].percentsys;
-			thisres.avgpercentidle += thisres.cpus[cpuno].percentidle;
-			thisres.avgpercentnice += thisres.cpus[cpuno].percentnice;
+			if(COUNT_HYPERTHREADS_IN_CPU_AVG) {
+				thisres.avgpercentuser += thisres.cpus[cpuno].percentuser;
+				thisres.avgpercentsys += thisres.cpus[cpuno].percentsys;
+				thisres.avgpercentidle += thisres.cpus[cpuno].percentidle;
+				thisres.avgpercentnice += thisres.cpus[cpuno].percentnice;
+			} else {
+				if(!(cpuno % thisres.cpuhyperthreadmod)) {
+					thisres.avgpercentuser += thisres.cpus[cpuno].percentuser;
+					thisres.avgpercentsys += thisres.cpus[cpuno].percentsys;
+					thisres.avgpercentidle += thisres.cpus[cpuno].percentidle;
+					thisres.avgpercentnice += thisres.cpus[cpuno].percentnice;
+				}
+			}
 		}
 
-		thisres.avgpercentuser /= thisres.cpucount;
-		thisres.avgpercentsys /= thisres.cpucount;
-		thisres.avgpercentidle /= thisres.cpucount;
-		thisres.avgpercentnice /= thisres.cpucount;
+		// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / (thisres.cpucount * 100);
+		if(COUNT_HYPERTHREADS_IN_CPU_AVG) {
+			thisres.avgpercentuser /= thisres.cpucount;
+			thisres.avgpercentsys /= thisres.cpucount;
+			thisres.avgpercentidle /= thisres.cpucount;
+			thisres.avgpercentnice /= thisres.cpucount;
+		} else {
+			thisres.avgpercentuser /= (thisres.cpucount / thisres.cpuhyperthreadmod);
+			thisres.avgpercentsys /= (thisres.cpucount / thisres.cpuhyperthreadmod);
+			thisres.avgpercentidle /= (thisres.cpucount / thisres.cpuhyperthreadmod);
+			thisres.avgpercentnice /= (thisres.cpucount / thisres.cpuhyperthreadmod);
+		}
+		thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / 100;
 	}
 
 	*inres = thisres;
@@ -234,7 +256,7 @@ void getsysresinfo(struct sysres *inres)
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable)
+static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable, double cpupercent)
 {
 	if(*procsin == NULL) {
 		*procsin = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
@@ -243,7 +265,8 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 	int error = 0;
 	struct rusage_info_v3 rusage;
-	double total = 0;
+	unsigned int total = 0;
+	unsigned int oldtotaltime = 0;
 	// int totalutime = 0;
 
 	for (int i = 0; i < count; ++i) {
@@ -311,10 +334,9 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 			procs[i].diskior = rusage.ri_diskio_bytesread;
 			procs[i].diskiow = rusage.ri_diskio_byteswritten;
-
-			total += (double)procs[i].totaltime;
 		} else {
 			procs[i].name = strerror(errno);
+			procs[i].utime = 0;
 			procs[i].stime = 0;
 			procs[i].totaltime = 0;
 			procs[i].billedtime = 0;
@@ -329,21 +351,32 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 		}
 
 		// TODO: add/update PIDs to hashtable
-		if(hashtget(*hashtable, procs[i].pid) == -1) {
-			// hashtadd(*hashtable, procs->pid, procs[i].totaltime);
+		oldtotaltime = hashtget(*hashtable, procs[i].pid);
+		if(oldtotaltime == -1) {
+			hashtadd(*hashtable, procs[i].pid, procs[i].totaltime);
+			procs[i].lasttotaltime = procs[i].totaltime;
+		} else {
+			hashtset(*hashtable, procs[i].pid, procs[i].totaltime);
+			procs[i].lasttotaltime = oldtotaltime;
 		}
+
+		total += procs[i].totaltime - procs[i].lasttotaltime;
 	}
 
-	// for (int i = 0; i < count; ++i) {
-	// 	procs[i].percentage = (double)(procs[i].totaltime - procs[i].oldtotaltime) / total * 100;
-	// }
+	for (int i = 0; i < count; ++i) {
+		procs[i].tmptotal = total;
+		procs[i].tmp = cpupercent;
+		// procs[i].percentage = ((double)(procs[i].totaltime - procs[i].lasttotaltime) / (double)total * 100) * cpupercent;
+		procs[i].percentage = (double)(procs[i].totaltime - procs[i].lasttotaltime) / total * 100 * cpupercent;
+		// procs[i].percentage = (double)(procs[i].totaltime - procs[i].lasttotaltime) / (double)(cputicks * 10000) * 100;
+	}
 	**procsin = *procs;
 }
 
 /*
  * Get all process information from sysctl
  */
-static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable)
+static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent)
 {
 	struct kinfo_proc *processlist = NULL;
 
@@ -382,7 +415,7 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 		// fill the sysproc struct from the returned information
 		if(!error) {
 			processcount = (unsigned int)templength / sizeof(struct kinfo_proc);
-			sysprocfromkinfoproc(processlist, processcount, procs, hashtable);
+			sysprocfromkinfoproc(processlist, processcount, procs, hashtable, cpupercent);
 			free(processlist);
 			processlist = NULL;
 			complete = 1;
@@ -398,9 +431,9 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 	*length = (size_t)processcount;
 }
 
-void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable)
+void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent)
 {
-	return getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable);
+	return getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent);
 }
 /*
 struct sysproc getsysprocinfobypid(int processid, size_t length)

@@ -54,6 +54,7 @@ struct hashitem {
 
 extern struct hashitem *hashtnew();
 extern void hashtadd(struct hashitem*, int, int);
+extern void hashtset(struct hashitem*, int, int);
 extern int hashtget(struct hashitem*, int);
 
 #endif
