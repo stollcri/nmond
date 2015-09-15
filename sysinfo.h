@@ -221,7 +221,6 @@ struct sysproc {
 
 	char *name;
 	char *path;
-	char *statustext;
 	char *realusername;
 	char *effectiveusername;
 	char *setloginname;

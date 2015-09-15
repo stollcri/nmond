@@ -299,24 +299,7 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 		char path[PROC_PIDPATHINFO_MAXSIZE];
 		proc_pidpath(procs[i].pid, path, sizeof(path));
 		procs[i].path = path;
-		// status text
-		switch(procs[i].status){
-			case SIDL:
-				procs[i].statustext = "IDLE";
-				break;
-			case SRUN:
-				procs[i].statustext = "RUN";
-				break;
-			case SSLEEP:
-				procs[i].statustext = "SLEEP";
-				break;
-			case SSTOP:
-				procs[i].statustext = "STOP";
-				break;
-			case SZOMB:
-				procs[i].statustext = "ZOMB";
-				break;
-		}		
+	
 		// real username
 		struct passwd *realuser = getpwuid(procs[i].realuid);
 		procs[i].realusername = realuser->pw_name;

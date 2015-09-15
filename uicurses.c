@@ -36,6 +36,7 @@
  */
 
 #include "uicurses.h"
+#include <sys/sysctl.h>
 #include <math.h>
 #include <string.h>
 
@@ -1225,8 +1226,29 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 		heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
 	}
 
+	char *statustext = malloc(6);
 	mvwprintw(win, 1, 1, "ID      NAME                   %%CPU MEM        PHYS       PGRP   PPID   STATE");
 	for (int i = 0; i < processcount; i++) {
+
+
+		switch(procs[i].status){
+			case SIDL:
+				statustext = "IDLE";
+				break;
+			case SRUN:
+				statustext = "RUN";
+				break;
+			case SSLEEP:
+				statustext = "SLEEP";
+				break;
+			case SSTOP:
+				statustext = "STOP";
+				break;
+			case SZOMB:
+				statustext = "ZOMB";
+				break;
+		}
+
 		mvwprintw(win, (i + 2), 1, "%-7d %-22.22s %4.1f %-10u %-10u %-6d %-7d %-5s", 
 			procs[i].pid,
 			procs[i].name,
@@ -1235,7 +1257,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 			procs[i].physicalmem, // cmprs
 			procs[i].pgid, // pgrp
 			procs[i].parentpid, // ppid
-			procs[i].statustext // state
+			statustext // state
 			);
 			// procs[j].pid, procs[j].statustext, procs[j].percentage,
 			// procs[j].lasttotaltime, procs[j].totaltime, (procs[j].totaltime - procs[j].lasttotaltime), 
