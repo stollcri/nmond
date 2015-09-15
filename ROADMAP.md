@@ -8,19 +8,20 @@
 	- ✓ Remove code for specail cases (IFDEFs)
 	- ☐ Get data from sysctl and other low-level C calls
 	- ✓ Pull out UI elements
-	- ☐ Streamline main()
+	- ✓ Streamline main()
 - ☐ APP: Create long output for: cpu, mem, disk, net
 - ☐ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
 	- ☐ Improve spacing
 		- ✓ CPU Load
 		- ✓ CPU Long-Term
+		- ✓ Top [processes]
 		- ☐ 
 	- ☐ Improve header line
-		- ☐ Remove version number
-		- ☐ Remove blinking "H for help" (prehaps replace with alert messages)
-		- ☐ Move hostname over and change wording
-		- ☐ Change refresh rate wording
-	- ☐ Display splash screen when nothing is selected
+		- ✓ Remove version number
+		- ✓ Remove blinking "H for help" (prehaps replace with alert messages)
+		- ✓ Move hostname over and change wording
+		- ✓ Change refresh rate wording
+	- ✓ Display splash screen when nothing is selected
 	- ☐ Only update changed portions of windows rather than recreating entire windows each pass
 	- ✓ CPU Load: remove top/bottom graph bars
 	- ✓ CPU Load: increase number of divisions on scale
@@ -32,15 +33,15 @@
 	- ☐      A -- All-in-one raw data display
 	- ☐ b => b -- black & white mode
 	- ✓ c => c -- CPU Load
-	- ☐ l => C -- CPU Load, long-term
+	- ✓ l => C -- CPU Load, long-term
 	- ☐ d => d -- Disk I/O
 	- ☐      D -- Disk I/O, long-term
 	- ☐ j => f -- Filesystems (JFS)
 	- ☐ N => F -- Filesystems (NFS)
 	- ☐ g      -- (removed: user defined disk groups)
-	- ☐ h => h -- help
-	- ☐ H => H -- help
-	- ☐ r => i -- Info A
+	- ✓ h => h -- help
+	- ✓ H => H -- help
+	- ✓ r => i -- Info A
 	- ☐      I -- Info B
 	- ☐ k => k -- Kernel Stats
 	- ☐ L      -- (removed: large memory)
@@ -50,7 +51,7 @@
 	- ☐      N -- Network, long-term
 	- ☐ o => o -- Disk busy map
 	- ☐ q => q -- quit
-	- ☐ t => t -- Top
+	- ✓ t => t -- Top
 	- ☐ u => T -- Top, show command arguments
 	- ☐ V => v -- Virtual Memory
 	- ☐ v => w -- warn mode
@@ -62,10 +63,10 @@
 	- ☐ 3 => 3 -- sort by
 	- ☐ 4 => 4 -- sort by
 	- ☐ 5 => 5 -- sort by
-	- ☐ + => + -- double refresh rate
-	- ☐ - => - -- half refresh rate
+	- ✓ + => + -- double refresh rate
+	- ✓ - => - -- half refresh rate
 	- ☐ .      -- (removed: minimal display)
-	- ☐ ? => ? -- help
+	- ✓ ? => ? -- help
 - ☐ APP: Static analysis
 	- ☐ malloc
 	- ☐ strcpy -- use strncpy or strlcpy (OpenBSD)

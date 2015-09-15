@@ -42,7 +42,9 @@
 #include "pidhash.h"
 
 #define STR_INIT "-"
-#define DATE_FORMAT "%Y-%m-%d %H:%M:%S"
+#define DATE_FORMAT "%Y-%m-%d"
+#define TIME_FORMAT "%H:%M:%S"
+#define DATE_TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 //#define CPU_TIME_DENOMINATOR 1000000
 #define COUNT_HYPERTHREADS_IN_CPU_AVG 1
 
@@ -223,6 +225,7 @@ struct sysproc {
 	char *realusername;
 	char *effectiveusername;
 	char *setloginname;
+	char *timestring;
 };
 #define SYSPROC_INIT { 0, 0, 0, 0, 0, 0, \
 0, 0, \
@@ -230,7 +233,7 @@ struct sysproc {
 0, 0, 0, \
 0, 0, \
 0, 0, \
-STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
+STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
 extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double);
 /*

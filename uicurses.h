@@ -44,8 +44,8 @@
 #include <sys/time.h>
 
 #define APPNAME "nmond"
-#define VERSION "0.1"
-#define VERDATE "2015-09-06"
+#define VERSION "0.1.1"
+#define VERDATE "2015-09-14"
 #define APPURL "https://github.com/stollcri/nmond"
 
 #define BYTES_IN_GB 1073741824

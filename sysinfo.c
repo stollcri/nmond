@@ -130,7 +130,7 @@ void getsyskerninfo(struct syskern *kern)
 	time_t timet = kern->boottime.tv_sec;
 	struct tm *ptm = localtime(&timet);
 	char boottimestring[64];
-	strftime(boottimestring, sizeof(boottimestring), DATE_FORMAT, ptm);
+	strftime(boottimestring, sizeof(boottimestring), DATE_TIME_FORMAT, ptm);
 	kern->boottimestring = boottimestring;
 
 	// struct timeval tv;
@@ -268,10 +268,12 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 	int error = 0;
 	struct rusage_info_v3 rusage;
-	// unsigned int total = 0;
 	uint64_t total = 0;
 	unsigned int oldtotaltime = 0;
-	// int totalutime = 0;
+
+	time_t timet = 0;
+	struct tm *ptm = NULL;
+	// char boottimestring[8];
 
 	for (int i = 0; i < count; ++i) {
 		// Process identifier.
@@ -338,8 +340,18 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 			procs[i].diskior = rusage.ri_diskio_bytesread;
 			procs[i].diskiow = rusage.ri_diskio_byteswritten;
+
+			// now store it as a string for quick printing
+			// char boottimestring[9];
+			// timet = procs[i].totaltime;
+			// ptm = localtime(&timet);
+			// strftime(boottimestring, sizeof(boottimestring), TIME_FORMAT, ptm);
+
+			// char *timestring = malloc(9);
+			// strcpy(timestring, boottimestring);
+			// procs[i].timestring = timestring;
 		} else {
-			procs[i].name = strerror(errno);
+			procs[i].name = "";//strerror(errno);
 			procs[i].utime = 0;
 			procs[i].stime = 0;
 			procs[i].totaltime = 0;

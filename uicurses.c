@@ -138,12 +138,11 @@ void uiwelcome(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struc
 		wattrset(win, COLOR_PAIR(0));
 	}
 	mvwprintw(win, x+15, 3, "Use these keys to toggle statistics on/off:");
-	mvwprintw(win, x+16, 3, "   c = CPU        l = CPU Long-term   - = Faster screen updates");
-	mvwprintw(win, x+17, 3, "   m = Memory     j = Filesystems     + = Slower screen updates");
-	mvwprintw(win, x+18, 3, "   d = Disks      n = Network         V = Virtual Memory");
-	mvwprintw(win, x+19, 3, "   r = Resource   N = NFS             v = Verbose hints");
-	mvwprintw(win, x+20, 3, "   k = kernel     t = Top-processes   . = only busy disks/procs");
-	mvwprintw(win, x+21, 3, "   h = more options                   q = Quit");
+	mvwprintw(win, x+16, 3, "  c = CPU               t = Top-processes     - = Reduce refresh delay  ");
+	mvwprintw(win, x+17, 3, "  C = CPU, Long-term      =                   + = Increase refresh delay");
+	mvwprintw(win, x+18, 3, "    =                     =                   ? = Help                  ");
+	mvwprintw(win, x+19, 3, "    =                     =                                             ");
+	mvwprintw(win, x+20, 3, "  i = About this Mac      =                   q = Quit                  ");
 	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
 	wnoutrefresh(stdscr);
 	
@@ -156,24 +155,25 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	if (win == NULL) {
 		return;
 	}
+
 	int x = *xin;
 	uibanner(win, cols, "HELP");
-	mvwprintw(win,  1, 2, "[ a =                               ][ t = Top Processes                 ]");
-	mvwprintw(win,  2, 2, "[ b = Black & White mode            ][                                   ]");
-	mvwprintw(win,  3, 2, "[ c = CPU Load                      ][                                   ]");
-	mvwprintw(win,  4, 2, "[ C = CPU Load, long-term           ][                                   ]");
-	mvwprintw(win,  5, 2, "[ d =                               ][                                   ]");
-	mvwprintw(win,  6, 2, "[ D =                               ][                                   ]");
+	mvwprintw(win,  1, 2, "[ a =                               ][ N =                               ]");
+	mvwprintw(win,  2, 2, "[ b = Black & White mode            ][ o =                               ]");
+	mvwprintw(win,  3, 2, "[ c = CPU Load                      ][ t = Top Processes                 ]");
+	mvwprintw(win,  4, 2, "[ C = CPU Load, long-term           ][ T =                               ]");
+	mvwprintw(win,  5, 2, "[ d =                               ][ v =                               ]");
+	mvwprintw(win,  6, 2, "[ D =                               ][ w =                               ]");
 	mvwprintw(win,  7, 2, "[ f =                               ][                                   ]");
 	mvwprintw(win,  8, 2, "[ F =                               ][                                   ]");
 	mvwprintw(win,  9, 2, "[ h = Help                          ][                                   ]");
 	mvwprintw(win, 10, 2, "[ H = Help                          ][                                   ]");
-	mvwprintw(win, 11, 2, "[ k = Kernel Information            ][                                   ]");
-	mvwprintw(win, 12, 2, "[ m =                               ][                                   ]");
-	mvwprintw(win, 13, 2, "[ M =                               ][                                   ]");
-	mvwprintw(win, 14, 2, "[ n =                               ][                                   ]");
-	mvwprintw(win, 15, 2, "[ N =                               ][                                   ]");
-	mvwprintw(win, 16, 2, "[ q = Quit/Exit                     ][                                   ]");
+	mvwprintw(win, 11, 2, "[ i = About This Mac                ][ - = Reduce refresh delay (half)   ]");
+	mvwprintw(win, 12, 2, "[ I =                               ][ + = Increase refresh delay (2x)   ]");
+	mvwprintw(win, 13, 2, "[ k =                               ][                                   ]");
+	mvwprintw(win, 14, 2, "[ m =                               ][ ? = Help                          ]");
+	mvwprintw(win, 15, 2, "[ M =                               ][                                   ]");
+	mvwprintw(win, 16, 2, "[ n =                               ][ q = Quit/Exit                     ]");
 	mvwprintw(win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
 	mvwprintw(win, 19, 2, "              Christopher Stoll, 2015 (%s)", APPURL);
 	
@@ -1216,7 +1216,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 	}
 	int x = *xin;
 
-	wmove(win,1, 1);
+	wmove(win, 1, 1);
 	wclrtobot(win);
 
 	// TODO: this is not working???
@@ -1225,22 +1225,17 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 		heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
 	}
 
-	mvwprintw(win, 1, 1, "ID      NAME         %%CPU TIME     #TH   #WQ  #PORT MEM    PURG   CMPRS  PGRP   PPID  STATE");
-	for (int j = 0; j < processcount; j++) {
-		mvwprintw(win, (j + 2), 1, "%-7d %-12.12s %4.1f %-8s %-5s %-4u %-5u %-6s %-6s %-6s %-6d %-7d %5s", 
-			procs[j].pid,
-			procs[j].name,
-			procs[j].percentage,
-			"00:00:00", // time
-			"00/00", // th
-			1234, // wq
-			12345, // port
-			"012345", // mem
-			"012345", // purg
-			"012345", // cmprs
-			123456, // pgrp
-			1234567,//procs[j].pid, // ppid
-			"abcde"//procs[j].statustext // state
+	mvwprintw(win, 1, 1, "ID      NAME                   %%CPU MEM        PHYS       PGRP   PPID   STATE");
+	for (int i = 0; i < processcount; i++) {
+		mvwprintw(win, (i + 2), 1, "%-7d %-22.22s %4.1f %-10u %-10u %-6d %-7d %-5s", 
+			procs[i].pid,
+			procs[i].name,
+			procs[i].percentage,
+			procs[i].residentmem, // purg
+			procs[i].physicalmem, // cmprs
+			procs[i].pgid, // pgrp
+			procs[i].parentpid, // ppid
+			procs[i].statustext // state
 			);
 			// procs[j].pid, procs[j].statustext, procs[j].percentage,
 			// procs[j].lasttotaltime, procs[j].totaltime, (procs[j].totaltime - procs[j].lasttotaltime), 
