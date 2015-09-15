@@ -268,7 +268,8 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 	int error = 0;
 	struct rusage_info_v3 rusage;
-	unsigned int total = 0;
+	// unsigned int total = 0;
+	uint64_t total = 0;
 	unsigned int oldtotaltime = 0;
 	// int totalutime = 0;
 
@@ -363,15 +364,11 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 			procs[i].lasttotaltime = oldtotaltime;
 		}
 
-		total += procs[i].totaltime - procs[i].lasttotaltime;
+		total += (procs[i].totaltime - procs[i].lasttotaltime);
 	}
 
 	for (int i = 0; i < count; ++i) {
-		procs[i].tmptotal = total;
-		procs[i].tmp = cpupercent;
-		// procs[i].percentage = ((double)(procs[i].totaltime - procs[i].lasttotaltime) / (double)total * 100) * cpupercent;
-		procs[i].percentage = (double)(procs[i].totaltime - procs[i].lasttotaltime) / total * 100 * cpupercent;
-		// procs[i].percentage = (double)(procs[i].totaltime - procs[i].lasttotaltime) / (double)(cputicks * 10000) * 100;
+		procs[i].percentage = (((double)(procs[i].totaltime - procs[i].lasttotaltime) / total) * 100) * cpupercent;
 	}
 	**procsin = *procs;
 }

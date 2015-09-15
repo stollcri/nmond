@@ -235,6 +235,41 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 int main(int argc, char **argv)
 {
+	/*
+	struct hashitem *thishasht = hashtnew();
+	hashtadd(thishasht, 99999, 1);
+	hashtadd(thishasht, 91234, 2);
+	hashtadd(thishasht, 98999, 3);
+	hashtadd(thishasht, 94567, 4);
+	hashtadd(thishasht, 97999, 5);
+	hashtadd(thishasht, 97890, 6);
+
+	printf("%u\n", hashtget(thishasht, 99999));
+	printf("%u\n", hashtget(thishasht, 91234));
+	printf("%u\n", hashtget(thishasht, 98999));
+	printf("%u\n", hashtget(thishasht, 94567));
+	printf("%u\n", hashtget(thishasht, 97999));
+	printf("%u\n", hashtget(thishasht, 97890));
+	printf("\n");
+
+	hashtset(thishasht, 99999, 11);
+	hashtset(thishasht, 91234, 12);
+	hashtset(thishasht, 98999, 13);
+	hashtset(thishasht, 94567, 14);
+	hashtset(thishasht, 97999, 15);
+	hashtset(thishasht, 97890, 16);
+
+	printf("%u\n", hashtget(thishasht, 99999));
+	printf("%u\n", hashtget(thishasht, 91234));
+	printf("%u\n", hashtget(thishasht, 98999));
+	printf("%u\n", hashtget(thishasht, 94567));
+	printf("%u\n", hashtget(thishasht, 97999));
+	printf("%u\n", hashtget(thishasht, 97890));
+	printf("\n");
+
+	exitapp();
+	*/
+
 	// first thing, prepare to be interupted
 	setinterupthandlers();
 
@@ -343,6 +378,7 @@ int main(int argc, char **argv)
 			getsyskerninfo(&thiskern);
 			getsysresinfo(&thisres);
 			processcount = 0;
+			// TODO: should use the hash map instead of constantly freeing/allocing
 			free(thisproc);
 			thisproc = NULL;
 			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu);

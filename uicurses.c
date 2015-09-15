@@ -1225,16 +1225,22 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 		heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
 	}
 
-	mvwprintw(win, 1, 1, "ID      NAME             %%CPU");
+	mvwprintw(win, 1, 1, "ID      NAME         %%CPU TIME     #TH   #WQ  #PORT MEM    PURG   CMPRS  PGRP   PPID  STATE");
 	for (int j = 0; j < processcount; j++) {
-		//mvwprintw(win, (j + 2), 1, "%-7d %-16.16s %4.1f  %10.10u - %-10.10u = %9.9u / %9.9u = %8.8f * %8.8f", 
-		mvwprintw(win, (j + 2), 1, "%-5d %-8.8s %4.1f  %10.10u - %-10.10u = %9.9u / %9.9u = %8.8f * %8.8f", 
-			procs[j].pid, procs[j].name, procs[j].percentage
-			, procs[j].totaltime, procs[j].lasttotaltime
-			, (procs[j].totaltime - procs[j].lasttotaltime)
-			, procs[j].tmptotal
-			, ((double)(procs[j].totaltime - procs[j].lasttotaltime) / procs[j].tmptotal)
-			, procs[j].tmp
+		mvwprintw(win, (j + 2), 1, "%-7d %-12.12s %4.1f %-8s %-5s %-4u %-5u %-6s %-6s %-6s %-6d %-7d %5s", 
+			procs[j].pid,
+			procs[j].name,
+			procs[j].percentage,
+			"00:00:00", // time
+			"00/00", // th
+			1234, // wq
+			12345, // port
+			"012345", // mem
+			"012345", // purg
+			"012345", // cmprs
+			123456, // pgrp
+			1234567,//procs[j].pid, // ppid
+			"abcde"//procs[j].statustext // state
 			);
 			// procs[j].pid, procs[j].statustext, procs[j].percentage,
 			// procs[j].lasttotaltime, procs[j].totaltime, (procs[j].totaltime - procs[j].lasttotaltime), 

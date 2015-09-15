@@ -49,12 +49,12 @@ struct hashitem {
 	struct hashitem *next;
 	int keyhash;
 	int key;
-	int value;
+	unsigned int value;
 };
 
 extern struct hashitem *hashtnew();
-extern void hashtadd(struct hashitem*, int, int);
-extern void hashtset(struct hashitem*, int, int);
-extern int hashtget(struct hashitem*, int);
+extern void hashtadd(struct hashitem*, int, unsigned int);
+extern void hashtset(struct hashitem*, int, unsigned int);
+extern unsigned int hashtget(struct hashitem*, int);
 
 #endif

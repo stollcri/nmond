@@ -44,7 +44,7 @@
 #define STR_INIT "-"
 #define DATE_FORMAT "%Y-%m-%d %H:%M:%S"
 //#define CPU_TIME_DENOMINATOR 1000000
-#define COUNT_HYPERTHREADS_IN_CPU_AVG 0
+#define COUNT_HYPERTHREADS_IN_CPU_AVG 1
 
 //
 // Hardware based information
@@ -216,9 +216,6 @@ struct sysproc {
 
 	unsigned int lasttotaltime;
 	double percentage;
-
-	unsigned int tmptotal;
-	double tmp;
 
 	char *name;
 	char *path;
