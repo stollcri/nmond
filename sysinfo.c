@@ -269,6 +269,7 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	int error = 0;
 	struct rusage_info_v3 rusage;
 	uint64_t total = 0;
+	uint64_t oldtotal = 0;
 	unsigned int oldtotaltime = 0;
 
 	time_t timet = 0;
@@ -376,7 +377,11 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 			procs[i].lasttotaltime = oldtotaltime;
 		}
 
+		oldtotal = total;
 		total += (procs[i].totaltime - procs[i].lasttotaltime);
+		if(total < oldtotal) {
+			// TODO: handle integer overflows
+		}
 	}
 
 	for (int i = 0; i < count; ++i) {
