@@ -68,7 +68,7 @@ static inline void uidisplay(WINDOW *win, int *xin, int cols, int rows, int line
 	if((x + rows + 2) > lines) {
 		pnoutrefresh(win, 0, 0, x, 1, (lines - 2), (cols - 2));
 	} else {
-		pnoutrefresh(win, 0, 0, x, 1, (x + rows + 1), (cols - 2));
+		pnoutrefresh(win, 0, 0, x, 1, (x + rows), (cols - 2));
 	}
 
 	x = x + rows;
@@ -140,7 +140,7 @@ void uiwelcome(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struc
 	}
 	mvwprintw(win, x+15, 3, "Use these keys to toggle statistics on/off:");
 	mvwprintw(win, x+16, 3, "  c = CPU               t = Top-processes     - = Reduce refresh delay  ");
-	mvwprintw(win, x+17, 3, "  C = CPU, Long-term      =                   + = Increase refresh delay");
+	mvwprintw(win, x+17, 3, "  C = CPU, Long-term    T = Top-procs,command + = Increase refresh delay");
 	mvwprintw(win, x+18, 3, "    =                     =                   ? = Help                  ");
 	mvwprintw(win, x+19, 3, "    =                     =                                             ");
 	mvwprintw(win, x+20, 3, "  i = About this Mac      =                   q = Quit                  ");
@@ -162,7 +162,7 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	mvwprintw(win,  1, 2, "[ a =                               ][ N =                               ]");
 	mvwprintw(win,  2, 2, "[ b = Black & White mode            ][ o =                               ]");
 	mvwprintw(win,  3, 2, "[ c = CPU Load                      ][ t = Top Processes                 ]");
-	mvwprintw(win,  4, 2, "[ C = CPU Load, long-term           ][ T =                               ]");
+	mvwprintw(win,  4, 2, "[ C = CPU Load, long-term           ][ T = Top Processes, show command   ]");
 	mvwprintw(win,  5, 2, "[ d =                               ][ v =                               ]");
 	mvwprintw(win,  6, 2, "[ D =                               ][ w =                               ]");
 	mvwprintw(win,  7, 2, "[ f =                               ][                                   ]");
@@ -1199,7 +1199,6 @@ static int comparepercentdes(const void *val1, const void *val2)
 	struct sysproc *percent1 = (struct sysproc *)val1;
 	struct sysproc *percent2 = (struct sysproc *)val2;
 
-	// return (int)(percent2->percentage - percent1->percentage);
 	if (percent1->percentage > percent2->percentage) {
 		return -1;
 	} else if (percent1->percentage < percent2->percentage) {
@@ -1209,13 +1208,18 @@ static int comparepercentdes(const void *val1, const void *val2)
 	}
 }
 
-void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, int processcount, bool updateddata)
+void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, int processcount, int topmode, bool updateddata)
 {
 	WINDOW *win = *winin;
 	if (win == NULL) {
 		return;
 	}
 	int x = *xin;
+
+	int procstoshow = processcount;
+	if(procstoshow > rows) {
+		procstoshow = rows - 4;
+	}
 
 	wmove(win, 1, 1);
 	wclrtobot(win);
@@ -1226,9 +1230,17 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 		heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
 	}
 
+	switch(topmode) {
+		case TOP_MODE_A:
+			mvwprintw(win, 1, 1, "ID      NAME                   %%CPU MEM        PHYS       PGRP   PPID   STATE");
+			break;
+		case TOP_MODE_B:
+			mvwprintw(win, 1, 1, "PID     %%CPU RESSIZE    COMMAND                                               ");
+			break;
+	}
+
 	char *statustext = malloc(6);
-	mvwprintw(win, 1, 1, "ID      NAME                   %%CPU MEM        PHYS       PGRP   PPID   STATE");
-	for (int i = 0; i < processcount; i++) {
+	for (int i = 0; i < procstoshow; i++) {
 
 
 		switch(procs[i].status){
@@ -1249,32 +1261,37 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 				break;
 		}
 
-		mvwprintw(win, (i + 2), 1, "%-7d %-22.22s %4.1f %-10u %-10u %-6d %-7d %-5s", 
-			procs[i].pid,
-			procs[i].name,
-			procs[i].percentage,
-			procs[i].residentmem, // purg
-			procs[i].physicalmem, // cmprs
-			procs[i].pgid, // pgrp
-			procs[i].parentpid, // ppid
-			statustext // state
-			);
-			// procs[j].pid, procs[j].statustext, procs[j].percentage,
-			// procs[j].lasttotaltime, procs[j].totaltime, (procs[j].totaltime - procs[j].lasttotaltime), 
-			// /*procs[j].utime,*/ procs[j].stime, procs[j].billedtime, procs[j].idlewakeups,
-			// procs[j].name);
-		// mvwprintw(win, j + 2, 1, "%7d %7d %6s %4d %4d %9s 0x%08x %1s %-32s",
-		// 				procs[j].pid,
-		// 				procs[j].parentpid,
-		// 				"pgrp",//procs[j].pgrp,
-		// 				0,//procs[j].pi_nice,
-		// 				0,//procs[j].pi_pri,
-		// 				"state",//(topper[j].time * 100 / elapsed) ? "Running " : get_state(procs[j].pi_state),
-		// 				0,//procs[j].pi_flags,
-		// 				(procs[j].ttydev ? "F" : " "),
-		// 				9);//procs[j].pi_comm);
+		switch(topmode) {
+			case TOP_MODE_A:
+				mvwprintw(win, (i + 2), 1, "%-7d %-22.22s %4.1f %-10u %-10u %-6d %-7d %-5.5s", 
+					procs[i].pid,
+					procs[i].name,
+					procs[i].percentage,
+					procs[i].residentmem,
+					procs[i].physicalmem,
+					procs[i].pgid,
+					procs[i].parentpid,
+					statustext
+					);
+				break;
+			case TOP_MODE_B:
+				mvwprintw(win, (i + 2), 1, "%-7d %4.1f %-10u %-53.53s", 
+					procs[i].pid,
+					procs[i].percentage,
+					procs[i].residentmem,
+					procs[i].path
+					);
+				break;
+		}
 	}
-	uidisplay(win, &x, cols, 26/*lines to show*/, rows);
+	uidisplay(win, &x, cols, 27, rows);
+
+	*xin = x;
+	
+
+	//mvwprintw(winin,1, 1, "  PID      PPID  Pgrp Nice Prior Status    proc-Flag Command");
+	//"  PID    %%CPU ResSize    Command                                            ";
+	//
 	//DISPLAY(winin,3 + j);
 /*
 				// Get the details of the running processes 
@@ -1292,24 +1309,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 					topper = REALLOC(topper, sizeof(struct topper ) * (n+1) ); // add one to avoid overrun 
 					topper_size = n;
 				}
-				// Sort the processes by CPU utilisation 
-				for ( i = 0, max_sorted = 0; i < n; i++) {
-					// move forward in the previous array to find a match
-					for(j=0;j < q->nprocs;j++) {
-						if (p->procs[i].pi_pid == q->procs[j].pi_pid) { // found a match 
-							topper[max_sorted].index = i;
-							topper[max_sorted].other = j;
-							topper[max_sorted].time =  TIMEDELTA(pi_utime,i,j) + 
-							TIMEDELTA(pi_stime,i,j);
-							topper[max_sorted].size =  p->procs[i].statm_resident;
-							if(isroot)
-								topper[max_sorted].io =  COUNTDELTA(read_io) + COUNTDELTA(write_io);
-							
-							max_sorted++;
-							break;
-						}
-					}
-				}
+
 				switch(show_topmode) {
 					default:
 					case 3: qsort((void *) & topper[0], max_sorted, sizeof(struct topper ), &cpu_compare );

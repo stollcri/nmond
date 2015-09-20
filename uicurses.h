@@ -53,6 +53,10 @@
 #define MAXROWS 256
 #define MAXCOLS 150
 
+#define TOP_MODE_NONE 0
+#define TOP_MODE_A 1
+#define TOP_MODE_B 2
+
 #define MSG_VERSION "nmond version %s\n"
 #define MSG_INF_GEN_DISKG "Generating disk group file from lsblk output to file: \"auto\"\n"
 #define MSG_INF_AUTOF_CMD "Create auto file command was: %s\n"
@@ -120,7 +124,7 @@ extern void uimemvirtual(WINDOW**, int*, int, int);
 extern void uineterrors(WINDOW**, int*, int, int);
 extern void uinetfilesys(WINDOW**, int*, int, int);
 extern void uinetwork(WINDOW**, int*, int, int);
-extern void uitop(WINDOW**, int*, int, int, struct sysproc*, int, bool);
+extern void uitop(WINDOW**, int*, int, int, struct sysproc*, int, int, bool);
 extern void uisys(WINDOW**, int*, int, int, struct syshw, struct syskern);
 extern void uiwarn(WINDOW**, int*, int, int);
 

@@ -58,6 +58,8 @@ struct nmondstate {
 	double timelast;
 	double elapsed;
 
+	int topmode;
+
 	bool pendingchanges;
 	bool debug;
 };

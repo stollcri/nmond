@@ -162,15 +162,34 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 			exitapp();
 			//break;
 		case 't':
-			if(wins->top.visible) {
-				wins->top.visible = false;
-				wins->visiblecount -= 1;
+			if(state->topmode == TOP_MODE_B) {
+				state->topmode = TOP_MODE_A;
 			} else {
-				wins->top.visible = true;
-				wins->visiblecount += 1;
+				if(wins->top.visible) {
+					state->topmode = TOP_MODE_NONE;
+					wins->top.visible = false;
+					wins->visiblecount -= 1;
+				} else {
+					state->topmode = TOP_MODE_A;
+					wins->top.visible = true;
+					wins->visiblecount += 1;
+				}
 			}
 			break;
 		case 'T':
+			if(state->topmode == TOP_MODE_A) {
+				state->topmode = TOP_MODE_B;
+			} else {
+				if(wins->top.visible) {
+					state->topmode = TOP_MODE_NONE;
+					wins->top.visible = false;
+					wins->visiblecount -= 1;
+				} else {
+					state->topmode = TOP_MODE_B;
+					wins->top.visible = true;
+					wins->visiblecount += 1;
+				}
+			}
 			break;
 		case 'v':
 			break;
@@ -424,7 +443,7 @@ int main(int argc, char **argv)
 			}
 		}
 		if (wins.top.visible) {
-			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount, pendingdata);
+			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount, currentstate.topmode, pendingdata);
 		}
 		if (wins.warn.visible) {
 			uiwarn(&wins.warn.win, &x, COLS, LINES);
