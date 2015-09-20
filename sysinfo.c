@@ -272,58 +272,104 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	unsigned long long oldtotal = 0;
 	unsigned long long oldtotaltime = 0;
 
+	int mib[4];
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROCARGS;
+	mib[2] = 0;
+	size_t templength = 0;
+	char *arglist;
+
 	time_t timet = 0;
 	struct tm *ptm = NULL;
 	// char boottimestring[8];
 
 	for (int i = 0; i < count; ++i) {
-		// Process identifier.
-		procs[i].pid = processes[i].kp_proc.p_pid;
-		// Process group identifier.
-		procs[i].pgid = processes[i].kp_eproc.e_pgid;
-		// parent process id
-		procs[i].parentpid = processes[i].kp_eproc.e_ppid;
+		//
+		// sysctl.h > proc.h
+		// 
 		// S* process status
 		procs[i].status = processes[i].kp_proc.p_stat;
-		// controlling tty dev
-		procs[i].ttydev = processes[i].kp_eproc.e_tdev;
+		// Process identifier.
+		procs[i].pid = processes[i].kp_proc.p_pid;
+		// Real time
+		procs[i].realtime = processes[i].kp_proc.p_rtime;
+		// // CPU ticks
+		// procs[i].cticks = processes[i].kp_proc.p_cpticks;
+		// // User ticks
+		// procs[i].uticks = processes[i].kp_proc.p_uticks;
+		// // System ticks
+		// procs[i].sticks = processes[i].kp_proc.p_sticks;
+		// // Interupt ticks
+		// procs[i].iticks = processes[i].kp_proc.p_iticks;
 		// Process priority.
 		procs[i].priority = processes[i].kp_proc.p_priority;
-		// process credentials, real user id
-		procs[i].realuid = processes[i].kp_eproc.e_pcred.p_ruid;
-		// current credentials, effective user id
-		procs[i].effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
+		// "nice" value
+		procs[i].nice = processes[i].kp_proc.p_nice;
 		// Process name
 		procs[i].name = processes[i].kp_proc.p_comm;
-		// process path
-		char path[PROC_PIDPATHINFO_MAXSIZE];
-		proc_pidpath(procs[i].pid, path, sizeof(path));
-		procs[i].path = path;
-	
+
+		//
+		// sysctl.h
+		// 
+		// process credentials, real user id
+		procs[i].realuid = processes[i].kp_eproc.e_pcred.p_ruid;
 		// real username
 		struct passwd *realuser = getpwuid(procs[i].realuid);
 		procs[i].realusername = realuser->pw_name;
+		// current credentials, effective user id
+		procs[i].effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
 		// effectiver user, name
 		struct passwd *effectiveuser = getpwuid(processes[i].kp_eproc.e_ucred.cr_uid);
 		procs[i].effectiveusername = effectiveuser->pw_name;
+		// parent process id
+		procs[i].parentpid = processes[i].kp_eproc.e_ppid;
+		// Process group identifier.
+		procs[i].pgid = processes[i].kp_eproc.e_pgid;
+		// controlling tty dev
+		procs[i].ttydev = processes[i].kp_eproc.e_tdev;
 		// setlogin() name
 		procs[i].setloginname = processes[i].kp_eproc.e_login;
+
+		// // process path (libproc.h)
+		// char *path = malloc(PROC_PIDPATHINFO_MAXSIZE);
+		// proc_pidpath(procs[i].pid, path, PROC_PIDPATHINFO_MAXSIZE);
+		// procs[i].path = path;
+
+
+
+		mib[2] = procs[i].pid;
+		error = sysctl(mib, 4, NULL, &templength, NULL, 0);
+		// allocate memory for the result
+		if(!error) {
+			arglist = malloc(templength);
+			if(arglist == NULL) {
+				error = 1;
+			}
+		}
+		// get the result
+		if(!error) {
+			error = sysctl(mib, 3, arglist, &templength, NULL, 0);
+		}
+		procs[i].path = arglist;
+
+
 
 		// get additional info not available from sysctl
 		error = proc_pid_rusage(procs[i].pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
 		if(!error) {
+			//
+			// resource.h
+			// 
 			procs[i].utime = rusage.ri_user_time;
 			procs[i].stime = rusage.ri_system_time;
 			procs[i].totaltime = rusage.ri_user_time + rusage.ri_system_time;
-			procs[i].billedtime = rusage.ri_billed_system_time;
 			procs[i].idlewakeups = rusage.ri_pkg_idle_wkups;
-
 			procs[i].wiredmem = rusage.ri_wired_size;
 			procs[i].residentmem = rusage.ri_resident_size;
 			procs[i].physicalmem = rusage.ri_phys_footprint;
-
 			procs[i].diskior = rusage.ri_diskio_bytesread;
 			procs[i].diskiow = rusage.ri_diskio_byteswritten;
+			procs[i].billedtime = rusage.ri_billed_system_time;
 
 			// now store it as a string for quick printing
 			// char boottimestring[9];

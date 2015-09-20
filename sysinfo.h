@@ -193,46 +193,42 @@ extern void getsysresinfo(struct sysres *);
 //
 
 struct sysproc {
+	char status;
 	int pid;
+	struct	timeval realtime;
+	// int cticks;
+	// unsigned long long uticks;
+	// unsigned long long sticks;
+	// unsigned long long iticks;
+	unsigned int priority;
+	char nice;
+	char *name;
+
+	unsigned int realuid;
+	char *realusername;
+	unsigned int effectiveuid;
+	char *effectiveusername;
 	int pgid;
 	int parentpid;
-	int status;
 	int ttydev;
-	int priority;
-	
-	unsigned int realuid;
-	unsigned int effectiveuid;
+	char *setloginname;
+
+	char *path;
 	
 	unsigned int utime;
 	unsigned int stime;
 	unsigned int totaltime;
-	unsigned int billedtime;
 	unsigned int idlewakeups;
-
 	unsigned int wiredmem;
 	unsigned int residentmem;
 	unsigned int physicalmem;
-
 	unsigned int diskior;
 	unsigned int diskiow;
+	unsigned int billedtime;
 
 	unsigned int lasttotaltime;
 	double percentage;
-
-	char *name;
-	char *path;
-	char *realusername;
-	char *effectiveusername;
-	char *setloginname;
-	char *timestring;
 };
-#define SYSPROC_INIT { 0, 0, 0, 0, 0, 0, \
-0, 0, \
-0, 0, 0, 0, 0, \
-0, 0, 0, \
-0, 0, \
-0, 0, \
-STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT }
 
 extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double);
 /*
