@@ -69,7 +69,7 @@ struct hashitem *hashtnew()
 	return (struct hashitem *)calloc(sizeof(struct hashitem), HASH_TABLE_SIZE);
 }
 
-void hashtadd(struct hashitem *hashtable, int key, unsigned int value)
+void hashtadd(struct hashitem *hashtable, int key, unsigned long long value)
 {
 	struct hashitem *thishashitem = (struct hashitem *)malloc(sizeof(struct hashitem));
 	thishashitem->next = NULL;
@@ -91,7 +91,7 @@ void hashtadd(struct hashitem *hashtable, int key, unsigned int value)
 	}
 }
 
-void hashtset(struct hashitem *hashtable, int key, unsigned int value)
+void hashtset(struct hashitem *hashtable, int key, unsigned long long value)
 {
 	int keyhash = hash(key);
 
@@ -111,7 +111,7 @@ void hashtset(struct hashitem *hashtable, int key, unsigned int value)
 	}
 }
 
-unsigned int hashtget(struct hashitem *hashtable, int key)
+unsigned long long hashtget(struct hashitem *hashtable, int key)
 {
 	int keyhash = hash(key);
 

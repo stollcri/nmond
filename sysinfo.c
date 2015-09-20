@@ -268,9 +268,9 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 	int error = 0;
 	struct rusage_info_v3 rusage;
-	uint64_t total = 0;
-	uint64_t oldtotal = 0;
-	unsigned int oldtotaltime = 0;
+	unsigned long long total = 0;
+	unsigned long long oldtotal = 0;
+	unsigned long long oldtotaltime = 0;
 
 	time_t timet = 0;
 	struct tm *ptm = NULL;
