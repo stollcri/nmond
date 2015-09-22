@@ -194,3 +194,113 @@ struct timeval timevalFromSysctl(int mib0, int mib1)
 
 	return result;
 }
+
+/*
+ * Get process name and arguments given a PID
+ */
+#include <stdio.h>
+char *processArguments(int pid)
+{
+	char *result = NULL;
+
+	int mib[4];
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROCARGS;//KERN_PROCARGS2;
+	mib[2] = pid;
+	size_t templength = 0;
+	int error = 0;
+	char *arglist = NULL;
+
+	error = sysctl(mib, 4, NULL, &templength, NULL, 0);
+	// allocate memory for the result
+	if(!error) {
+		arglist = malloc(templength);
+		if(arglist == NULL) {
+			error = 1;
+		}
+	}
+
+	// get the result
+	if(!error) {
+		error = sysctl(mib, 3, arglist, &templength, NULL, 0);
+
+		if(!error) {
+			//
+			// TODO: merge loops together
+			// 
+			int argcount = 0;
+			int argstarts[1024];
+			int argstart = 0;
+			int argsizes[1024];
+			int argsize = -1;
+			int skipcount = 0;
+			for(int i = 0; i < templength; ++i) {
+				if(arglist[i] == '\0') {
+
+					if(arglist[i-1] == '\0') {
+						++skipcount;
+					} else {
+						argstarts[argcount] = argstart + skipcount;
+						argstart = i + 1;
+
+						argsizes[argcount] = i - (argsize + skipcount + 1);
+						argsize = i;
+						
+						skipcount = 0;
+						++argcount;
+					}
+				} else if(arglist[i] == '/') {
+					// argstart = i + 1;
+					// argsize = i;
+				} else if(arglist[i] == '=') {
+					break;
+				}
+			}
+
+			int resultlen = 0;
+			int resultoffset = 0;
+
+			for(int argno = 1; argno < argcount; ++argno) {
+				resultlen += (argsizes[argno] + 1);
+			}
+
+			if(resultlen > MAX_ARGUMENT_COUNT) {
+				resultoffset = resultlen - MAX_ARGUMENT_COUNT + TRUNC_STRING_LENGTH;
+				resultlen = MAX_ARGUMENT_COUNT - TRUNC_STRING_LENGTH;
+			}
+
+			int currentarg = 1;
+			int currentargpos = argstarts[currentarg];
+			char currentchar = 0;
+
+			int stringpos = 0;
+			result = malloc(resultlen + 1);
+
+			for(int i = 0; i < (resultoffset + resultlen - 1); ++i) {
+				currentchar = arglist[currentargpos];
+
+				if(i >= resultoffset) {
+					if(currentchar != '\0'){
+						result[stringpos] = currentchar;
+					} else {
+						result[stringpos] = ' ';
+					}
+					++stringpos;
+				} else if (i >= (resultoffset - TRUNC_STRING_LENGTH)) {
+					result[stringpos] = TRUNC_CHAR;
+					++stringpos;
+				}
+
+				++currentargpos;
+				if(currentargpos > (argstarts[currentarg] + argsizes[currentarg])) {
+					++currentarg;
+					currentargpos = argstarts[currentarg];
+				}
+			}
+			result[stringpos] = '\0';
+		}
+	}
+	free(arglist);
+
+	return result;
+}

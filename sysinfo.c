@@ -272,13 +272,6 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	unsigned long long oldtotal = 0;
 	unsigned long long oldtotaltime = 0;
 
-	int mib[4];
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROCARGS;
-	mib[2] = 0;
-	size_t templength = 0;
-	char *arglist;
-
 	time_t timet = 0;
 	struct tm *ptm = NULL;
 	// char boottimestring[8];
@@ -335,24 +328,10 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 		// proc_pidpath(procs[i].pid, path, PROC_PIDPATHINFO_MAXSIZE);
 		// procs[i].path = path;
 
-
-
-		mib[2] = procs[i].pid;
-		error = sysctl(mib, 4, NULL, &templength, NULL, 0);
-		// allocate memory for the result
-		if(!error) {
-			arglist = malloc(templength);
-			if(arglist == NULL) {
-				error = 1;
-			}
+		procs[i].path = processArguments(procs[i].pid);
+		if(procs[i].path == NULL) {
+			procs[i].path = procs[i].name;
 		}
-		// get the result
-		if(!error) {
-			error = sysctl(mib, 3, arglist, &templength, NULL, 0);
-		}
-		procs[i].path = arglist;
-
-
 
 		// get additional info not available from sysctl
 		error = proc_pid_rusage(procs[i].pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
@@ -381,7 +360,7 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 			// strcpy(timestring, boottimestring);
 			// procs[i].timestring = timestring;
 		} else {
-			procs[i].name = "";//strerror(errno);
+			// procs[i].name = "";//strerror(errno);
 			procs[i].utime = 0;
 			procs[i].stime = 0;
 			procs[i].totaltime = 0;
@@ -479,8 +458,9 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 
 void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent)
 {
-	return getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent);
+	getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent);
 }
+
 /*
 struct sysproc getsysprocinfobypid(int processid, size_t length)
 {

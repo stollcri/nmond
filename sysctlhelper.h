@@ -40,11 +40,16 @@
 
 #include <stdint.h>
 
+#define MAX_ARGUMENT_COUNT 52
+#define TRUNC_STRING_LENGTH 3
+#define TRUNC_CHAR '.'
+
 extern char *stringFromSysctl(int, int);
 extern char *stringFromSysctlByName(char*);
 extern unsigned int intFromSysctl(int, int);
 extern unsigned int intFromSysctlByName(char*);
 extern int64_t int64FromSysctlByName(char*);
 extern struct timeval timevalFromSysctl(int, int);
+extern char *processArguments(int);
 
 #endif
