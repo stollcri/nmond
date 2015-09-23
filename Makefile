@@ -6,9 +6,9 @@
 # cheap i18n (not localized)
 LANG = en
 ifeq ($(LANG),en)
-	LANGFILES = uicli.c uicurses.c
+	LANGFILES = uicli.c uicurses.c uibytesize.c
 else ifeq ($(LANG),de)
-	LANGFILES = uicli.c uicurses.c
+	LANGFILES = uicli.c uicurses.c uibytesize.c
 endif
 
 
