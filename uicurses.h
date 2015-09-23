@@ -48,7 +48,7 @@
 #define VERDATE "2015-09-14"
 #define APPURL "https://github.com/stollcri/nmond"
 
-#define BYTES_IN_GB 1073741824
+// #define BYTES_IN_GB 1073741824
 
 #define MAXROWS 256
 #define MAXCOLS 150
