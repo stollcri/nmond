@@ -64,43 +64,38 @@ static inline void uibanner(WINDOW *win, int cols, char *string)
 
 static inline void uidisplay(WINDOW *win, int *xin, int cols, int rows, int lines)
 {
-	int x = *xin;
-
-	if((x + rows + 2) > lines) {
-		pnoutrefresh(win, 0, 0, x, 1, (lines - 2), (cols - 2));
+	if((*xin + rows + 2) > lines) {
+		pnoutrefresh(win, 0, 0, *xin, 1, (lines - 2), (cols - 2));
 	} else {
-		pnoutrefresh(win, 0, 0, x, 1, (x + rows), (cols - 2));
+		pnoutrefresh(win, 0, 0, *xin, 1, (*xin + rows), (cols - 2));
 	}
 
-	x = x + rows;
-	if((x + 1) > lines) {
+	*xin = *xin + rows;
+	if((*xin + 1) > lines) {
 		mvwprintw(stdscr, lines-1, 10, MSG_WRN_NOT_SHOWN);
 	}
-
-	*xin = x;
 }
 
 void uiheader(int *xin, int usecolor, int blinkon, char *hostname, char *message, double elapsed, time_t timer)
 {
-	int x = *xin;
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvprintw(x, 2, APPNAME);
-	mvprintw(x, 10, "%s", hostname);
+	mvprintw(*xin, 2, APPNAME);
+	mvprintw(*xin, 10, "%s", hostname);
 	if(blinkon) {
 		if(strlen(message)) {
 			attrset(COLOR_PAIR(8));
 			// TODO: should limit to 26 characters
-			mvprintw(x, 35, "%s", message);
+			mvprintw(*xin, 35, "%s", message);
 			attrset(COLOR_PAIR(0));
 		}
 	}
-	mvprintw(x, 64, "%1.0fs", elapsed);
-	mvprintw(x, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
+	mvprintw(*xin, 64, "%1.0fs", elapsed);
+	mvprintw(*xin, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
 
-	*xin = x + 1;
+	*xin = *xin + 1;
 }
 
 void uiwelcome(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct syshw hw)
@@ -109,46 +104,45 @@ void uiwelcome(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struc
 	if (win == NULL) {
 		return;
 	}
-	int x = *xin;
 
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(2));
 	}
-	mvwprintw(win, x+1, 1, "                                         __");
-	mvwprintw(win, x+2, 1, "    ____   ____ ___   ____   ____   ____/ /");
-	mvwprintw(win, x+3, 1, "   / __ \\ / __ `__ \\ / __ \\ / __ \\ / __  / ");
-	mvwprintw(win, x+4, 1, "  / / / // / / / / // /_/ // / / // /_/ /  ");
-	mvwprintw(win, x+5, 1, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
-	mvwprintw(win, x+6, 1, "=======================================    ");
+	mvwprintw(win, *xin+1, 1, "                                         __");
+	mvwprintw(win, *xin+2, 1, "    ____   ____ ___   ____   ____   ____/ /");
+	mvwprintw(win, *xin+3, 1, "   / __ \\ / __ `__ \\ / __ \\ / __ \\ / __  / ");
+	mvwprintw(win, *xin+4, 1, "  / / / // / / / / // /_/ // / / // /_/ /  ");
+	mvwprintw(win, *xin+5, 1, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
+	mvwprintw(win, *xin+6, 1, "=======================================    ");
 
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(0));
 	}
-	mvwprintw(win, x+1, 45, "For help type H or ...");
-	mvwprintw(win, x+2, 45, " nmond -?  - hint");
-	mvwprintw(win, x+3, 45, " nmond -h  - full");
-	mvwprintw(win, x+5, 45, "To start the same way every time");
-	mvwprintw(win, x+6, 45, " set the NMOND shell variable");
+	mvwprintw(win, *xin+1, 45, "For help type H or ...");
+	mvwprintw(win, *xin+2, 45, " nmond -?  - hint");
+	mvwprintw(win, *xin+3, 45, " nmond -h  - full");
+	mvwprintw(win, *xin+5, 45, "To start the same way every time");
+	mvwprintw(win, *xin+6, 45, " set the NMOND shell variable");
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(1));
 	}
-	mvwprintw(win, x+8,  2, "%s", hw.model);
-	mvwprintw(win, x+9,  2, "%s", hw.cpubrand);
-	mvwprintw(win, x+10, 2, "CPU Count    = %2d   Physcal Cores = %d", hw.cpucount, hw.physicalcpucount);
-	mvwprintw(win, x+11, 2, "Hyperthreads = %2d   Virtual CPUs  = %d", hw.hyperthreads, hw.logicalcpucount);
+	mvwprintw(win, *xin+8,  2, "%s", hw.model);
+	mvwprintw(win, *xin+9,  2, "%s", hw.cpubrand);
+	mvwprintw(win, *xin+10, 2, "CPU Count    = %2d   Physcal Cores = %d", hw.cpucount, hw.physicalcpucount);
+	mvwprintw(win, *xin+11, 2, "Hyperthreads = %2d   Virtual CPUs  = %d", hw.hyperthreads, hw.logicalcpucount);
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(0));
 	}
-	mvwprintw(win, x+15, 3, "Use these keys to toggle statistics on/off:");
-	mvwprintw(win, x+16, 3, "  c = CPU               t = Top-processes     - = Reduce refresh delay  ");
-	mvwprintw(win, x+17, 3, "  C = CPU, Long-term    T = Top-procs,command + = Increase refresh delay");
-	mvwprintw(win, x+18, 3, "    =                     =                   ? = Help                  ");
-	mvwprintw(win, x+19, 3, "    =                     =                                             ");
-	mvwprintw(win, x+20, 3, "  i = About this Mac      =                   q = Quit                  ");
-	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
+	mvwprintw(win, *xin+15, 3, "Use these keys to toggle statistics on/off:");
+	mvwprintw(win, *xin+16, 3, "  c = CPU               t = Top-processes     - = Reduce refresh delay  ");
+	mvwprintw(win, *xin+17, 3, "  C = CPU, Long-term    T = Top-procs,command + = Increase refresh delay");
+	mvwprintw(win, *xin+18, 3, "    =                     =                   ? = Help                  ");
+	mvwprintw(win, *xin+19, 3, "    =                     =                                             ");
+	mvwprintw(win, *xin+20, 3, "  i = About this Mac      =                   q = Quit                  ");
+	pnoutrefresh(win, 0, 0, *xin, 1, rows-2, cols-2);
 	wnoutrefresh(stdscr);
 	
-	*xin = x + 22;
+	*xin = *xin + 22;
 }
 
 void uihelp(WINDOW **winin, int *xin, int cols, int rows)
@@ -158,7 +152,6 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 		return;
 	}
 
-	int x = *xin;
 	uibanner(win, cols, "HELP");
 	mvwprintw(win,  1, 2, "[ a =                               ][ N =                               ]");
 	mvwprintw(win,  2, 2, "[ b = Black & White mode            ][ o =                               ]");
@@ -179,10 +172,8 @@ void uihelp(WINDOW **winin, int *xin, int cols, int rows)
 	mvwprintw(win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
 	mvwprintw(win, 19, 2, "              Christopher Stoll, 2015 (%s)", APPURL);
 	
-	pnoutrefresh(win, 0, 0, x, 1, rows-2, cols-2);
-	uidisplay(win, &x, cols, 20, rows);
-	
-	*xin = x;
+	pnoutrefresh(win, 0, 0, *xin, 1, rows-2, cols-2);
+	uidisplay(win, xin, cols, 20, rows);
 }
 
 static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double user, double sys, double idle, double nice)
@@ -262,7 +253,6 @@ void uicpu(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct sy
 	if (win == NULL) {
 		return;
 	}
-	int x = *xin;
 
 	uibanner(win, cols, "CPU Load");
 	mvwprintw(win, 1, 0, "CPU");
@@ -300,9 +290,7 @@ void uicpu(WINDOW **winin, int *xin, int cols, int rows, int usecolor, struct sy
 			thisres.avgpercentidle, 
 			thisres.avgpercentnice);
 	}
-	uidisplay(win, &x, cols, (cpuno + 3), rows);
-
-	*xin = x;
+	uidisplay(win, xin, cols, (cpuno + 3), rows);
 }
 
 void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int usecolor, struct sysres thisres, bool updategraph)
@@ -311,7 +299,6 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 	if (win == NULL) {
 		return;
 	}
-	int x = *xin;
 	int itteration = *itterin;
 
 	mvwprintw(win, 0, 0, " CPU +---Long-Term-----------------------------------------------------------+");
@@ -416,10 +403,9 @@ void uicpulong(WINDOW **winin, int *xin, int cols, int rows, int *itterin, int u
 			itteration = 0;
 		}
 	}
-	uidisplay(win, &x, cols, 21, rows);
+	uidisplay(win, xin, cols, 21, rows);
 
 	*itterin = itteration;
-	*xin = x;
 }
 
 extern void uidisks(WINDOW **winin, int *xin, int cols, int rows)
@@ -1163,7 +1149,6 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syshw hw, struct
 	if (win == NULL) {
 		return;
 	}
-	int x = *xin;
 
 	uibanner(win, cols, "About This Mac");
 	mvwprintw(win, 1, 2, "%s", hw.model);
@@ -1175,9 +1160,7 @@ void uisys(WINDOW **winin, int *xin, int cols, int rows, struct syshw hw, struct
 	
 	mvwprintw(win, 8, 2, "Domain   : %s", kern.domainname);
 	mvwprintw(win, 9, 2, "Booted   : %s", kern.boottimestring);
-	uidisplay(win, &x, cols, 10, rows);
-	
-	*xin = x;
+	uidisplay(win, xin, cols, 10, rows);
 }
 
 static int comparepercentasc(const void *val1, const void *val2)
@@ -1215,7 +1198,6 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 	if (win == NULL) {
 		return;
 	}
-	int x = *xin;
 
 	int procstoshow = processcount;
 	if(procstoshow > rows) {
@@ -1285,9 +1267,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 				break;
 		}
 	}
-	uidisplay(win, &x, cols, 27, rows);
-
-	*xin = x;
+	uidisplay(win, xin, cols, 27, rows);
 	
 
 	//mvwprintw(winin,1, 1, "  PID      PPID  Pgrp Nice Prior Status    proc-Flag Command");
@@ -1449,7 +1429,6 @@ void uiwarn(WINDOW **winin, int *xin, int cols, int rows)
 	if (win == NULL) {
 		return;
 	}
-	int x = *xin;
 
 	uibanner(win, cols, "Verbose Mode");
 	mvwprintw(win, 1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
@@ -1501,7 +1480,5 @@ void uiwarn(WINDOW **winin, int *xin, int cols, int rows)
 				DISPLAY(padverb,4);
 				x=y;
 */
-	uidisplay(win, &x, cols, 4, rows);
-
-	*xin = x + 6;
+	uidisplay(win, xin, cols, 4, rows);
 }
