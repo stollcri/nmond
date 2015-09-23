@@ -1233,10 +1233,10 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 
 	switch(topmode) {
 		case TOP_MODE_A:
-			mvwprintw(win, 1, 1, "ID      NAME                   %%CPU     MEM        PHYS   PGRP   PPID   STATE");
+			mvwprintw(win, 1, 1, "ID      NAME                   %%CPU     MEM      PHYS   PGRP   PPID   STATE");
 			break;
 		case TOP_MODE_B:
-			mvwprintw(win, 1, 1, "PID     %%CPU RESSIZE    COMMAND                                               ");
+			mvwprintw(win, 1, 1, "PID     %%CPU  RESSIZE   COMMAND                                            ");
 			break;
 	}
 
@@ -1264,7 +1264,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 
 		switch(topmode) {
 			case TOP_MODE_A:
-				mvwprintw(win, (i + 2), 1, "%-7d %-22.22s %4.1f %10s %10s %-6d %-7d %-5.5s", 
+				mvwprintw(win, (i + 2), 1, "%-7d %-22.22s %4.1f %9s %9s %-6d %-7d %-5.5s", 
 					procs[i].pid,
 					procs[i].name,
 					procs[i].percentage,
@@ -1276,7 +1276,7 @@ void uitop(WINDOW **winin, int *xin, int cols, int rows, struct sysproc *procs, 
 					);
 				break;
 			case TOP_MODE_B:
-				mvwprintw(win, (i + 2), 1, "%-7d %4.1f %10s %-53.53s", 
+				mvwprintw(win, (i + 2), 1, "%-7d %4.1f %9s  %-53.53s", 
 					procs[i].pid,
 					procs[i].percentage,
 					uireadablebytes(procs[i].residentmem),
