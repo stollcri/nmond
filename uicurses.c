@@ -188,7 +188,9 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 	mvwprintw(win, row, 27, "|");
 
 	wmove(win, row, 28);
-	char *metermark = (char*)malloc(sizeof(char));
+	
+	char *metermark = NULL;//malloc(1);
+	
 	int userquant = (int)(round(user) / 2);
 	int systquant = (int)(round(sys) / 2);
 	int nicequant = (int)(round(nice) / 2);
@@ -332,9 +334,9 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 		int graphrows = 20;
 		int offset = 6;
 
-		char *metermark = (char*)malloc(sizeof(char));
-		char *blankmark = (char*)malloc(sizeof(char));
-		char *leadermark = (char*)malloc(sizeof(char));
+		char *metermark = NULL;//malloc(1);
+		char *blankmark = NULL;//malloc(1);
+		char *leadermark = NULL;//malloc(1);
 
 		int userquant = (int)(round(thisres.avgpercentuser) / 5);
 		int systquant = (int)(round(thisres.avgpercentsys) / 5);
@@ -1213,7 +1215,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 			break;
 	}
 
-	char *statustext = malloc(6);
+	char *statustext = NULL;//malloc(6);
 	for (int i = 0; i < procstoshow; i++) {
 
 
