@@ -199,7 +199,7 @@ struct timeval timevalFromSysctl(int mib0, int mib1)
  * Get process name and arguments given a PID
  */
 #include <stdio.h>
-char *processArguments(int pid)
+char *processArguments(int pid, int sizelimit)
 {
 	char *result = NULL;
 
@@ -264,9 +264,9 @@ char *processArguments(int pid)
 				resultlen += (argsizes[argno] + 1);
 			}
 
-			if(resultlen > MAX_ARGUMENT_COUNT) {
-				resultoffset = resultlen - MAX_ARGUMENT_COUNT + TRUNC_STRING_LENGTH;
-				resultlen = MAX_ARGUMENT_COUNT - TRUNC_STRING_LENGTH;
+			if(resultlen > sizelimit) {
+				resultoffset = resultlen - sizelimit + TRUNC_STRING_LENGTH;
+				resultlen = sizelimit - TRUNC_STRING_LENGTH;
 			}
 
 			int currentarg = 1;

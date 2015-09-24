@@ -328,7 +328,8 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 		// proc_pidpath(procs[i].pid, path, PROC_PIDPATHINFO_MAXSIZE);
 		// procs[i].path = path;
 
-		procs[i].path = processArguments(procs[i].pid);
+		// TODO: lengthen and remove magic number
+		procs[i].path = processArguments(procs[i].pid, 45);
 		if(procs[i].path == NULL) {
 			procs[i].path = procs[i].name;
 		}
