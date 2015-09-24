@@ -149,8 +149,6 @@ void getsyskerninfo(struct syskern *kern)
 
 void getsysresinfo(struct sysres *inres)
 {
-	struct sysres thisres = *inres;
-
 	int error = 0;
 	int newcpucount = 4; // TODO: FIXME Below
 
@@ -162,19 +160,19 @@ void getsysresinfo(struct sysres *inres)
 	error = sysctl(mib, 2, &thisload, &length, NULL, 0);
 	if(!error) {
 		newcpucount = (int)intFromSysctlByName("hw.ncpu");
-		thisres.loadavg1 = thisload.ldavg[0] / thisload.fscale;
-		thisres.loadavg5 = thisload.ldavg[1] / thisload.fscale;
-		thisres.loadavg15 = thisload.ldavg[2] / thisload.fscale;
+		inres->loadavg1 = thisload.ldavg[0] / thisload.fscale;
+		inres->loadavg5 = thisload.ldavg[1] / thisload.fscale;
+		inres->loadavg15 = thisload.ldavg[2] / thisload.fscale;
 	}
 
 	// does the CPU count really change? Set it on the first pass
-	if (!thisres.cpucount || (newcpucount != thisres.cpucount)) {
-		thisres.cpucount = newcpucount;
-		thisres.cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)thisres.cpucount);
+	if (!inres->cpucount || (newcpucount != inres->cpucount)) {
+		inres->cpucount = newcpucount;
+		inres->cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)inres->cpucount);
 
 		int physcpu = (int)intFromSysctlByName("hw.physicalcpu");
 		int logicpu = (int)intFromSysctlByName("hw.logicalcpu");
-		thisres.cpuhyperthreadmod = logicpu / physcpu;
+		inres->cpuhyperthreadmod = logicpu / physcpu;
 	}
 
 	double total = 0;
@@ -185,71 +183,65 @@ void getsysresinfo(struct sysres *inres)
 	if (!error) {
 		processor_cpu_load_info_data_t* r_load = (processor_cpu_load_info_data_t*)hostinfo;
 
-		thisres.avgpercentuser = 0;
-		thisres.avgpercentsys = 0;
-		thisres.avgpercentidle = 0;
-		thisres.avgpercentnice = 0;
+		inres->avgpercentuser = 0;
+		inres->avgpercentsys = 0;
+		inres->avgpercentidle = 0;
+		inres->avgpercentnice = 0;
 
-		for (int cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
-			thisres.cpus[cpuno].olduser = thisres.cpus[cpuno].user;
-			thisres.cpus[cpuno].oldsys = thisres.cpus[cpuno].sys;
-			thisres.cpus[cpuno].oldidle = thisres.cpus[cpuno].idle;
-			thisres.cpus[cpuno].oldnice = thisres.cpus[cpuno].nice;
-			thisres.cpus[cpuno].oldtotal = thisres.cpus[cpuno].total;
+		for (int cpuno = 0; cpuno < inres->cpucount; ++cpuno) {
+			inres->cpus[cpuno].olduser = inres->cpus[cpuno].user;
+			inres->cpus[cpuno].oldsys = inres->cpus[cpuno].sys;
+			inres->cpus[cpuno].oldidle = inres->cpus[cpuno].idle;
+			inres->cpus[cpuno].oldnice = inres->cpus[cpuno].nice;
+			inres->cpus[cpuno].oldtotal = inres->cpus[cpuno].total;
 
-			thisres.cpus[cpuno].user = (int)r_load[cpuno].cpu_ticks[CPU_STATE_USER];
-			thisres.cpus[cpuno].sys = (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
-			thisres.cpus[cpuno].idle = (int)r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
-			thisres.cpus[cpuno].nice = (int)r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
-			thisres.cpus[cpuno].total = 
+			inres->cpus[cpuno].user = (int)r_load[cpuno].cpu_ticks[CPU_STATE_USER];
+			inres->cpus[cpuno].sys = (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
+			inres->cpus[cpuno].idle = (int)r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
+			inres->cpus[cpuno].nice = (int)r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
+			inres->cpus[cpuno].total = 
 				(int)r_load[cpuno].cpu_ticks[CPU_STATE_USER] + (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] + 
 				(int)r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + (int)r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
 
-			total = (double)(thisres.cpus[cpuno].total - thisres.cpus[cpuno].oldtotal);
+			total = (double)(inres->cpus[cpuno].total - inres->cpus[cpuno].oldtotal);
 
-			thisres.cpus[cpuno].percentuser = 
-				(double)(thisres.cpus[cpuno].user - thisres.cpus[cpuno].olduser) / total * 100;
-			thisres.cpus[cpuno].percentsys = 
-				(double)(thisres.cpus[cpuno].sys - thisres.cpus[cpuno].oldsys) / total * 100;
-			thisres.cpus[cpuno].percentidle = 
-				(double)(thisres.cpus[cpuno].idle - thisres.cpus[cpuno].oldidle) / total * 100;
-			thisres.cpus[cpuno].percentnice = 
-				(double)(thisres.cpus[cpuno].nice - thisres.cpus[cpuno].oldnice) / total * 100;
+			inres->cpus[cpuno].percentuser = 
+				(double)(inres->cpus[cpuno].user - inres->cpus[cpuno].olduser) / total * 100;
+			inres->cpus[cpuno].percentsys = 
+				(double)(inres->cpus[cpuno].sys - inres->cpus[cpuno].oldsys) / total * 100;
+			inres->cpus[cpuno].percentidle = 
+				(double)(inres->cpus[cpuno].idle - inres->cpus[cpuno].oldidle) / total * 100;
+			inres->cpus[cpuno].percentnice = 
+				(double)(inres->cpus[cpuno].nice - inres->cpus[cpuno].oldnice) / total * 100;
 
 			if(COUNT_HYPERTHREADS_IN_CPU_AVG) {
-				thisres.avgpercentuser += thisres.cpus[cpuno].percentuser;
-				thisres.avgpercentsys += thisres.cpus[cpuno].percentsys;
-				thisres.avgpercentidle += thisres.cpus[cpuno].percentidle;
-				thisres.avgpercentnice += thisres.cpus[cpuno].percentnice;
+				inres->avgpercentuser += inres->cpus[cpuno].percentuser;
+				inres->avgpercentsys += inres->cpus[cpuno].percentsys;
+				inres->avgpercentidle += inres->cpus[cpuno].percentidle;
+				inres->avgpercentnice += inres->cpus[cpuno].percentnice;
 			} else {
-				if(!(cpuno % thisres.cpuhyperthreadmod)) {
-					thisres.avgpercentuser += thisres.cpus[cpuno].percentuser;
-					thisres.avgpercentsys += thisres.cpus[cpuno].percentsys;
-					thisres.avgpercentidle += thisres.cpus[cpuno].percentidle;
-					thisres.avgpercentnice += thisres.cpus[cpuno].percentnice;
+				if(!(cpuno % inres->cpuhyperthreadmod)) {
+					inres->avgpercentuser += inres->cpus[cpuno].percentuser;
+					inres->avgpercentsys += inres->cpus[cpuno].percentsys;
+					inres->avgpercentidle += inres->cpus[cpuno].percentidle;
+					inres->avgpercentnice += inres->cpus[cpuno].percentnice;
 				}
 			}
 		}
 
-		thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / 100;
-		// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / (thisres.cpucount * 100);
+		inres->percentallcpu = (inres->avgpercentuser + inres->avgpercentsys + inres->avgpercentnice) / 100;
 		if(COUNT_HYPERTHREADS_IN_CPU_AVG) {
-			thisres.avgpercentuser /= thisres.cpucount;
-			thisres.avgpercentsys /= thisres.cpucount;
-			thisres.avgpercentidle /= thisres.cpucount;
-			thisres.avgpercentnice /= thisres.cpucount;
-			// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) * thisres.cpucount / 100;
+			inres->avgpercentuser /= inres->cpucount;
+			inres->avgpercentsys /= inres->cpucount;
+			inres->avgpercentidle /= inres->cpucount;
+			inres->avgpercentnice /= inres->cpucount;
 		} else {
-			thisres.avgpercentuser /= (thisres.cpucount / thisres.cpuhyperthreadmod);
-			thisres.avgpercentsys /= (thisres.cpucount / thisres.cpuhyperthreadmod);
-			thisres.avgpercentidle /= (thisres.cpucount / thisres.cpuhyperthreadmod);
-			thisres.avgpercentnice /= (thisres.cpucount / thisres.cpuhyperthreadmod);
-			// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) * (thisres.cpucount / thisres.cpuhyperthreadmod) * 100;
+			inres->avgpercentuser /= (inres->cpucount / inres->cpuhyperthreadmod);
+			inres->avgpercentsys /= (inres->cpucount / inres->cpuhyperthreadmod);
+			inres->avgpercentidle /= (inres->cpucount / inres->cpuhyperthreadmod);
+			inres->avgpercentnice /= (inres->cpucount / inres->cpuhyperthreadmod);
 		}
-		// thisres.percentallcpu = (thisres.avgpercentuser + thisres.avgpercentsys + thisres.avgpercentnice) / 100;
 	}
-
-	*inres = thisres;
 }
 
 //
@@ -264,6 +256,7 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	if(*procsin == NULL) {
 		*procsin = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
 	}
+	// TODO: clean this up
 	struct sysproc *procs = *procsin;
 
 	int error = 0;
