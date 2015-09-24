@@ -38,9 +38,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define BYTES_IN_KB 1000.0
-#define BYTES_IN_MB 1000000.0
-#define BYTES_IN_GB 1000000000.0
+// To match what appears to be used in Activity Monitor
+#define BYTES_IN_KB 1024.0//1000.0
+#define BYTES_IN_MB 1048576.0//1000000.0
+#define BYTES_IN_GB 1073741824.0//1000000000.0
 
 extern char *uireadablebytes(unsigned int);
 
