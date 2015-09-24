@@ -365,9 +365,6 @@ int main(int argc, char **argv)
 			processcount = 0;
 			//
 			// TODO: should use the hash map instead of constantly freeing/allocing
-			// 
-			free(thisproc);
-			thisproc = NULL;
 			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu);
 
 			// data changes are pending gui update

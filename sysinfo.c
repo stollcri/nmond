@@ -255,6 +255,9 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 {
 	if(*procsin == NULL) {
 		*procsin = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
+	} else {
+		struct sysproc *procsold = *procsin;
+		*procsin = (struct sysproc *)realloc(procsold, sizeof(struct sysproc) * (size_t)count);
 	}
 	// TODO: clean this up
 	struct sysproc *procs = *procsin;
