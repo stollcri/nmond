@@ -44,7 +44,7 @@
 char *uireadablebytes(unsigned int bytes)
 {
 	char *result = malloc(RESULT_LENGTH);
-	char *resultsufix = malloc(2);
+	char *resultsufix = NULL;//malloc(2);
 	double resultnumber = 0;
 
 	if(bytes > BYTES_IN_KB) {
