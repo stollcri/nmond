@@ -1186,7 +1186,7 @@ static int comparepercentdes(const void *val1, const void *val2)
 	}
 }
 
-void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, int processcount, int topmode, bool updateddata)
+void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, int processcount, int topmode, bool updateddata, char *user)
 {
 	if (*win == NULL) {
 		return;
@@ -1208,10 +1208,10 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 
 	switch(topmode) {
 		case TOP_MODE_A:
-			mvwprintw(*win, 1, 1, "ID      NAME                   %%CPU     MEM      PHYS   PGRP   PPID   STATE");
+			mvwprintw(*win, 1, 1, "ID     NAME             %%CPU     MEM      PHYS      USER   PGRP   PPID  STATE");
 			break;
 		case TOP_MODE_B:
-			mvwprintw(*win, 1, 1, "PID     %%CPU  RESSIZE   COMMAND                                            ");
+			mvwprintw(*win, 1, 1, "PID    %%CPU   RESSIZE    USER   COMMAND                                      ");
 			break;
 	}
 
@@ -1239,24 +1239,36 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 
 		switch(topmode) {
 			case TOP_MODE_A:
-				mvwprintw(*win, (i + 2), 1, "%-7d %-22.22s %4.1f %9s %9s %-6d %-7d %-5.5s", 
+				mvwprintw(*win, (i + 2), 1, "%-6d %-16.16s %4.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
 					procs[i].pid,
 					procs[i].name,
 					procs[i].percentage,
 					uireadablebytes(procs[i].residentmem),
 					uireadablebytes(procs[i].physicalmem),
+					procs[i].realusername,
 					procs[i].pgid,
 					procs[i].parentpid,
 					statustext
 					);
+				if(!strcmp(user, procs[i].realusername)) {
+					wattron(*win, A_BOLD);
+				}
+				mvwprintw(*win, (i + 2), 50, "%9.9s", procs[i].realusername);
+				wattroff(*win, A_BOLD);
 				break;
 			case TOP_MODE_B:
-				mvwprintw(*win, (i + 2), 1, "%-7d %4.1f %9s  %-53.53s", 
+				mvwprintw(*win, (i + 2), 1, "%-6d %4.1f %9.9s %9.9s %-45.45s", 
 					procs[i].pid,
 					procs[i].percentage,
 					uireadablebytes(procs[i].residentmem),
+					procs[i].realusername,
 					procs[i].path
 					);
+				if(!strcmp(user, procs[i].realusername)) {
+					wattron(*win, A_BOLD);
+				}
+				mvwprintw(*win, (i + 2), 23, "%9.9s", procs[i].realusername);
+				wattroff(*win, A_BOLD);
 				break;
 		}
 	}

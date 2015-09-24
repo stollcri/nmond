@@ -62,6 +62,8 @@ struct nmondstate {
 
 	bool pendingchanges;
 	bool debug;
+
+	char *user;
 };
 #define NMONDSTATE_INIT { 0, 2, 2000, 0, 0.0, 0.0, 0.0, false, false }
 

@@ -286,6 +286,7 @@ int main(int argc, char **argv)
 	struct nmondstate currentstate = NMONDSTATE_INIT;
 	currentstate.color = has_colors();
 	currentstate.timenow = time(NULL);
+	currentstate.user = getlogin();
 	// set wait time for getch()
 	timeout(currentstate.refreshms);
 
@@ -443,7 +444,7 @@ int main(int argc, char **argv)
 			}
 		}
 		if (wins.top.visible) {
-			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount, currentstate.topmode, pendingdata);
+			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount, currentstate.topmode, pendingdata, currentstate.user);
 		}
 		if (wins.warn.visible) {
 			uiwarn(&wins.warn.win, &x, COLS, LINES);
