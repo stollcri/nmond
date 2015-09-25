@@ -251,7 +251,7 @@ void getsysresinfo(struct sysres *inres)
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable, double cpupercent)
+static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable, double cpupercent, unsigned long long *memused)
 {
 	if(*procsin == NULL) {
 		*procsin = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
@@ -264,6 +264,9 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 	int error = 0;
 	struct rusage_info_v3 rusage;
+
+	unsigned long long totalmem = 0;
+
 	unsigned long long total = 0;
 	unsigned long long oldtotal = 0;
 	unsigned long long oldtotaltime = 0;
@@ -356,6 +359,8 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 			// char *timestring = malloc(9);
 			// strcpy(timestring, boottimestring);
 			// procs[i].timestring = timestring;
+			
+			totalmem += procs[i].residentmem;
 		} else {
 			// procs[i].name = "";//strerror(errno);
 			procs[i].utime = 0;
@@ -392,13 +397,14 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	for (int i = 0; i < count; ++i) {
 		procs[i].percentage = (((double)(procs[i].totaltime - procs[i].lasttotaltime) / total) * 100) * cpupercent;
 	}
+	*memused = totalmem;
 	**procsin = *procs;
 }
 
 /*
  * Get all process information from sysctl
  */
-static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent)
+static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, unsigned long long *memused)
 {
 	struct kinfo_proc *processlist = NULL;
 
@@ -437,7 +443,7 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 		// fill the sysproc struct from the returned information
 		if(!error) {
 			processcount = (unsigned int)templength / sizeof(struct kinfo_proc);
-			sysprocfromkinfoproc(processlist, processcount, procs, hashtable, cpupercent);
+			sysprocfromkinfoproc(processlist, processcount, procs, hashtable, cpupercent, memused);
 			free(processlist);
 			processlist = NULL;
 			complete = 1;
@@ -453,9 +459,9 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 	*length = (size_t)processcount;
 }
 
-void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent)
+void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, unsigned long long *memused)
 {
-	getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent);
+	getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent, memused);
 }
 
 /*

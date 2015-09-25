@@ -149,6 +149,13 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 		case 'k':
 			break;
 		case 'm':
+			if(wins->memory.visible) {
+				wins->memory.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				wins->memory.visible = true;
+				wins->visiblecount += 1;
+			}
 			break;
 		case 'M':
 			break;
@@ -254,6 +261,11 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 int main(int argc, char **argv)
 {
+	// struct syshw tmphw = SYSHW_INIT;
+	// getsyshwinfo(&tmphw);
+	// printf("%lld\n", tmphw.memorysize);
+	// exitapp();
+
 	// first thing, prepare to be interupted
 	setinterupthandlers();
 
@@ -300,7 +312,7 @@ int main(int argc, char **argv)
 	size_t processcount = 0;
 	struct sysproc *thisproc = NULL;
 	struct hashitem *thishash = hashtnew();
-	getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu);
+	getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres.memused);
 	printf("a done\n");
 
 	// initialize main() variables
@@ -328,7 +340,7 @@ int main(int argc, char **argv)
 	wins.diskmap.win = newpad(24, MAXCOLS);
 	wins.filesys.win = newpad(MAXROWS, MAXCOLS);
 	wins.kernel.win = newpad(5, MAXCOLS);
-	wins.memory.win = newpad(20, MAXCOLS);
+	wins.memory.win = newpad(5, MAXCOLS);
 	wins.memlarge.win = newpad(20, MAXCOLS);
 	wins.memvirtual.win = newpad(20, MAXCOLS);
 	wins.neterrors.win = newpad(MAXROWS, MAXCOLS);
@@ -365,7 +377,8 @@ int main(int argc, char **argv)
 			processcount = 0;
 			//
 			// TODO: should use the hash map instead of constantly freeing/allocing
-			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu);
+			// TODO: there is a memory leak somewhere in the folling line
+			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres.memused);
 
 			// data changes are pending gui update
 			pendingdata = true;
@@ -412,7 +425,7 @@ int main(int argc, char **argv)
 			uikernel(&wins.kernel.win, &x, COLS, LINES);
 		}
 		if (wins.memory.visible) {
-			uimemory(&wins.memory.win, &x, COLS, LINES);
+			uimemory(&wins.memory.win, &x, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
 		}
 		if (wins.memlarge.visible) {
 			uimemlarge(&wins.memlarge.win, &x, COLS, LINES);

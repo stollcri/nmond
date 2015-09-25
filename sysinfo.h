@@ -183,6 +183,8 @@ struct sysres {
 	double loadavg1;
 	double loadavg5;
 	double loadavg15;
+
+	unsigned long long memused;
 };
 #define SYSRES_INIT { 0, 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
 
@@ -230,7 +232,7 @@ struct sysproc {
 	double percentage;
 };
 
-extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double);
+extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double, unsigned long long*);
 /*
 extern struct sysproc getsysprocinfobypid(int, size_t);
 extern struct sysproc getsysprocinfobypgrp(int, size_t);

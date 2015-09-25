@@ -4,19 +4,22 @@
 - Work-in-progress builds
 
 ## v0.2 -- MVP
-- ☐ APP: Make [GUI portion of] the program run without /proc files
+- ✓ APP: Make [GUI portion of] the program run without /proc files
 	- ✓ Remove code for specail cases (IFDEFs)
-	- ☐ Get data from sysctl and other low-level C calls
+	- ✓ Get data from sysctl and other low-level C calls
 	- ✓ Pull out UI elements
 	- ✓ Streamline main()
-- ☐ APP: Create long output for: cpu, mem, disk, net
+- ☐ APP: Create long output for:
+	- ✓ cpu
+	- ☐ mem
+	- ☐ disk
+	- ☐ net
 - ☐ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
 	- ☐ Improve spacing
 		- ✓ CPU Load
 		- ✓ CPU Long-Term
 		- ✓ Top [processes]
-		- ☐ 
-	- ☐ Improve header line
+	- ✓ Improve header line
 		- ✓ Remove version number
 		- ✓ Remove blinking "H for help" (prehaps replace with alert messages)
 		- ✓ Move hostname over and change wording
@@ -45,7 +48,7 @@
 	- ☐      I -- Info B
 	- ☐ k => k -- Kernel Stats
 	- ☐ L      -- (removed: large memory)
-	- ☐ m => m -- Memory & Swap
+	- ✓ m => m -- Memory & Swap
 	- ☐      M -- Memory & Swap
 	- ☐ n => n -- Network
 	- ☐      N -- Network, long-term

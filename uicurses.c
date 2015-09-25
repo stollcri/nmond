@@ -789,8 +789,54 @@ extern void uikernel(WINDOW **winin, int *xin, int cols, int rows)
 */
 }
 
-extern void uimemory(WINDOW **winin, int *xin, int cols, int rows)
+static void uimemdetail(WINDOW *win, int cpuno, int usecolor, unsigned long long used, unsigned long long total, double percent)
 {
+	mvwprintw(win, 1, 2, "Used:  %7.7s", uireadablebyteslong(used));
+	mvwprintw(win, 2, 2, "Total: %7.7s   %5.2f%%", uireadablebyteslong(total), percent);
+	mvwprintw(win, 2, 27, "|");
+	wmove(win, 2, 28);
+
+	char *metermark = "#";
+	int usedquant = (int)(floor(percent) / 2) - 1;
+	
+	for(int i=28; i<77; ++i){
+		if(((i + 3) % 5) == 0) {
+			metermark = "|";
+		} else {
+			metermark = " ";
+		}
+
+		if(usedquant >= 0) {
+			if(usecolor) {
+				wattrset(win, COLOR_PAIR(10));
+				wprintw(win, metermark);
+			} else {
+				wprintw(win, "#");
+			}
+			--usedquant;
+		} else {
+			wattrset(win, COLOR_PAIR(0));
+			wprintw(win, metermark);
+		}
+	}
+	wattrset(win, COLOR_PAIR(0));
+	mvwprintw(win, 2, 77, "|");
+}
+
+extern void uimemory(WINDOW **win, int *xin, int cols, int rows, int usecolor, unsigned long long memused, unsigned long long memtotal)
+{
+	if (*win == NULL) {
+		return;
+	}
+
+	double percent = (double)((memused / 100.0) / (memtotal / 100.0) * 100);
+	uibanner(*win, cols, "Memory Use");
+	// mvwprintw(*win, 1, 0, "%lld %lld %d", memused, memtotal, percent);
+	mvwprintw(*win, 1, 0, " %d", percent);
+	mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+ 	mvwprintw(*win, 2, 77, "|");
+	uimemdetail(*win, 0, usecolor, memused, memtotal, percent);
+	uidisplay(*win, xin, cols, 3, rows);
 /*
 				proc_read(P_MEMINFO);
 				proc_mem();

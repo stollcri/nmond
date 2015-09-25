@@ -44,8 +44,8 @@
 #include <sys/time.h>
 
 #define APPNAME "nmond"
-#define VERSION "0.1.1"
-#define VERDATE "2015-09-14"
+#define VERSION "0.1.2"
+#define VERDATE "2015-09-24"
 #define APPURL "https://github.com/stollcri/nmond"
 
 // #define BYTES_IN_GB 1073741824
@@ -118,7 +118,7 @@ extern void uidiskgroup(WINDOW**, int*, int, int);
 extern void uidiskmap(WINDOW**, int*, int, int);
 extern void uifilesys(WINDOW**, int*, int, int);
 extern void uikernel(WINDOW**, int*, int, int);
-extern void uimemory(WINDOW**, int*, int, int);
+extern void uimemory(WINDOW**, int*, int, int, int, unsigned long long, unsigned long long);
 extern void uimemlarge(WINDOW**, int*, int, int);
 extern void uimemvirtual(WINDOW**, int*, int, int);
 extern void uineterrors(WINDOW**, int*, int, int);
