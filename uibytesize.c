@@ -68,3 +68,31 @@ char *uireadablebytes(unsigned int bytes)
 	snprintf(result, RESULT_LENGTH, "%3.2f%s", resultnumber, resultsufix);
 	return result;
 }
+
+char *uireadablebyteslong(unsigned long long bytes)
+{
+	char *result = malloc(RESULT_LENGTH);
+	char *resultsufix = NULL;//malloc(2);
+	double resultnumber = 0;
+
+	if(bytes > BYTES_IN_KB) {
+		if(bytes > BYTES_IN_MB) {
+			if(bytes > BYTES_IN_GB) {
+				resultnumber = bytes / BYTES_IN_GB;
+				resultsufix = "GB";
+			} else {
+				resultnumber = bytes / BYTES_IN_MB;
+				resultsufix = "MB";
+			}
+		} else {
+			resultnumber = bytes / BYTES_IN_KB;
+			resultsufix = "KB";
+		}
+	} else {
+		resultnumber = bytes;
+		resultsufix = "  ";
+	}
+
+	snprintf(result, RESULT_LENGTH, "%3.3f%s", resultnumber, resultsufix);
+	return result;
+}

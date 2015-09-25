@@ -44,5 +44,6 @@
 #define BYTES_IN_GB 1073741824.0//1000000000.0
 
 extern char *uireadablebytes(unsigned int);
+extern char *uireadablebyteslong(unsigned long long);
 
 #endif
