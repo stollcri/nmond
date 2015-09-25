@@ -169,9 +169,9 @@ unsigned int intFromSysctlByName(char *name)
 /*
  * Get a 64bit integer from sysctlbyname
  */
-int64_t int64FromSysctlByName(char *name)
+unsigned long long int64FromSysctlByName(char *name)
 {
-	int64_t result = 0;
+	unsigned long long result = 0;
 
 	size_t length = sizeof(result);
 	sysctlbyname(name, &result, &length, NULL, 0);

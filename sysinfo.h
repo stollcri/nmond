@@ -77,7 +77,7 @@ struct syshw { // CTL_HW
 	unsigned int thermallevelgpu; // machdep.xcpm.gpu_thermal_level
 	unsigned int thermallevelio; // machdep.xcpm.io_thermal_level
 
-	int64_t memorysize; // HW_MEMSIZE (total memory, 64bit int)
+	unsigned long long memorysize; // HW_MEMSIZE (total memory, 64bit int)
 
 	char *architecture; // HW_MACHINE_ARCH
 	char *cpuvendor; // machdep.cpu.vendor ("GenuineIntel")
