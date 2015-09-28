@@ -248,18 +248,18 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 	if(getenv("NMONDEBUG") != NULL) {
 		state->debug = true;
 	}
-	/* TODO: this is broken
-	char *envar = getenv("NMON");
-	// NMOND over rides NMON
-	if(getenv("NMOND") != NULL) {
-		envar = getenv("NMOND");
-	}
 
-	char envarstr[16];
-	for (unsigned long i = 0; i < strlen(envar); ++i) {
-		setwinstate(wins, state, envarstr[i]);
+	char *envar = getenv("NMOND");
+	if(envar) {
+		for (int i = 0; i < strlen(envar); ++i) {
+			setwinstate(wins, state, envar[i]);
+		}
+	} else {
+		envar = getenv("NMON");
+		if(envar) {
+			//
+		}
 	}
-	*/
 }
 
 //~~~~~~
