@@ -251,7 +251,7 @@ void getsysresinfo(struct sysres *inres)
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable, double cpupercent, unsigned long long *memused)
+static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable, double cpupercent, struct sysres *res)
 {
 	if(*procsin == NULL) {
 		*procsin = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
@@ -265,6 +265,8 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	int error = 0;
 	struct rusage_info_v3 rusage;
 
+	unsigned int totaldiskr = 0;
+	unsigned int totaldiskw = 0;
 	unsigned long long totalmem = 0;
 
 	unsigned long long total = 0;
@@ -343,6 +345,7 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 			procs[i].stime = rusage.ri_system_time;
 			procs[i].totaltime = rusage.ri_user_time + rusage.ri_system_time;
 			procs[i].idlewakeups = rusage.ri_pkg_idle_wkups;
+
 			procs[i].wiredmem = rusage.ri_wired_size;
 			procs[i].residentmem = rusage.ri_resident_size;
 			procs[i].physicalmem = rusage.ri_phys_footprint;
@@ -360,6 +363,8 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 			// strcpy(timestring, boottimestring);
 			// procs[i].timestring = timestring;
 			
+			totaldiskr += procs[i].diskior;
+			totaldiskw += procs[i].diskiow;
 			totalmem += procs[i].residentmem;
 		} else {
 			// procs[i].name = "";//strerror(errno);
@@ -397,14 +402,30 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	for (int i = 0; i < count; ++i) {
 		procs[i].percentage = (((double)(procs[i].totaltime - procs[i].lasttotaltime) / total) * 100) * cpupercent;
 	}
-	*memused = totalmem;
+
+	if(totaldiskr > res->diskuser) {
+		res->diskuserlast = res->diskuser;
+		res->diskuser = totaldiskr;
+	} else {
+		res->diskuserlast = totaldiskr;
+		res->diskuser = totaldiskr;
+	}
+	if(totaldiskw > res->diskusew) {
+		res->diskusewlast = res->diskusew;
+		res->diskusew = totaldiskw;
+	} else {
+		res->diskusewlast = totaldiskw;
+		res->diskusew = totaldiskw;
+	}
+
+	res->memused = totalmem;
 	**procsin = *procs;
 }
 
 /*
  * Get all process information from sysctl
  */
-static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, unsigned long long *memused)
+static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, struct sysres *res)
 {
 	struct kinfo_proc *processlist = NULL;
 
@@ -443,7 +464,7 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 		// fill the sysproc struct from the returned information
 		if(!error) {
 			processcount = (unsigned int)templength / sizeof(struct kinfo_proc);
-			sysprocfromkinfoproc(processlist, processcount, procs, hashtable, cpupercent, memused);
+			sysprocfromkinfoproc(processlist, processcount, procs, hashtable, cpupercent, res);
 			free(processlist);
 			processlist = NULL;
 			complete = 1;
@@ -459,9 +480,9 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 	*length = (size_t)processcount;
 }
 
-void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, unsigned long long *memused)
+void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, struct sysres *res)
 {
-	getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent, memused);
+	getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent, res);
 }
 
 /*

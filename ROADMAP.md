@@ -37,7 +37,7 @@
 	- ☐ b => b -- black & white mode
 	- ✓ c => c -- CPU Load
 	- ✓ l => C -- CPU Load, long-term
-	- ☐ d => d -- Disk I/O
+	- ✓ d => d -- Disk I/O
 	- ☐      D -- Disk I/O, long-term
 	- ☐ j => f -- Filesystems (JFS)
 	- ☐ N => F -- Filesystems (NFS)

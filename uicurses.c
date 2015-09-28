@@ -403,8 +403,62 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 	uidisplay(*win, xin, cols, 21, rows);
 }
 
-extern void uidisks(WINDOW **winin, int *xin, int cols, int rows)
+static void uidiskdetail(WINDOW *win, int usecolor, unsigned long diskr, unsigned long diskw)
 {
+	mvwprintw(win, 1, 2, "Reads:  %9.9s", uireadablebyteslong(diskr));
+	mvwprintw(win, 2, 2, "Writes: %9.9s", uireadablebyteslong(diskw));
+	mvwprintw(win, 2, 27, "|");
+	wmove(win, 2, 28);
+
+	char *metermark = "#";
+	int readquant = (int)(floor(diskr) / (BYTES_IN_MB * 2)) - 1;
+	int writequant = (int)(floor(diskw) / (BYTES_IN_MB * 2)) - 1;
+	
+	for(int i=28; i<77; ++i){
+		if(((i + 3) % 5) == 0) {
+			metermark = "|";
+		} else {
+			metermark = " ";
+		}
+
+		if(readquant >= 0) {
+			if(usecolor) {
+				wattrset(win, COLOR_PAIR(10));
+				wprintw(win, metermark);
+			} else {
+				wprintw(win, "#");
+			}
+			--readquant;
+		} else {
+			if(writequant >= 0) {
+				if(usecolor) {
+					wattrset(win, COLOR_PAIR(8));
+					wprintw(win, metermark);
+				} else {
+					wprintw(win, "#");
+				}
+				--writequant;
+			} else {
+				wattrset(win, COLOR_PAIR(0));
+				wprintw(win, metermark);
+			}
+		}
+	}
+	wattrset(win, COLOR_PAIR(0));
+	mvwprintw(win, 2, 77, "|");
+}
+
+extern void uidisks(WINDOW **win, int *xin, int cols, int rows, int usecolor, unsigned int diskr, unsigned int diskw)
+{
+	if (*win == NULL) {
+		return;
+	}
+
+	uibanner(*win, cols, "Disk Use");
+	mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+ 	mvwprintw(*win, 2, 77, "|");
+	uidiskdetail(*win, usecolor, diskr, diskw);
+	uidisplay(*win, xin, cols, 3, rows);
 /*
 				if(show_disk) {
 					BANNER(paddisk,"Disk I/O");

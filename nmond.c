@@ -117,6 +117,13 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 			}
 			break;
 		case 'd':
+			if(wins->disks.visible) {
+				wins->disks.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				wins->disks.visible = true;
+				wins->visiblecount += 1;
+			}
 			break;
 		case 'D':
 			break;
@@ -312,7 +319,7 @@ int main(int argc, char **argv)
 	size_t processcount = 0;
 	struct sysproc *thisproc = NULL;
 	struct hashitem *thishash = hashtnew();
-	getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres.memused);
+	getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres);
 	printf("a done\n");
 
 	// initialize main() variables
@@ -335,7 +342,7 @@ int main(int argc, char **argv)
 	wins.help.win = newpad(20, MAXCOLS);
 	wins.cpu.win = newpad((thisres.cpucount+3), MAXCOLS);
 	wins.cpulong.win = newpad(21, MAXCOLS);
-	wins.disks.win = newpad(MAXROWS, MAXCOLS);
+	wins.disks.win = newpad(6, MAXCOLS);
 	wins.diskgroup.win = newpad(MAXROWS, MAXCOLS);
 	wins.diskmap.win = newpad(24, MAXCOLS);
 	wins.filesys.win = newpad(MAXROWS, MAXCOLS);
@@ -378,7 +385,7 @@ int main(int argc, char **argv)
 			//
 			// TODO: should use the hash map instead of constantly freeing/allocing
 			// TODO: there is a memory leak somewhere in the folling line
-			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres.memused);
+			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres);
 
 			// data changes are pending gui update
 			pendingdata = true;
@@ -406,12 +413,14 @@ int main(int argc, char **argv)
 		if (wins.cpu.visible) {
 			uicpu(&wins.cpu.win, &x, COLS, LINES, currentstate.color, thisres, show_raw);
 		}
-
-
-
-		if (wins.disks.visible) {
-			uidisks(&wins.disks.win, &x, COLS, LINES);
+		if (wins.memory.visible) {
+			uimemory(&wins.memory.win, &x, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
 		}
+		if (wins.disks.visible) {
+			uidisks(&wins.disks.win, &x, COLS, LINES, currentstate.color, (thisres.diskuser - thisres.diskuserlast), (thisres.diskusew - thisres.diskusewlast));
+		}
+
+
 		if (wins.diskgroup.visible) {
 			uidiskgroup(&wins.diskgroup.win, &x, COLS, LINES);
 		}
@@ -423,9 +432,6 @@ int main(int argc, char **argv)
 		}
 		if (wins.kernel.visible) {
 			uikernel(&wins.kernel.win, &x, COLS, LINES);
-		}
-		if (wins.memory.visible) {
-			uimemory(&wins.memory.win, &x, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
 		}
 		if (wins.memlarge.visible) {
 			uimemlarge(&wins.memlarge.win, &x, COLS, LINES);
