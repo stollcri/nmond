@@ -136,7 +136,7 @@ void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct 
 	mvwprintw(*win, *xin+16, 3, "  c = CPU               t = Top-processes     - = Reduce refresh delay  ");
 	mvwprintw(*win, *xin+17, 3, "  C = CPU, Long-term    T = Top-procs,command + = Increase refresh delay");
 	mvwprintw(*win, *xin+18, 3, "    =                     =                   ? = Help                  ");
-	mvwprintw(*win, *xin+19, 3, "    =                     =                                             ");
+	mvwprintw(*win, *xin+19, 3, "  m = Memory Usage        =                                             ");
 	mvwprintw(*win, *xin+20, 3, "  i = About this Mac      =                   q = Quit                  ");
 	pnoutrefresh(*win, 0, 0, *xin, 1, rows-2, cols-2);
 	wnoutrefresh(stdscr);
@@ -164,7 +164,7 @@ void uihelp(WINDOW **win, int *xin, int cols, int rows)
 	mvwprintw(*win, 11, 2, "[ i = About This Mac                ][ - = Reduce refresh delay (half)   ]");
 	mvwprintw(*win, 12, 2, "[ I =                               ][ + = Increase refresh delay (2x)   ]");
 	mvwprintw(*win, 13, 2, "[ k =                               ][                                   ]");
-	mvwprintw(*win, 14, 2, "[ m =                               ][ ? = Help                          ]");
+	mvwprintw(*win, 14, 2, "[ m = Memory Usage                  ][ ? = Help                          ]");
 	mvwprintw(*win, 15, 2, "[ M =                               ][                                   ]");
 	mvwprintw(*win, 16, 2, "[ n =                               ][ q = Quit/Exit                     ]");
 	mvwprintw(*win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
@@ -242,7 +242,6 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 			}
 		}
 	}
-	// free(metermark);
 	wattrset(win, COLOR_PAIR(0));
 	mvwprintw(win, row, 77, "|");
 }
@@ -334,9 +333,9 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 		int graphrows = 20;
 		int offset = 6;
 
-		char *metermark = NULL;//malloc(1);
-		char *blankmark = NULL;//malloc(1);
-		char *leadermark = NULL;//malloc(1);
+		char *metermark = NULL;
+		char *blankmark = NULL;
+		char *leadermark = NULL;
 
 		int userquant = (int)(round(thisres.avgpercentuser) / 5);
 		int systquant = (int)(round(thisres.avgpercentsys) / 5);
@@ -391,9 +390,6 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 			wmove(*win, i, *itterin+offset+1);
 			wprintw(*win, leadermark);
 		}
-		// free(metermark);
-		// free(blankmark);
-	// free(leadermark);
 
 		*itterin += 1;
 		if(*itterin > graphcols) {
@@ -843,10 +839,10 @@ extern void uikernel(WINDOW **winin, int *xin, int cols, int rows)
 */
 }
 
-static void uimemdetail(WINDOW *win, int cpuno, int usecolor, unsigned long long used, unsigned long long total, double percent)
+static void uimemdetail(WINDOW *win, int usecolor, unsigned long long used, unsigned long long total, double percent)
 {
-	mvwprintw(win, 1, 2, "Used:  %7.7s", uireadablebyteslong(used));
-	mvwprintw(win, 2, 2, "Total: %7.7s   %5.2f%%", uireadablebyteslong(total), percent);
+	mvwprintw(win, 1, 2, "Total: %9.9s", uireadablebyteslonglong(total));
+	mvwprintw(win, 2, 2, "Used:  %9.9s  %5.2f%%", uireadablebyteslonglong(used), percent);
 	mvwprintw(win, 2, 27, "|");
 	wmove(win, 2, 28);
 
@@ -885,11 +881,9 @@ extern void uimemory(WINDOW **win, int *xin, int cols, int rows, int usecolor, u
 
 	double percent = (double)((memused / 100.0) / (memtotal / 100.0) * 100);
 	uibanner(*win, cols, "Memory Use");
-	// mvwprintw(*win, 1, 0, "%lld %lld %d", memused, memtotal, percent);
-	mvwprintw(*win, 1, 0, " %d", percent);
 	mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
  	mvwprintw(*win, 2, 77, "|");
-	uimemdetail(*win, 0, usecolor, memused, memtotal, percent);
+	uimemdetail(*win, usecolor, memused, memtotal, percent);
 	uidisplay(*win, xin, cols, 3, rows);
 /*
 				proc_read(P_MEMINFO);
@@ -1262,7 +1256,6 @@ static int comparepercentasc(const void *val1, const void *val2)
 	struct sysproc *percent1 = (struct sysproc *)val1;
 	struct sysproc *percent2 = (struct sysproc *)val2;
 
-	// return (int)(percent1->percentage - percent2->percentage);
 	if (percent1->percentage < percent2->percentage) {
 		return -1;
 	} else if (percent1->percentage > percent2->percentage) {
@@ -1315,7 +1308,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 			break;
 	}
 
-	char *statustext = NULL;//malloc(6);
+	char *statustext = NULL;
 	for (int i = 0; i < procstoshow; i++) {
 
 

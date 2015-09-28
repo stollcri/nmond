@@ -15,7 +15,7 @@
 	- ☐ disk
 	- ☐ net
 - ☐ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
-	- ☐ Improve spacing
+	- ✓ Improve spacing
 		- ✓ CPU Load
 		- ✓ CPU Long-Term
 		- ✓ Top [processes]

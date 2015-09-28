@@ -324,11 +324,6 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 		// setlogin() name
 		procs[i].setloginname = processes[i].kp_eproc.e_login;
 
-		// // process path (libproc.h)
-		// char *path = malloc(PROC_PIDPATHINFO_MAXSIZE);
-		// proc_pidpath(procs[i].pid, path, PROC_PIDPATHINFO_MAXSIZE);
-		// procs[i].path = path;
-
 		// TODO: lengthen and remove magic number
 		procs[i].path = processArguments(procs[i].pid, 45);
 		if(procs[i].path == NULL) {
@@ -352,34 +347,22 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 			procs[i].diskior = rusage.ri_diskio_bytesread;
 			procs[i].diskiow = rusage.ri_diskio_byteswritten;
 			procs[i].billedtime = rusage.ri_billed_system_time;
-
-			// now store it as a string for quick printing
-			// char boottimestring[9];
-			// timet = procs[i].totaltime;
-			// ptm = localtime(&timet);
-			// strftime(boottimestring, sizeof(boottimestring), TIME_FORMAT, ptm);
-
-			// char *timestring = malloc(9);
-			// strcpy(timestring, boottimestring);
-			// procs[i].timestring = timestring;
 			
 			totaldiskr += procs[i].diskior;
 			totaldiskw += procs[i].diskiow;
 			totalmem += procs[i].residentmem;
 		} else {
-			// procs[i].name = "";//strerror(errno);
 			procs[i].utime = 0;
 			procs[i].stime = 0;
 			procs[i].totaltime = 0;
-			procs[i].billedtime = 0;
 			procs[i].idlewakeups = 0;
 
 			procs[i].wiredmem = 0;
 			procs[i].residentmem = 0;
 			procs[i].physicalmem = 0;
-
 			procs[i].diskior = 0;
 			procs[i].diskiow = 0;
+			procs[i].billedtime = 0;
 		}
 
 		// TODO: add/update PIDs to hashtable
