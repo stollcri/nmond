@@ -47,9 +47,9 @@ char *uireadablebytes(unsigned int bytes)
 	char *resultsufix = NULL;//malloc(2);
 	double resultnumber = 0;
 
-	if(bytes > BYTES_IN_KB) {
-		if(bytes > BYTES_IN_MB) {
-			if(bytes > BYTES_IN_GB) {
+	if(bytes > BYTES_IN_KB_LIMIT) {
+		if(bytes > BYTES_IN_MB_LIMIT) {
+			if(bytes > BYTES_IN_GB_LIMIT) {
 				resultnumber = bytes / BYTES_IN_GB;
 				resultsufix = "GB";
 			} else {
@@ -75,9 +75,9 @@ char *uireadablebyteslong(unsigned long bytes)
 	char *resultsufix = NULL;//malloc(2);
 	double resultnumber = 0;
 
-	if(bytes > BYTES_IN_KB) {
-		if(bytes > BYTES_IN_MB) {
-			if(bytes > BYTES_IN_GB) {
+	if(bytes > BYTES_IN_KB_LIMIT) {
+		if(bytes > BYTES_IN_MB_LIMIT) {
+			if(bytes > BYTES_IN_GB_LIMIT) {
 				resultnumber = bytes / BYTES_IN_GB;
 				resultsufix = "GB";
 			} else {
@@ -103,9 +103,9 @@ char *uireadablebyteslonglong(unsigned long long bytes)
 	char *resultsufix = NULL;//malloc(2);
 	double resultnumber = 0;
 
-	if(bytes > BYTES_IN_KB) {
-		if(bytes > BYTES_IN_MB) {
-			if(bytes > BYTES_IN_GB) {
+	if(bytes > BYTES_IN_KB_LIMIT) {
+		if(bytes > BYTES_IN_MB_LIMIT) {
+			if(bytes > BYTES_IN_GB_LIMIT) {
 				resultnumber = bytes / BYTES_IN_GB;
 				resultsufix = "GB";
 			} else {

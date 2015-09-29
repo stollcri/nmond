@@ -43,6 +43,10 @@
 #define BYTES_IN_MB 1048576.0//1000000.0
 #define BYTES_IN_GB 1073741824.0//1000000000.0
 
+#define BYTES_IN_KB_LIMIT 1000.0
+#define BYTES_IN_MB_LIMIT 1000000.0
+#define BYTES_IN_GB_LIMIT 1000000000.0
+
 extern char *uireadablebytes(unsigned int);
 extern char *uireadablebyteslong(unsigned long);
 extern char *uireadablebyteslonglong(unsigned long long);
