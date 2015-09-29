@@ -41,15 +41,6 @@
 #include <string.h>
 #include "uibytesize.h"
 
-static inline double bytestogb(int inbytes)
-{
-	return (double)inbytes / BYTES_IN_GB;
-}
-static inline double bytestogb64(int64_t inbytes)
-{
-	return (double)inbytes / BYTES_IN_GB;
-}
-
 static inline void uibanner(WINDOW *win, int cols, char *string)
 {
 	mvwhline(win, 0, 0, ACS_HLINE, (cols - 2));
@@ -1244,7 +1235,7 @@ void uisys(WINDOW **win, int *xin, int cols, int rows, struct syshw hw, struct s
 	mvwprintw(*win, 3, 2, "%s", kern.version);
 	mvwprintw(*win, 4, 2, "OS Release: %s / OS Version: %s", kern.osrelease, kern.osversion);
 	mvwprintw(*win, 5, 2, "CPUs: %d (%d cores, %d physical, %d logical)", hw.cpucount, kern.corecount, hw.physicalcpucount, hw.logicalcpucount);
-	mvwprintw(*win, 6, 2, "Memory: %4.2f GB (%4.2f GB non-kernel in use)", bytestogb64(hw.memorysize), bytestogb(hw.usermemory));
+	mvwprintw(*win, 6, 2, "Memory: %9.9s, %9.9s non-kernel in use", uireadablebyteslong(hw.memorysize), uireadablebyteslong(hw.usermemory));
 	
 	mvwprintw(*win, 8, 2, "Domain   : %s", kern.domainname);
 	mvwprintw(*win, 9, 2, "Booted   : %s", kern.boottimestring);
@@ -1336,8 +1327,8 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 					procs[i].pid,
 					procs[i].name,
 					procs[i].percentage,
-					uireadablebytes(procs[i].residentmem),
-					uireadablebytes(procs[i].physicalmem),
+					uireadablebyteslonglong(procs[i].residentmem),
+					uireadablebyteslonglong(procs[i].physicalmem),
 					procs[i].realusername,
 					procs[i].pgid,
 					procs[i].parentpid,
@@ -1353,7 +1344,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 				mvwprintw(*win, (i + 2), 1, "%-6d %4.1f %9.9s %9.9s %-45.45s", 
 					procs[i].pid,
 					procs[i].percentage,
-					uireadablebytes(procs[i].residentmem),
+					uireadablebyteslonglong(procs[i].residentmem),
 					procs[i].realusername,
 					procs[i].path
 					);
