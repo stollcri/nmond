@@ -257,7 +257,22 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 	} else {
 		envar = getenv("NMON");
 		if(envar) {
-			//
+			for (int i = 0; i < strlen(envar); ++i) {
+				switch(envar[i]) {
+					case 'l':
+						setwinstate(wins, state, 'C');
+						break;
+					case 'r':
+						setwinstate(wins, state, 'i');
+						break;
+					case 'u':
+						setwinstate(wins, state, 'T');
+						break;
+					default:
+						setwinstate(wins, state, envar[i]);
+						break;
+				}
+			}
 		}
 	}
 }
