@@ -34,7 +34,7 @@
 - ☐ APP: restructure command options (lower-case for horizontal graph, upper-case for vertical graph)
 	- ☐      a -- All-in-one display (cpu long + disk + mem + net)
 	- ☐      A -- All-in-one raw data display
-	- ☐ b => b -- black & white mode
+	- ✓ b => b -- black & white mode
 	- ✓ c => c -- CPU Load
 	- ✓ l => C -- CPU Load, long-term
 	- ✓ d => d -- Disk I/O
