@@ -251,13 +251,13 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 	char *envar = getenv("NMOND");
 	if(envar) {
-		for (int i = 0; i < strlen(envar); ++i) {
+		for (int i = 0; i < (int)strlen(envar); ++i) {
 			setwinstate(wins, state, envar[i]);
 		}
 	} else {
 		envar = getenv("NMON");
 		if(envar) {
-			for (int i = 0; i < strlen(envar); ++i) {
+			for (int i = 0; i < (int)strlen(envar); ++i) {
 				switch(envar[i]) {
 					case 'l':
 						setwinstate(wins, state, 'C');
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
 	int	flash_on = 0;
 	int	show_raw = 0;
 	int x;
-	int y;
+	// int y;
 
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
@@ -404,7 +404,7 @@ int main(int argc, char **argv)
 	for(;;) {
 		// Reset the cursor position to top left
 		x = 0;
-		y = 0;
+		// y = 0;
 
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
@@ -453,7 +453,7 @@ int main(int argc, char **argv)
 			uimemory(&wins.memory.win, &x, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
 		}
 		if (wins.disks.visible) {
-			uidisks(&wins.disks.win, &x, COLS, LINES, currentstate.color, (thisres.diskuser - thisres.diskuserlast), (thisres.diskusew - thisres.diskusewlast));
+			uidisks(&wins.disks.win, &x, COLS, LINES, currentstate.color, (unsigned int)(thisres.diskuser - thisres.diskuserlast), (unsigned int)(thisres.diskusew - thisres.diskusewlast));
 		}
 
 
@@ -496,7 +496,7 @@ int main(int argc, char **argv)
 			}
 		}
 		if (wins.top.visible) {
-			uitop(&wins.top.win, &x, COLS, LINES, thisproc, processcount, currentstate.topmode, pendingdata, currentstate.user);
+			uitop(&wins.top.win, &x, COLS, LINES, thisproc, (int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 		}
 		if (wins.warn.visible) {
 			uiwarn(&wins.warn.win, &x, COLS, LINES);

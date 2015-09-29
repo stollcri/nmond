@@ -1251,19 +1251,19 @@ void uisys(WINDOW **win, int *xin, int cols, int rows, struct syshw hw, struct s
 	uidisplay(*win, xin, cols, 10, rows);
 }
 
-static int comparepercentasc(const void *val1, const void *val2)
-{
-	struct sysproc *percent1 = (struct sysproc *)val1;
-	struct sysproc *percent2 = (struct sysproc *)val2;
+// static int comparepercentasc(const void *val1, const void *val2)
+// {
+// 	struct sysproc *percent1 = (struct sysproc *)val1;
+// 	struct sysproc *percent2 = (struct sysproc *)val2;
 
-	if (percent1->percentage < percent2->percentage) {
-		return -1;
-	} else if (percent1->percentage > percent2->percentage) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
+// 	if (percent1->percentage < percent2->percentage) {
+// 		return -1;
+// 	} else if (percent1->percentage > percent2->percentage) {
+// 		return 1;
+// 	} else {
+// 		return 0;
+// 	}
+// }
 
 static int comparepercentdes(const void *val1, const void *val2)
 {
@@ -1296,7 +1296,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 	// TODO: this is not working???
 	uibanner(*win, cols, "Top Processes");
 	if(updateddata) {
-		heapsort(procs, processcount, sizeof(struct sysproc), comparepercentdes);
+		heapsort(procs, (size_t)processcount, sizeof(struct sysproc), comparepercentdes);
 	}
 
 	switch(topmode) {

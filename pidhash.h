@@ -52,7 +52,7 @@ struct hashitem {
 	unsigned long long value;
 };
 
-extern struct hashitem *hashtnew();
+extern struct hashitem *hashtnew(void);
 extern void hashtadd(struct hashitem*, int, unsigned long long);
 extern void hashtset(struct hashitem*, int, unsigned long long);
 extern unsigned long long hashtget(struct hashitem*, int);

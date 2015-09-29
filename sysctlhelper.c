@@ -229,12 +229,12 @@ char *processArguments(int pid, int sizelimit)
 			// TODO: merge loops together
 			// 
 			int argcount = 0;
-			int argstarts[1024];
+			static int argstarts[1024];
 			int argstart = 0;
-			int argsizes[1024];
+			static int argsizes[1024];
 			int argsize = -1;
 			int skipcount = 0;
-			for(int i = 0; i < templength; ++i) {
+			for(int i = 0; i < (int)templength; ++i) {
 				if(arglist[i] == '\0') {
 
 					if(arglist[i-1] == '\0') {
@@ -274,9 +274,9 @@ char *processArguments(int pid, int sizelimit)
 			char currentchar = 0;
 
 			int stringpos = 0;
-			result = malloc(resultlen + 1);
+			result = malloc((unsigned int)resultlen + 1);
 
-			for(int i = 0; i < (resultoffset + resultlen - 1); ++i) {
+			for(int i = 0; i < (int)(resultoffset + resultlen - 1); ++i) {
 				currentchar = arglist[currentargpos];
 
 				if(i >= resultoffset) {

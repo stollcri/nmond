@@ -124,7 +124,7 @@ unsigned long long hashtget(struct hashitem *hashtable, int key)
 			}
 		}
 		if(hitem->key != key) {
-			return -1;
+			return -1U;
 		}
 	}
 

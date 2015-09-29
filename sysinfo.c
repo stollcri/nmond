@@ -367,7 +367,7 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 		// TODO: add/update PIDs to hashtable
 		oldtotaltime = hashtget(*hashtable, procs[i].pid);
-		if(oldtotaltime == -1) {
+		if(oldtotaltime == -1U) {
 			hashtadd(*hashtable, procs[i].pid, procs[i].totaltime);
 			procs[i].lasttotaltime = procs[i].totaltime;
 		} else {

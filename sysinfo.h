@@ -190,7 +190,7 @@ struct sysres {
 	unsigned long diskusewlast;
 	unsigned long long memused;
 };
-#define SYSRES_INIT { 0, 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }
+#define SYSRES_INIT { 0, 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0 }
 
 extern void getsysresinfo(struct sysres *);
 
@@ -221,18 +221,18 @@ struct sysproc {
 
 	char *path;
 	
-	unsigned int utime;
-	unsigned int stime;
-	unsigned int totaltime;
-	unsigned int idlewakeups;
-	unsigned int wiredmem;
-	unsigned int residentmem;
-	unsigned int physicalmem;
-	unsigned int diskior;
-	unsigned int diskiow;
-	unsigned int billedtime;
+	unsigned long long utime;
+	unsigned long long stime;
+	unsigned long long totaltime;
+	unsigned long long idlewakeups;
+	unsigned long long wiredmem;
+	unsigned long long residentmem;
+	unsigned long long physicalmem;
+	unsigned long long diskior;
+	unsigned long long diskiow;
+	unsigned long long billedtime;
 
-	unsigned int lasttotaltime;
+	unsigned long long lasttotaltime;
 	double percentage;
 };
 
