@@ -98,21 +98,22 @@ void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(2));
 	}
-	mvwprintw(*win, *xin+1, 1, "                                         __");
-	mvwprintw(*win, *xin+2, 1, "    ____   ____ ___   ____   ____   ____/ /");
-	mvwprintw(*win, *xin+3, 1, "   / __ \\ / __ `__ \\ / __ \\ / __ \\ / __  / ");
-	mvwprintw(*win, *xin+4, 1, "  / / / // / / / / // /_/ // / / // /_/ /  ");
-	mvwprintw(*win, *xin+5, 1, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
-	mvwprintw(*win, *xin+6, 1, "=======================================    ");
+	mvwprintw(*win, *xin+0, 18, "                                         __");
+	mvwprintw(*win, *xin+1, 18, "    ____   ____ ___   ____   ____   ____/ /");
+	mvwprintw(*win, *xin+2, 18, "   / __ \\ / __ `__ \\ / __ \\ / __ \\ / __  / ");
+	mvwprintw(*win, *xin+3, 18, "  / / / // / / / / // /_/ // / / // /_/ /  ");
+	mvwprintw(*win, *xin+4, 18, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
+	mvwprintw(*win, *xin+5, 18, "=======================================    ");
+	// mvwprintw(*win, *xin+5, 18, "================================/nmond/    ");
+	// mvwprintw(*win, *xin+5, 18, "-------------------------------[nmond]-    ");
 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	mvwprintw(*win, *xin+1, 45, "For help type H or ...");
-	mvwprintw(*win, *xin+2, 45, " nmond -?  - hint");
-	mvwprintw(*win, *xin+3, 45, " nmond -h  - full");
-	mvwprintw(*win, *xin+5, 45, "To start the same way every time");
-	mvwprintw(*win, *xin+6, 45, " set the NMOND shell variable");
+	// mvwprintw(*win, *xin+1, 45, "For help type H or ...");
+	// mvwprintw(*win, *xin+2, 45, " nmond -?  - hint");
+	// mvwprintw(*win, *xin+3, 45, " nmond -h  - full");
+
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(1));
 	}
@@ -123,12 +124,13 @@ void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	mvwprintw(*win, *xin+15, 3, "Use these keys to toggle statistics on/off:");
-	mvwprintw(*win, *xin+16, 3, "  c = CPU               t = Top-processes     - = Reduce refresh delay  ");
-	mvwprintw(*win, *xin+17, 3, "  C = CPU, Long-term    T = Top-procs,command + = Increase refresh delay");
-	mvwprintw(*win, *xin+18, 3, "    =                     =                   ? = Help                  ");
-	mvwprintw(*win, *xin+19, 3, "  m = Memory Usage        =                                             ");
-	mvwprintw(*win, *xin+20, 3, "  i = About this Mac      =                   q = Quit                  ");
+	mvwprintw(*win, *xin+13, 2, "Use these keys to toggle statistics on/off:");
+	mvwprintw(*win, *xin+14, 2, "  c = CPU                t = Top-processes      - = Reduce refresh delay  ");
+	mvwprintw(*win, *xin+15, 2, "  C = CPU, Long-term     T = Top-procs,command  + = Increase refresh delay");
+	mvwprintw(*win, *xin+16, 2, "  d = Disk Usage                                ? = Help                  ");
+	mvwprintw(*win, *xin+17, 2, "  i = About this Mac                                                      ");
+	mvwprintw(*win, *xin+18, 2, "  m = Memory Usage                              q = Quit                  ");
+	mvwprintw(*win, *xin+20, 1, "To start the same way every time set the NMOND variable: 'export NMOND=cdmT'");
 	pnoutrefresh(*win, 0, 0, *xin, 1, rows-2, cols-2);
 	wnoutrefresh(stdscr);
 	
