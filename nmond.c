@@ -175,34 +175,56 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 		case 'q':
 			exitapp();
 			//break;
-		case 't':
-			if(state->topmode == TOP_MODE_B) {
-				state->topmode = TOP_MODE_A;
+		case 'r':
+			if(state->topmode == TOP_MODE_C) {
+				state->topmode = TOP_MODE_NONE;
+				wins->top.visible = false;
+				wins->visiblecount -= 1;
 			} else {
-				if(wins->top.visible) {
-					state->topmode = TOP_MODE_NONE;
-					wins->top.visible = false;
-					wins->visiblecount -= 1;
-				} else {
-					state->topmode = TOP_MODE_A;
+				if(!wins->top.visible) {
 					wins->top.visible = true;
 					wins->visiblecount += 1;
 				}
+				state->topmode = TOP_MODE_C;
+			}
+			break;
+		case 'R':
+			if(state->topmode == TOP_MODE_D) {
+				state->topmode = TOP_MODE_NONE;
+				wins->top.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				if(!wins->top.visible) {
+					wins->top.visible = true;
+					wins->visiblecount += 1;
+				}
+				state->topmode = TOP_MODE_D;
+			}
+			break;
+		case 't':
+			if(state->topmode == TOP_MODE_A) {
+				state->topmode = TOP_MODE_NONE;
+				wins->top.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				if(!wins->top.visible) {
+					wins->top.visible = true;
+					wins->visiblecount += 1;
+				}
+				state->topmode = TOP_MODE_A;
 			}
 			break;
 		case 'T':
-			if(state->topmode == TOP_MODE_A) {
-				state->topmode = TOP_MODE_B;
+			if(state->topmode == TOP_MODE_B) {
+				state->topmode = TOP_MODE_NONE;
+				wins->top.visible = false;
+				wins->visiblecount -= 1;
 			} else {
-				if(wins->top.visible) {
-					state->topmode = TOP_MODE_NONE;
-					wins->top.visible = false;
-					wins->visiblecount -= 1;
-				} else {
-					state->topmode = TOP_MODE_B;
+				if(!wins->top.visible) {
 					wins->top.visible = true;
 					wins->visiblecount += 1;
 				}
+				state->topmode = TOP_MODE_B;
 			}
 			break;
 		case 'v':

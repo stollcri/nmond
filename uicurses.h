@@ -54,6 +54,8 @@
 #define TOP_MODE_NONE 0
 #define TOP_MODE_A 1
 #define TOP_MODE_B 2
+#define TOP_MODE_C 3
+#define TOP_MODE_D 4
 
 #define MSG_WRN_NOT_SHOWN "Warning: Some Statistics may not shown"
 

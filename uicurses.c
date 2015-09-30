@@ -125,10 +125,10 @@ void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct 
 		wattrset(*win, COLOR_PAIR(0));
 	}
 	mvwprintw(*win, *xin+13, 2, "Use these keys to toggle statistics on/off:");
-	mvwprintw(*win, *xin+14, 2, "  c = CPU                t = Top-processes      - = Reduce refresh delay  ");
-	mvwprintw(*win, *xin+15, 2, "  C = CPU, Long-term     T = Top-procs,command  + = Increase refresh delay");
-	mvwprintw(*win, *xin+16, 2, "  d = Disk Usage                                ? = Help                  ");
-	mvwprintw(*win, *xin+17, 2, "  i = About this Mac                                                      ");
+	mvwprintw(*win, *xin+14, 2, "  c = CPU               r = Top-procs,mem-sort  - = Reduce refresh delay  ");
+	mvwprintw(*win, *xin+15, 2, "  C = CPU, Long-term    R = Top-procs/cmnd,mem  + = Increase refresh delay");
+	mvwprintw(*win, *xin+16, 2, "  d = Disk Usage        t = Top-processes       ? = Help                  ");
+	mvwprintw(*win, *xin+17, 2, "  i = About this Mac    T = Top-procs/command                             ");
 	mvwprintw(*win, *xin+18, 2, "  m = Memory Usage                              q = Quit                  ");
 	mvwprintw(*win, *xin+20, 1, "To start the same way every time set the NMOND variable: 'export NMOND=cdmT'");
 	pnoutrefresh(*win, 0, 0, *xin, 1, rows-2, cols-2);
@@ -146,12 +146,12 @@ void uihelp(WINDOW **win, int *xin, int cols, int rows)
 	uibanner(*win, cols, "HELP");
 	mvwprintw(*win,  1, 2, "[ a =                               ][ N =                               ]");
 	mvwprintw(*win,  2, 2, "[ b = Black & White mode            ][ o =                               ]");
-	mvwprintw(*win,  3, 2, "[ c = CPU Load                      ][ t = Top Processes                 ]");
-	mvwprintw(*win,  4, 2, "[ C = CPU Load, long-term           ][ T = Top Processes, show command   ]");
-	mvwprintw(*win,  5, 2, "[ d =                               ][ v =                               ]");
-	mvwprintw(*win,  6, 2, "[ D =                               ][ w =                               ]");
-	mvwprintw(*win,  7, 2, "[ f =                               ][                                   ]");
-	mvwprintw(*win,  8, 2, "[ F =                               ][                                   ]");
+	mvwprintw(*win,  3, 2, "[ c = CPU Load                      ][ r = Top Processes, order by mem   ]");
+	mvwprintw(*win,  4, 2, "[ C = CPU Load, long-term           ][ R = Top Processes, command by mem ]");
+	mvwprintw(*win,  5, 2, "[ d =                               ][ t = Top Processes, order by proc  ]");
+	mvwprintw(*win,  6, 2, "[ D =                               ][ T = Top Processes, command by prc ]");
+	mvwprintw(*win,  7, 2, "[ f =                               ][ v =                               ]");
+	mvwprintw(*win,  8, 2, "[ F =                               ][ w =                               ]");
 	mvwprintw(*win,  9, 2, "[ h = Help                          ][                                   ]");
 	mvwprintw(*win, 10, 2, "[ H = Help                          ][                                   ]");
 	mvwprintw(*win, 11, 2, "[ i = About This Mac                ][ - = Reduce refresh delay (half)   ]");
@@ -1272,6 +1272,20 @@ static int comparepercentdes(const void *val1, const void *val2)
 	}
 }
 
+static int compareresmemdes(const void *val1, const void *val2)
+{
+	struct sysproc *percent1 = (struct sysproc *)val1;
+	struct sysproc *percent2 = (struct sysproc *)val2;
+
+	if (percent1->residentmem > percent2->residentmem) {
+		return -1;
+	} else if (percent1->residentmem < percent2->residentmem) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, int processcount, int topmode, bool updateddata, char *user)
 {
 	if (*win == NULL) {
@@ -1289,14 +1303,25 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 	// TODO: this is not working???
 	uibanner(*win, cols, "Top Processes");
 	if(updateddata) {
-		heapsort(procs, (size_t)processcount, sizeof(struct sysproc), comparepercentdes);
+		switch(topmode) {
+			case TOP_MODE_A:
+			case TOP_MODE_B:
+				heapsort(procs, (size_t)processcount, sizeof(struct sysproc), comparepercentdes);
+				break;
+			case TOP_MODE_C:
+			case TOP_MODE_D:
+				heapsort(procs, (size_t)processcount, sizeof(struct sysproc), compareresmemdes);
+				break;
+		}
 	}
 
 	switch(topmode) {
 		case TOP_MODE_A:
+		case TOP_MODE_C:
 			mvwprintw(*win, 1, 1, "ID     NAME             %%CPU     MEM      PHYS      USER   PGRP   PPID  STATE");
 			break;
 		case TOP_MODE_B:
+		case TOP_MODE_D:
 			mvwprintw(*win, 1, 1, "PID    %%CPU   RESSIZE    USER   COMMAND                                      ");
 			break;
 	}
@@ -1325,6 +1350,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 
 		switch(topmode) {
 			case TOP_MODE_A:
+			case TOP_MODE_C:
 				mvwprintw(*win, (i + 2), 1, "%-6d %-16.16s %4.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
 					procs[i].pid,
 					procs[i].name,
@@ -1343,6 +1369,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 				wattroff(*win, A_BOLD);
 				break;
 			case TOP_MODE_B:
+			case TOP_MODE_D:
 				mvwprintw(*win, (i + 2), 1, "%-6d %4.1f %9.9s %9.9s %-45.45s", 
 					procs[i].pid,
 					procs[i].percentage,
