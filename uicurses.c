@@ -396,6 +396,13 @@ static void uidiskdetail(WINDOW *win, int usecolor, unsigned long diskr, unsigne
 {
 	mvwprintw(win, 1, 2, "Reads:  %9.9s", uireadablebyteslong(diskr));
 	mvwprintw(win, 2, 2, "Writes: %9.9s", uireadablebyteslong(diskw));
+	if(usecolor) {
+		wattrset(win, COLOR_PAIR(4));
+		mvwprintw(win, 1, 10, "%9.9s", uireadablebyteslong(diskr));
+		wattrset(win, COLOR_PAIR(1));
+		mvwprintw(win, 2, 10, "%9.9s", uireadablebyteslong(diskw));
+		wattrset(win, COLOR_PAIR(0));
+	}
 	mvwprintw(win, 2, 27, "|");
 	wmove(win, 2, 28);
 
@@ -836,6 +843,11 @@ static void uimemdetail(WINDOW *win, int usecolor, unsigned long long used, unsi
 {
 	mvwprintw(win, 1, 2, "Total: %9.9s", uireadablebyteslonglong(total));
 	mvwprintw(win, 2, 2, "Used:  %9.9s  %5.2f%%", uireadablebyteslonglong(used), percent);
+	if(usecolor) {
+		wattrset(win, COLOR_PAIR(4));
+		mvwprintw(win, 2, 20, "%5.2f%%", percent);
+		wattrset(win, COLOR_PAIR(0));
+	}
 	mvwprintw(win, 2, 27, "|");
 	wmove(win, 2, 28);
 
