@@ -518,7 +518,7 @@ int main(int argc, char **argv)
 			}
 		}
 		if (wins.top.visible) {
-			uitop(&wins.top.win, &x, COLS, LINES, thisproc, (int)processcount, currentstate.topmode, pendingdata, currentstate.user);
+			uitop(&wins.top.win, &x, COLS, LINES, currentstate.color, thisproc, (int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 		}
 		if (wins.warn.visible) {
 			uiwarn(&wins.warn.win, &x, COLS, LINES);

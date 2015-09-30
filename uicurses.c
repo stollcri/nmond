@@ -1298,7 +1298,7 @@ static int compareresmemdes(const void *val1, const void *val2)
 	}
 }
 
-void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, int processcount, int topmode, bool updateddata, char *user)
+void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysproc *procs, int processcount, int topmode, bool updateddata, char *user)
 {
 	if (*win == NULL) {
 		return;
@@ -1339,6 +1339,11 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 	}
 
 	char *statustext = NULL;
+	char *tmppath = NULL;
+	int tmppathlen = 0;
+	int appnamebegin = 0;
+	int appnameend = 0;
+	bool appnamefound = false;
 	for (int i = 0; i < procstoshow; i++) {
 
 
@@ -1347,7 +1352,13 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 				statustext = "IDLE";
 				break;
 			case SRUN:
-				statustext = "RUN";
+				if(procs[i].percentage > 0) {
+					statustext = "RUN";
+				} else {
+					// I made up this classification, I think
+					// technically running, but not using any CPU
+					statustext = "LAZE"; // lāze, or as I prefer laz-e
+				}
 				break;
 			case SSLEEP:
 				statustext = "SLEEP";
@@ -1376,9 +1387,9 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 					);
 				if(!strcmp(user, procs[i].realusername)) {
 					wattron(*win, A_BOLD);
+					mvwprintw(*win, (i + 2), 50, "%9.9s", procs[i].realusername);
+					wattroff(*win, A_BOLD);
 				}
-				mvwprintw(*win, (i + 2), 50, "%9.9s", procs[i].realusername);
-				wattroff(*win, A_BOLD);
 				break;
 			case TOP_MODE_B:
 			case TOP_MODE_D:
@@ -1391,9 +1402,38 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, struct sysproc *procs, in
 					);
 				if(!strcmp(user, procs[i].realusername)) {
 					wattron(*win, A_BOLD);
+					mvwprintw(*win, (i + 2), 23, "%9.9s", procs[i].realusername);
+					wattroff(*win, A_BOLD);
 				}
-				mvwprintw(*win, (i + 2), 23, "%9.9s", procs[i].realusername);
-				wattroff(*win, A_BOLD);
+				if(usecolor) {
+					tmppath = procs[i].path;
+					tmppathlen = strlen(tmppath);
+					appnamebegin = 0;
+					appnameend = tmppathlen;
+					appnamefound = false;
+					for(int j = tmppathlen; j > 0; --j) {
+						if(tmppath[j] == ' ') {
+							appnameend = j;
+							appnamebegin = 0;
+							appnamefound = false;
+						} else if(tmppath[j] == '/') {
+							if(!appnamefound) {
+								appnamebegin = j + 1;
+								appnamefound = true;
+							}
+						}
+					}
+
+					wattrset(*win, COLOR_PAIR(5));
+					for(int j = appnamebegin; j < appnameend; ++j) {
+						mvwprintw(*win, (i + 2), (33 + j), "%c", tmppath[j]);
+					}
+					wattrset(*win, COLOR_PAIR(6));
+					for(int j = appnameend; j < tmppathlen; ++j) {
+						mvwprintw(*win, (i + 2), (33 + j), "%c", tmppath[j]);
+					} 
+					wattrset(*win, COLOR_PAIR(0));
+				}
 				break;
 		}
 	}
