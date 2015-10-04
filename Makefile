@@ -47,6 +47,7 @@ analysis:
 	scan-build -o tst/out -v -V make debug
 
 run:
+	# bin/nmond noarg1 noarg2 2> errors.txt
 	bin/nmond noarg1 noarg2
 
 clean:
