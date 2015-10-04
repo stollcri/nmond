@@ -305,52 +305,6 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 int main(int argc, char **argv)
 {
-	// struct syshw tmphw = SYSHW_INIT;
-	// getsyshwinfo(&tmphw);
-	// printf("%lld\n", tmphw.memorysize);
-	// 
-	// 
-	// struct sysres tmpres = SYSRES_INIT;
-	// getsysresinfo(&tmpres);
-	// size_t tmpproccnt = 0;
-	// struct sysproc **tmprpoc = NULL;
-	// struct hashitem *tmphash = hashtnew();
-	// printf("0 ... %8x \n", (unsigned int)tmprpoc);
-	// tmprpoc = getsysprocinfoall(&tmpproccnt, tmprpoc, &tmphash, tmpres.percentallcpu, &tmpres);
-	// printf("  ... %8x \n", (unsigned int)tmprpoc);
-	// printf("1 ... \n");
-	// sleep(1);
-	// getsysprocinfoall(&tmpproccnt, tmprpoc, &tmphash, tmpres.percentallcpu, &tmpres);
-	// printf("2 ... \n");
-	
-	// sleep(1);
-	// getsysprocinfoall(&tmpproccnt, &tmprpoc, &tmphash, tmpres.percentallcpu, &tmpres);
-	// printf("3 ... \n");
-	// sleep(1);
-	// getsysprocinfoall(&tmpproccnt, &tmprpoc, &tmphash, tmpres.percentallcpu, &tmpres);
-	// printf("4 ... \n");
-	// sleep(1);
-	// getsysprocinfoall(&tmpproccnt, &tmprpoc, &tmphash, tmpres.percentallcpu, &tmpres);
-	// printf("5 ... \n");
-	// 
-	// cbreak();
-	// timeout(20);
-	// int inp = 0;
-	// for(;;)  {
-	// 	getsysprocinfoall(&tmpproccnt, &tmprpoc, &tmphash, tmpres.percentallcpu, &tmpres);
-	// 	for(int i = 0; i < 2000; ++i){
-	// 		//
-	// 	}
-	// }
-	// 
-	// struct uiwins tmpwins = UIWINS_INIT;
-	// struct nmondstate tmpcurrentstate = NMONDSTATE_INIT;
-	// processenvars(&tmpwins, &tmpcurrentstate);
-	// 
-	// exitapp();
-
-
-
 	// first thing, prepare to be interupted
 	setinterupthandlers();
 
