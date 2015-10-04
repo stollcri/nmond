@@ -349,10 +349,9 @@ int main(int argc, char **argv)
 	struct sysres thisres = SYSRES_INIT;
 	getsysresinfo(&thisres);
 	size_t processcount = 0;
-	struct sysproc *thisproc = NULL;
+	struct sysproc **thisproc = NULL;
 	struct hashitem *thishash = hashtnew();
-	getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres);
-	printf("a done\n");
+	thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
 
 	// initialize main() variables
 	char hostname[22];
@@ -417,7 +416,7 @@ int main(int argc, char **argv)
 			//
 			// TODO: should use the hash map instead of constantly freeing/allocing
 			// TODO: there is a memory leak somewhere in the folling line
-			getsysprocinfoall(&processcount, &thisproc, &thishash, thisres.percentallcpu, &thisres);
+			thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
 
 			// data changes are pending gui update
 			pendingdata = true;

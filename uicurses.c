@@ -1272,12 +1272,12 @@ void uisys(WINDOW **win, int *xin, int cols, int rows, struct syshw hw, struct s
 
 static int comparepercentdes(const void *val1, const void *val2)
 {
-	struct sysproc *percent1 = (struct sysproc *)val1;
-	struct sysproc *percent2 = (struct sysproc *)val2;
+	struct sysproc **percent1 = (struct sysproc **)val1;
+	struct sysproc **percent2 = (struct sysproc **)val2;
 
-	if (percent1->percentage > percent2->percentage) {
+	if ((*percent1)->percentage > (*percent2)->percentage) {
 		return -1;
-	} else if (percent1->percentage < percent2->percentage) {
+	} else if ((*percent1)->percentage < (*percent2)->percentage) {
 		return 1;
 	} else {
 		return 0;
@@ -1286,21 +1286,25 @@ static int comparepercentdes(const void *val1, const void *val2)
 
 static int compareresmemdes(const void *val1, const void *val2)
 {
-	struct sysproc *percent1 = (struct sysproc *)val1;
-	struct sysproc *percent2 = (struct sysproc *)val2;
+	struct sysproc **percent1 = (struct sysproc **)val1;
+	struct sysproc **percent2 = (struct sysproc **)val2;
 
-	if (percent1->residentmem > percent2->residentmem) {
+	if ((*percent1)->residentmem > (*percent2)->residentmem) {
 		return -1;
-	} else if (percent1->residentmem < percent2->residentmem) {
+	} else if ((*percent1)->residentmem < (*percent2)->residentmem) {
 		return 1;
 	} else {
 		return 0;
 	}
 }
 
-void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysproc *procs, int processcount, int topmode, bool updateddata, char *user)
+void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysproc **procs, int processcount, int topmode, bool updateddata, char *user)
 {
 	if (*win == NULL) {
+		return;
+	}
+
+	if(!procs){
 		return;
 	}
 
@@ -1318,13 +1322,15 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 		switch(topmode) {
 			case TOP_MODE_A:
 			case TOP_MODE_B:
-				heapsort(procs, (size_t)processcount, sizeof(struct sysproc), comparepercentdes);
+				heapsort(procs, (size_t)processcount, sizeof(struct sysproc *), comparepercentdes);
 				break;
 			case TOP_MODE_C:
 			case TOP_MODE_D:
-				heapsort(procs, (size_t)processcount, sizeof(struct sysproc), compareresmemdes);
+				heapsort(procs, (size_t)processcount, sizeof(struct sysproc *), compareresmemdes);
 				break;
 		}
+
+		fprintf(stderr, " \n");
 	}
 
 	switch(topmode) {
@@ -1339,25 +1345,27 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 	}
 
 	char *statustext = NULL;
+	char *rmem = NULL;
+	char *pmem = NULL;
+
 	char *tmppath = NULL;
 	int tmppathlen = 0;
 	int appnamebegin = 0;
 	int appnameend = 0;
 	bool appnamefound = false;
+
 	for (int i = 0; i < procstoshow; i++) {
-
-
-		switch(procs[i].status){
+		switch(procs[i]->status){
 			case SIDL:
 				statustext = "IDLE";
 				break;
 			case SRUN:
-				if(procs[i].percentage > 0) {
+				if(procs[i]->percentage > 0) {
 					statustext = "RUN";
 				} else {
 					// I made up this classification, I think
 					// technically running, but not using any CPU
-					statustext = "LAZE"; // lāze, or as I prefer laz-e
+					statustext = "ZZZ"; // lāze, or as I prefer laz-e
 				}
 				break;
 			case SSLEEP:
@@ -1374,39 +1382,47 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 		switch(topmode) {
 			case TOP_MODE_A:
 			case TOP_MODE_C:
+				rmem = uireadablebyteslonglong(procs[i]->residentmem);
+				pmem = uireadablebyteslonglong(procs[i]->physicalmem);
 				mvwprintw(*win, (i + 2), 1, "%-6d %-16.16s %4.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
-					procs[i].pid,
-					procs[i].name,
-					procs[i].percentage,
-					uireadablebyteslonglong(procs[i].residentmem),
-					uireadablebyteslonglong(procs[i].physicalmem),
-					procs[i].realusername,
-					procs[i].pgid,
-					procs[i].parentpid,
+					procs[i]->pid,
+					procs[i]->name,
+					procs[i]->percentage,
+					rmem,
+					pmem,
+					procs[i]->realusername,
+					procs[i]->pgid,
+					procs[i]->parentpid,
 					statustext
 					);
-				if(!strcmp(user, procs[i].realusername)) {
+				free(rmem);
+				free(pmem);
+
+				if(!strcmp(user, procs[i]->realusername)) {
 					wattron(*win, A_BOLD);
-					mvwprintw(*win, (i + 2), 50, "%9.9s", procs[i].realusername);
+					mvwprintw(*win, (i + 2), 50, "%9.9s", procs[i]->realusername);
 					wattroff(*win, A_BOLD);
 				}
 				break;
 			case TOP_MODE_B:
 			case TOP_MODE_D:
+				rmem = uireadablebyteslonglong(procs[i]->residentmem);
 				mvwprintw(*win, (i + 2), 1, "%-6d %4.1f %9.9s %9.9s %-45.45s", 
-					procs[i].pid,
-					procs[i].percentage,
-					uireadablebyteslonglong(procs[i].residentmem),
-					procs[i].realusername,
-					procs[i].path
+					procs[i]->pid,
+					procs[i]->percentage,
+					rmem,
+					procs[i]->realusername,
+					procs[i]->path
 					);
-				if(!strcmp(user, procs[i].realusername)) {
+				if(!strcmp(user, procs[i]->realusername)) {
 					wattron(*win, A_BOLD);
-					mvwprintw(*win, (i + 2), 23, "%9.9s", procs[i].realusername);
+					mvwprintw(*win, (i + 2), 23, "%9.9s", procs[i]->realusername);
 					wattroff(*win, A_BOLD);
 				}
+				free(rmem);
+				
 				if(usecolor) {
-					tmppath = procs[i].path;
+					tmppath = procs[i]->path;
 					tmppathlen = strlen(tmppath);
 					appnamebegin = 0;
 					appnameend = tmppathlen;

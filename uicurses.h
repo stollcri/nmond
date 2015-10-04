@@ -44,8 +44,8 @@
 #include <sys/time.h>
 
 #define APPNAME "nmond"
-#define VERSION "0.1.4"
-#define VERDATE "2015-09-29"
+#define VERSION "0.1.5"
+#define VERDATE "2015-10-04"
 #define APPURL "https://github.com/stollcri/nmond"
 
 #define MAXROWS 256
@@ -113,7 +113,7 @@ extern void uimemvirtual(WINDOW**, int*, int, int);
 extern void uineterrors(WINDOW**, int*, int, int);
 extern void uinetfilesys(WINDOW**, int*, int, int);
 extern void uinetwork(WINDOW**, int*, int, int);
-extern void uitop(WINDOW**, int*, int, int, int, struct sysproc*, int, int, bool, char*);
+extern void uitop(WINDOW**, int*, int, int, int, struct sysproc**, int, int, bool, char*);
 extern void uisys(WINDOW**, int*, int, int, struct syshw, struct syskern);
 extern void uiwarn(WINDOW**, int*, int, int);
 

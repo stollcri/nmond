@@ -251,16 +251,18 @@ void getsysresinfo(struct sysres *inres)
 /*
  * Convert kinfo_proc data structure into a simple sysproc data structure
  */
-static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable, double cpupercent, struct sysres *res)
+static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct sysproc **procsin, struct hashitem **hashtable, double cpupercent, struct sysres *res)
 {
-	if(*procsin == NULL) {
-		*procsin = (struct sysproc *)malloc(sizeof(struct sysproc) * (size_t)count);
+	// struct sysproc **procsin;
+	if(procsin == NULL) {
+		procsin = (struct sysproc **)malloc(sizeof(struct sysproc*) * (size_t)count);
 	} else {
-		struct sysproc *procsold = *procsin;
-		*procsin = (struct sysproc *)realloc(procsold, sizeof(struct sysproc) * (size_t)count);
+		struct sysproc **procsold = procsin;
+		procsin = (struct sysproc **)realloc(procsold, sizeof(struct sysproc*) * (size_t)count);
+		if(!procsin) {
+			// TODO: handle error and memory leak
+		}
 	}
-	// TODO: clean this up
-	struct sysproc *procs = *procsin;
 
 	int error = 0;
 	struct rusage_info_v3 rusage;
@@ -271,121 +273,121 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 
 	unsigned long long total = 0;
 	unsigned long long oldtotal = 0;
-	unsigned long long oldtotaltime = 0;
-
-	time_t timet = 0;
-	struct tm *ptm = NULL;
-	// char boottimestring[8];
-
+	
+	struct sysproc *procinfo = NULL;
 	for (int i = 0; i < count; ++i) {
+		procinfo = (struct sysproc *)hashtget(*hashtable, processes[i].kp_proc.p_pid);
+		if(!procinfo) {
+			procinfo = (struct sysproc *)calloc(sizeof(struct sysproc), 1);
+			hashtadd(*hashtable, processes[i].kp_proc.p_pid, procinfo);
+		}
+
 		//
 		// sysctl.h > proc.h
 		// 
 		// S* process status
-		procs[i].status = processes[i].kp_proc.p_stat;
+		procinfo->status = processes[i].kp_proc.p_stat;
 		// Process identifier.
-		procs[i].pid = processes[i].kp_proc.p_pid;
+		procinfo->pid = processes[i].kp_proc.p_pid;
 		// Real time
-		procs[i].realtime = processes[i].kp_proc.p_rtime;
+		procinfo->realtime = processes[i].kp_proc.p_rtime;
 		// // CPU ticks
-		// procs[i].cticks = processes[i].kp_proc.p_cpticks;
+		// procinfo->cticks = processes[i].kp_proc.p_cpticks;
 		// // User ticks
-		// procs[i].uticks = processes[i].kp_proc.p_uticks;
+		// procinfo->uticks = processes[i].kp_proc.p_uticks;
 		// // System ticks
-		// procs[i].sticks = processes[i].kp_proc.p_sticks;
+		// procinfo->sticks = processes[i].kp_proc.p_sticks;
 		// // Interupt ticks
-		// procs[i].iticks = processes[i].kp_proc.p_iticks;
+		// procinfo->iticks = processes[i].kp_proc.p_iticks;
 		// Process priority.
-		procs[i].priority = processes[i].kp_proc.p_priority;
+		procinfo->priority = processes[i].kp_proc.p_priority;
 		// "nice" value
-		procs[i].nice = processes[i].kp_proc.p_nice;
+		procinfo->nice = processes[i].kp_proc.p_nice;
 		// Process name
-		procs[i].name = processes[i].kp_proc.p_comm;
+		procinfo->name = processes[i].kp_proc.p_comm;
 
 		//
 		// sysctl.h
 		// 
 		// process credentials, real user id
-		procs[i].realuid = processes[i].kp_eproc.e_pcred.p_ruid;
+		procinfo->realuid = processes[i].kp_eproc.e_pcred.p_ruid;
 		// real username
-		struct passwd *realuser = getpwuid(procs[i].realuid);
-		procs[i].realusername = realuser->pw_name;
+		struct passwd *realuser = getpwuid(procinfo->realuid);
+		procinfo->realusername = realuser->pw_name;
 		// current credentials, effective user id
-		procs[i].effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
+		procinfo->effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
 		// effectiver user, name
 		struct passwd *effectiveuser = getpwuid(processes[i].kp_eproc.e_ucred.cr_uid);
-		procs[i].effectiveusername = effectiveuser->pw_name;
+		procinfo->effectiveusername = effectiveuser->pw_name;
 		// parent process id
-		procs[i].parentpid = processes[i].kp_eproc.e_ppid;
+		procinfo->parentpid = processes[i].kp_eproc.e_ppid;
 		// Process group identifier.
-		procs[i].pgid = processes[i].kp_eproc.e_pgid;
+		procinfo->pgid = processes[i].kp_eproc.e_pgid;
 		// controlling tty dev
-		procs[i].ttydev = processes[i].kp_eproc.e_tdev;
+		procinfo->ttydev = processes[i].kp_eproc.e_tdev;
 		// setlogin() name
-		procs[i].setloginname = processes[i].kp_eproc.e_login;
+		procinfo->setloginname = processes[i].kp_eproc.e_login;
 
 		// TODO: lengthen and remove magic number
-		procs[i].path = processArguments(procs[i].pid, 45);
-		if(procs[i].path == NULL) {
-			procs[i].path = procs[i].name;
+		procinfo->path = processArguments(procinfo->pid, 45);
+		if(procinfo->path == NULL) {
+			procinfo->path = procinfo->name;
 		}
 
+		procinfo->lasttotaltime = procinfo->totaltime;
+
 		// get additional info not available from sysctl
-		error = proc_pid_rusage(procs[i].pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
+		error = proc_pid_rusage(procinfo->pid, RUSAGE_INFO_V3, (rusage_info_t *)&rusage);
 		if(!error) {
 			//
 			// resource.h
 			// 
-			procs[i].utime = rusage.ri_user_time;
-			procs[i].stime = rusage.ri_system_time;
-			procs[i].totaltime = rusage.ri_user_time + rusage.ri_system_time;
-			procs[i].idlewakeups = rusage.ri_pkg_idle_wkups;
+			procinfo->utime = rusage.ri_user_time;
+			procinfo->stime = rusage.ri_system_time;
+			procinfo->totaltime = rusage.ri_user_time + rusage.ri_system_time;
+			procinfo->idlewakeups = rusage.ri_pkg_idle_wkups;
 
-			procs[i].wiredmem = rusage.ri_wired_size;
-			procs[i].residentmem = rusage.ri_resident_size;
-			procs[i].physicalmem = rusage.ri_phys_footprint;
-			procs[i].diskior = rusage.ri_diskio_bytesread;
-			procs[i].diskiow = rusage.ri_diskio_byteswritten;
-			procs[i].billedtime = rusage.ri_billed_system_time;
+			procinfo->wiredmem = rusage.ri_wired_size;
+			procinfo->residentmem = rusage.ri_resident_size;
+			procinfo->physicalmem = rusage.ri_phys_footprint;
+			procinfo->diskior = rusage.ri_diskio_bytesread;
+			procinfo->diskiow = rusage.ri_diskio_byteswritten;
+			procinfo->billedtime = rusage.ri_billed_system_time;
 			
-			totaldiskr += procs[i].diskior;
-			totaldiskw += procs[i].diskiow;
-			totalmem += procs[i].residentmem;
+			totaldiskr += procinfo->diskior;
+			totaldiskw += procinfo->diskiow;
+			totalmem += procinfo->residentmem;
 		} else {
-			procs[i].utime = 0;
-			procs[i].stime = 0;
-			procs[i].totaltime = 0;
-			procs[i].idlewakeups = 0;
+			procinfo->utime = 0;
+			procinfo->stime = 0;
+			procinfo->totaltime = 0;
+			procinfo->idlewakeups = 0;
 
-			procs[i].wiredmem = 0;
-			procs[i].residentmem = 0;
-			procs[i].physicalmem = 0;
-			procs[i].diskior = 0;
-			procs[i].diskiow = 0;
-			procs[i].billedtime = 0;
+			procinfo->wiredmem = 0;
+			procinfo->residentmem = 0;
+			procinfo->physicalmem = 0;
+			procinfo->diskior = 0;
+			procinfo->diskiow = 0;
+			procinfo->billedtime = 0;
 		}
-
-		// TODO: add/update PIDs to hashtable
-		oldtotaltime = hashtget(*hashtable, procs[i].pid);
-		if(oldtotaltime == -1U) {
-			hashtadd(*hashtable, procs[i].pid, procs[i].totaltime);
-			procs[i].lasttotaltime = procs[i].totaltime;
-		} else {
-			hashtset(*hashtable, procs[i].pid, procs[i].totaltime);
-			procs[i].lasttotaltime = oldtotaltime;
+		
+		if(procinfo->totaltime && !procinfo->lasttotaltime) {
+			procinfo->lasttotaltime = procinfo->totaltime;
 		}
 
 		oldtotal = total;
-		total += (procs[i].totaltime - procs[i].lasttotaltime);
+		total += (procinfo->totaltime - procinfo->lasttotaltime);
 		if(total < oldtotal) {
 			// TODO: handle integer overflows
 		}
+
+		procsin[i] = procinfo;
 	}
 
 	for (int i = 0; i < count; ++i) {
-		procs[i].percentage = (((double)(procs[i].totaltime - procs[i].lasttotaltime) / total) * 100) * cpupercent;
+		procsin[i]->percentage = (((double)(procsin[i]->totaltime - procsin[i]->lasttotaltime) / total) * 100) * cpupercent;
 	}
-
+	
 	if(totaldiskr > res->diskuser) {
 		res->diskuserlast = res->diskuser;
 		res->diskuser = totaldiskr;
@@ -402,14 +404,16 @@ static void sysprocfromkinfoproc(struct kinfo_proc *processes, int count, struct
 	}
 
 	res->memused = totalmem;
-	**procsin = *procs;
+
+	return procsin;
 }
 
 /*
  * Get all process information from sysctl
  */
-static void getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, struct sysres *res)
+static struct sysproc **getsysprocinfo(int processinfotype, int criteria, size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, struct sysres *res)
 {
+	struct sysproc **result = NULL;
 	struct kinfo_proc *processlist = NULL;
 
 	int mib[4];
@@ -447,7 +451,7 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 		// fill the sysproc struct from the returned information
 		if(!error) {
 			processcount = (unsigned int)templength / sizeof(struct kinfo_proc);
-			sysprocfromkinfoproc(processlist, processcount, procs, hashtable, cpupercent, res);
+			result = sysprocfromkinfoproc(processlist, processcount, procs, hashtable, cpupercent, res);
 			free(processlist);
 			processlist = NULL;
 			complete = 1;
@@ -461,11 +465,12 @@ static void getsysprocinfo(int processinfotype, int criteria, size_t *length, st
 		}
 	}
 	*length = (size_t)processcount;
+	return result;
 }
 
-void getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, struct sysres *res)
+struct sysproc **getsysprocinfoall(size_t *length, struct sysproc **procs, struct hashitem **hashtable, double cpupercent, struct sysres *res)
 {
-	getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent, res);
+	return getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent, res);
 }
 
 /*

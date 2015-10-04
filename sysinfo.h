@@ -201,7 +201,7 @@ extern void getsysresinfo(struct sysres *);
 struct sysproc {
 	char status;
 	int pid;
-	struct	timeval realtime;
+	struct timeval realtime;
 	// int cticks;
 	// unsigned long long uticks;
 	// unsigned long long sticks;
@@ -235,8 +235,13 @@ struct sysproc {
 	unsigned long long lasttotaltime;
 	double percentage;
 };
+// #define SYSPROC_INIT { ' ', 0, 0, 0, ' ', ' ', \
+// 0, 0, 0, 0, 0, 0, 0, 0, \
+// 0, \
+// 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
+// 0, 0.0 }
 
-extern void getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double, struct sysres*);
+extern struct sysproc **getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double, struct sysres*);
 /*
 extern struct sysproc getsysprocinfobypid(int, size_t);
 extern struct sysproc getsysprocinfobypgrp(int, size_t);

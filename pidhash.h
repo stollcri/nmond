@@ -46,15 +46,15 @@
 #define HASH_TABLE_SIZE_X100 100000
 
 struct hashitem {
-	struct hashitem *next;
-	int keyhash;
 	int key;
-	unsigned long long value;
+	int keyhash;
+	void *valoc;
+	struct hashitem *next;
 };
 
 extern struct hashitem *hashtnew(void);
-extern void hashtadd(struct hashitem*, int, unsigned long long);
-extern void hashtset(struct hashitem*, int, unsigned long long);
-extern unsigned long long hashtget(struct hashitem*, int);
+extern void hashtadd(struct hashitem*, int, void*);
+extern void hashtset(struct hashitem*, int, void*);
+extern void *hashtget(struct hashitem*, int);
 
 #endif

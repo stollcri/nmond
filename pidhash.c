@@ -64,18 +64,16 @@ static int hash(int value)
 
 struct hashitem *hashtnew()
 {
-	// static struct hashitem *hashtab[HASH_TABLE_SIZE];
-	// return hashtab;
 	return (struct hashitem *)calloc(sizeof(struct hashitem), HASH_TABLE_SIZE);
 }
 
-void hashtadd(struct hashitem *hashtable, int key, unsigned long long value)
+void hashtadd(struct hashitem *hashtable, int key, void *valoc)
 {
 	struct hashitem *thishashitem = (struct hashitem *)malloc(sizeof(struct hashitem));
 	thishashitem->next = NULL;
 	thishashitem->keyhash = hash(key);
 	thishashitem->key = key;
-	thishashitem->value = value;
+	thishashitem->valoc = valoc;
 
 	struct hashitem *hitem = &hashtable[thishashitem->keyhash];
 	// go to the last linked list item
@@ -83,7 +81,7 @@ void hashtadd(struct hashitem *hashtable, int key, unsigned long long value)
 		hitem = hitem->next;
 	}
 	// this linked list item is already assigned
-	if(hitem->value) {
+	if(hitem->valoc) {
 		hitem->next = thishashitem;
 	// the head of the linked list
 	} else {
@@ -91,7 +89,7 @@ void hashtadd(struct hashitem *hashtable, int key, unsigned long long value)
 	}
 }
 
-void hashtset(struct hashitem *hashtable, int key, unsigned long long value)
+void hashtset(struct hashitem *hashtable, int key, void *valoc)
 {
 	int keyhash = hash(key);
 
@@ -100,18 +98,18 @@ void hashtset(struct hashitem *hashtable, int key, unsigned long long value)
 		while(hitem->next) {
 			hitem = hitem->next;
 			if(hitem->key == key) {
-				hitem->value = value;
+				hitem->valoc = valoc;
 				break;
 			}
 		}
 		// automatically jump to add it when not found
-		hashtadd(hashtable, key, value);
+		hashtadd(hashtable, key, valoc);
 	} else {
-		hitem->value = value;
+		hitem->valoc = valoc;
 	}
 }
 
-unsigned long long hashtget(struct hashitem *hashtable, int key)
+void *hashtget(struct hashitem *hashtable, int key)
 {
 	int keyhash = hash(key);
 
@@ -124,9 +122,8 @@ unsigned long long hashtget(struct hashitem *hashtable, int key)
 			}
 		}
 		if(hitem->key != key) {
-			return -1U;
+			return NULL;
 		}
 	}
-
-	return hitem->value;
+	return hitem->valoc;
 }
