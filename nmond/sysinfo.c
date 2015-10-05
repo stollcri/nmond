@@ -78,29 +78,19 @@ void getsyshwinfo(struct syshw *hw)
 	hw->thermallevelgpu = intFromSysctlByName("machdep.xcpm.gpu_thermal_level");
 	hw->thermallevelio = intFromSysctlByName("machdep.xcpm.io_thermal_level");
 
-	if (hw->architecture != NULL) {
-        free(hw->architecture);
-    }
+	free(hw->architecture);
 	hw->architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
 	
-	if (hw->cpuvendor != NULL) {
-        free(hw->cpuvendor);
-    }
+	free(hw->cpuvendor);
 	hw->cpuvendor = stringFromSysctlByName("machdep.cpu.vendor");
 
-	if (hw->cpubrand != NULL) {
-        free(hw->cpubrand);
-    }
+	free(hw->cpubrand);
 	hw->cpubrand = stringFromSysctlByName("machdep.cpu.brand_string");
 
-	if (hw->machine != NULL) {
-        free(hw->machine);
-    }
+	free(hw->machine);
 	hw->machine = stringFromSysctl(CTL_HW, HW_MACHINE);
 
-	if (hw->model != NULL) {
-        free(hw->model);
-    }
+	free(hw->model);
 	hw->model = stringFromSysctl(CTL_HW, HW_MODEL);
 
 	if(hw->logicalcpucount > hw->physicalcpucount) {
@@ -136,39 +126,25 @@ void getsyskerninfo(struct syskern *kern)
 
 	kern->corecount = intFromSysctlByName("machdep.cpu.core_count");
 
-    if (kern->ostype != NULL) {
-        free(kern->ostype);
-    }
+    free(kern->ostype);
 	kern->ostype = stringFromSysctl(CTL_KERN, KERN_OSTYPE);
     
-    if (kern->osrelease != NULL) {
-        free(kern->osrelease);
-    }
+    free(kern->osrelease);
     kern->osrelease = stringFromSysctl(CTL_KERN, KERN_OSRELEASE);
     
-    if (kern->osversion != NULL) {
-        free(kern->osversion);
-    }
+    free(kern->osversion);
     kern->osversion = stringFromSysctl(CTL_KERN, KERN_OSVERSION);
     
-    if (kern->version != NULL) {
-        free(kern->version);
-    }
+    free(kern->version);
     kern->version = stringFromSysctl(CTL_KERN, KERN_VERSION);
     
-    if (kern->bootfile != NULL) {
-        free(kern->bootfile);
-    }
+    free(kern->bootfile);
     kern->bootfile = stringFromSysctl(CTL_KERN, KERN_BOOTFILE);
     
-    if (kern->hostname != NULL) {
-        free(kern->hostname);
-    }
+    free(kern->hostname);
     kern->hostname = stringFromSysctl(CTL_KERN, KERN_HOSTNAME);
     
-    if (kern->domainname != NULL) {
-        free(kern->domainname);
-    }
+    free(kern->domainname);
     kern->domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
 
 	kern->boottime = timevalFromSysctl(CTL_KERN, KERN_BOOTTIME);
