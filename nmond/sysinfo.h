@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include "pidhash.h"
 
-#define STR_INIT "-"
+#define STR_INIT NULL
 #define DATE_FORMAT "%Y-%m-%d"
 #define TIME_FORMAT "%H:%M:%S"
 #define DATE_TIME_FORMAT "%Y-%m-%d %H:%M:%S"

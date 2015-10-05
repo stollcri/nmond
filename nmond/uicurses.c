@@ -394,15 +394,31 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 
 static void uidiskdetail(WINDOW *win, int usecolor, unsigned long diskr, unsigned long diskw)
 {
-	mvwprintw(win, 1, 2, "Reads:  %9.9s", uireadablebyteslong(diskr));
-	mvwprintw(win, 2, 2, "Writes: %9.9s", uireadablebyteslong(diskw));
+	char *bytestring = NULL;
+
+	bytestring = uireadablebyteslong(diskr);
+	mvwprintw(win, 1, 2, "Reads:  %9.9s", bytestring);
+	free(bytestring);
+	bytestring = NULL;
+	bytestring = uireadablebyteslong(diskw);
+	mvwprintw(win, 2, 2, "Writes: %9.9s", bytestring);
+	free(bytestring);
+	bytestring = NULL;
+
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
-		mvwprintw(win, 1, 10, "%9.9s", uireadablebyteslong(diskr));
+		bytestring = uireadablebyteslong(diskr);
+		mvwprintw(win, 1, 10, "%9.9s", bytestring);
+		free(bytestring);
+		bytestring = NULL;
 		wattrset(win, COLOR_PAIR(1));
-		mvwprintw(win, 2, 10, "%9.9s", uireadablebyteslong(diskw));
+        bytestring = uireadablebyteslong(diskw);
+		mvwprintw(win, 2, 10, "%9.9s", bytestring);
+		free(bytestring);
+		bytestring = NULL;
 		wattrset(win, COLOR_PAIR(0));
 	}
+
 	mvwprintw(win, 2, 27, "|");
 	wmove(win, 2, 28);
 
@@ -841,8 +857,17 @@ extern void uikernel(WINDOW **winin, int *xin, int cols, int rows)
 
 static void uimemdetail(WINDOW *win, int usecolor, unsigned long long used, unsigned long long total, double percent)
 {
-	mvwprintw(win, 1, 2, "Total: %9.9s", uireadablebyteslonglong(total));
-	mvwprintw(win, 2, 2, "Used:  %9.9s  %5.2f%%", uireadablebyteslonglong(used), percent);
+	char *bytestring = NULL;
+
+	bytestring = uireadablebyteslonglong(total);
+	mvwprintw(win, 1, 2, "Total: %9.9s", bytestring);
+	free(bytestring);
+	bytestring = NULL;
+	bytestring = uireadablebyteslonglong(used);
+	mvwprintw(win, 2, 2, "Used:  %9.9s  %5.2f%%", bytestring, percent);
+	free(bytestring);
+	bytestring = NULL;
+
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
 		mvwprintw(win, 2, 20, "%5.2f%%", percent);
@@ -1243,13 +1268,18 @@ void uisys(WINDOW **win, int *xin, int cols, int rows, struct syshw hw, struct s
 		return;
 	}
 
+	char *bytestringa = uireadablebyteslong(hw.memorysize);
+	char *bytestringb = uireadablebyteslong(hw.usermemory);
+
 	uibanner(*win, cols, "About This Mac");
 	mvwprintw(*win, 1, 2, "%s", hw.model);
 	mvwprintw(*win, 2, 2, "%s %s", hw.cpuvendor, hw.cpubrand);
 	mvwprintw(*win, 3, 2, "%s", kern.version);
 	mvwprintw(*win, 4, 2, "OS Release: %s / OS Version: %s", kern.osrelease, kern.osversion);
 	mvwprintw(*win, 5, 2, "CPUs: %d (%d cores, %d physical, %d logical)", hw.cpucount, kern.corecount, hw.physicalcpucount, hw.logicalcpucount);
-	mvwprintw(*win, 6, 2, "Memory: %9.9s, %9.9s non-kernel in use", uireadablebyteslong(hw.memorysize), uireadablebyteslong(hw.usermemory));
+	mvwprintw(*win, 6, 2, "Memory: %9.9s, %9.9s non-kernel in use", bytestringa, bytestringb);
+	free(bytestringa);
+	free(bytestringb);
 	
 	mvwprintw(*win, 8, 2, "Domain   : %s", kern.domainname);
 	mvwprintw(*win, 9, 2, "Booted   : %s", kern.boottimestring);
