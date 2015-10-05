@@ -72,8 +72,8 @@ void uiheader(int *xin, int usecolor, int blinkon, char *hostname, char *message
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvprintw(*xin, 2, APPNAME);
-	mvprintw(*xin, 10, "%s", hostname);
+	mvprintw(*xin, 3, APPNAME);
+	mvprintw(*xin, 11, "%s", hostname);
 	if(blinkon) {
 		if(strlen(message)) {
 			attrset(COLOR_PAIR(8));
@@ -1382,7 +1382,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 			case TOP_MODE_C:
 				rmem = uireadablebyteslonglong(procs[i]->residentmem);
 				pmem = uireadablebyteslonglong(procs[i]->physicalmem);
-				mvwprintw(*win, (i + 2), 1, "%-6d %-16.16s %4.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
+				mvwprintw(*win, (i + 2), 1, "%-6d %-16.16s%5.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
 					procs[i]->pid,
 					procs[i]->name,
 					procs[i]->percentage,
@@ -1405,7 +1405,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 			case TOP_MODE_B:
 			case TOP_MODE_D:
 				rmem = uireadablebyteslonglong(procs[i]->residentmem);
-				mvwprintw(*win, (i + 2), 1, "%-6d %4.1f %9.9s %9.9s %-45.45s", 
+				mvwprintw(*win, (i + 2), 1, "%-6d%5.1f %9.9s %9.9s %-45.45s", 
 					procs[i]->pid,
 					procs[i]->percentage,
 					rmem,
