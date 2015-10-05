@@ -373,20 +373,20 @@ int main(int argc, char **argv)
 	wins.help.win = newpad(20, MAXCOLS);
 	wins.cpu.win = newpad((thisres.cpucount+3), MAXCOLS);
 	wins.cpulong.win = newpad(21, MAXCOLS);
-	wins.disks.win = newpad(6, MAXCOLS);
-	wins.diskgroup.win = newpad(MAXROWS, MAXCOLS);
-	wins.diskmap.win = newpad(24, MAXCOLS);
-	wins.filesys.win = newpad(MAXROWS, MAXCOLS);
-	wins.kernel.win = newpad(5, MAXCOLS);
-	wins.memory.win = newpad(5, MAXCOLS);
-	wins.memlarge.win = newpad(20, MAXCOLS);
-	wins.memvirtual.win = newpad(20, MAXCOLS);
-	wins.neterrors.win = newpad(MAXROWS, MAXCOLS);
-	wins.netfilesys.win = newpad(25, MAXCOLS);
-	wins.network.win = newpad(MAXROWS, MAXCOLS);
-	wins.top.win = newpad(MAXROWS, (MAXCOLS * 2));
+	wins.disks.win = newpad(3, MAXCOLS);
+	// wins.diskgroup.win = newpad(MAXROWS, MAXCOLS);
+	// wins.diskmap.win = newpad(24, MAXCOLS);
+	// wins.filesys.win = newpad(MAXROWS, MAXCOLS);
+	// wins.kernel.win = newpad(5, MAXCOLS);
+	wins.memory.win = newpad(3, MAXCOLS);
+	// wins.memlarge.win = newpad(20, MAXCOLS);
+	// wins.memvirtual.win = newpad(20, MAXCOLS);
+	// wins.neterrors.win = newpad(MAXROWS, MAXCOLS);
+	// wins.netfilesys.win = newpad(25, MAXCOLS);
+	// wins.network.win = newpad(MAXROWS, MAXCOLS);
+	wins.top.win = newpad(MAXROWS, MAXCOLS);
 	wins.sys.win = newpad(10, MAXCOLS);
-	wins.warn.win = newpad(8, MAXCOLS);
+	// wins.warn.win = newpad(8, MAXCOLS);
 
 	// change settings based upon environment variables
 	processenvars(&wins, &currentstate);
@@ -491,6 +491,7 @@ int main(int argc, char **argv)
 			}
 		}
 		if (wins.top.visible) {
+			// wclear(wins.top.win);
 			uitop(&wins.top.win, &x, COLS, LINES, currentstate.color, thisproc, (int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 		}
 		if (wins.warn.visible) {
