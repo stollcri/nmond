@@ -1451,7 +1451,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 				
 				if(usecolor) {
 					tmppath = procs[i]->path;
-					tmppathlen = strlen(tmppath);
+					tmppathlen = (int)strlen(tmppath);
 					appnamebegin = 0;
 					appnameend = tmppathlen;
 					appnamefound = false;
