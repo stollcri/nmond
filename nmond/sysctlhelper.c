@@ -301,8 +301,8 @@ char *processArguments(int pid, int sizelimit)
 				result[stringpos] = '\0';
 			}
 		}
+		free(arglist);
 	}
-	free(arglist);
 
 	return result;
 }

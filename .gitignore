@@ -1,9 +1,7 @@
 .DS_Store
 notes.md
 
-dbg
-inc/Apple/xnu
-bin/nmond.dSYM
-tst/out/20*
-
-NOTES.md
+nmond/dbg
+nmond/inc/Apple/xnu
+nmond/bin/nmond.dSYM
+nmond/tst/out/20*

@@ -335,7 +335,9 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 		procinfo->setloginname = processes[i].kp_eproc.e_login;
 
 		// TODO: lengthen and remove magic number
-		procinfo->path = processArguments(procinfo->pid, 45);
+		// procinfo->path = processArguments(procinfo->pid, 45);
+		// TODO: reassign to the same memory lcoation
+		// processArguments(procinfo->pid, 45, &procinfo->path);
 		if(procinfo->path == NULL) {
 			procinfo->path = procinfo->name;
 		}
