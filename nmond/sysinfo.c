@@ -285,6 +285,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 		procinfo = (struct sysproc *)hashtget(*hashtable, processes[i].kp_proc.p_pid);
 		if(!procinfo) {
 			procinfo = (struct sysproc *)calloc(sizeof(struct sysproc), 1);
+			procinfo->path = malloc(SYSPROC_PATH_LENGTH + 1);
 			hashtadd(*hashtable, processes[i].kp_proc.p_pid, procinfo);
 		}
 
@@ -334,10 +335,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 		// setlogin() name
 		procinfo->setloginname = processes[i].kp_eproc.e_login;
 
-		// TODO: lengthen and remove magic number
-		// procinfo->path = processArguments(procinfo->pid, 45);
-		// TODO: reassign to the same memory lcoation
-		// processArguments(procinfo->pid, 45, &procinfo->path);
+		processArguments(procinfo->pid, SYSPROC_PATH_LENGTH, procinfo->path);
 		if(procinfo->path == NULL) {
 			procinfo->path = procinfo->name;
 		}

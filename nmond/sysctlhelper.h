@@ -49,6 +49,6 @@ extern unsigned int intFromSysctl(int, int);
 extern unsigned int intFromSysctlByName(char*);
 extern unsigned long long int64FromSysctlByName(char*);
 extern struct timeval timevalFromSysctl(int, int);
-extern char *processArguments(int, int);
+extern void processArguments(int, int, char*);
 
 #endif

@@ -198,6 +198,8 @@ extern void getsysresinfo(struct sysres *);
 // Processes information
 //
 
+#define SYSPROC_PATH_LENGTH 45
+
 struct sysproc {
 	char status;
 	int pid;
