@@ -44,6 +44,9 @@
 char *uireadablebytes(unsigned int bytes)
 {
 	char *result = malloc(RESULT_LENGTH);
+	if(result == NULL) {
+		// TODO: handle memory allocation failure
+	}
 	char *resultsufix = NULL;//malloc(2);
 	double resultnumber = 0;
 
@@ -72,6 +75,9 @@ char *uireadablebytes(unsigned int bytes)
 char *uireadablebyteslong(unsigned long bytes)
 {
 	char *result = malloc(RESULT_LENGTH);
+	if(result == NULL) {
+		// TODO: handle memory allocation failure
+	}
 	char *resultsufix = NULL;//malloc(2);
 	double resultnumber = 0;
 
@@ -100,6 +106,9 @@ char *uireadablebyteslong(unsigned long bytes)
 char *uireadablebyteslonglong(unsigned long long bytes)
 {
 	char *result = malloc(RESULT_LENGTH);
+	if(result == NULL) {
+		// TODO: handle memory allocation failure
+	}
 	char *resultsufix = NULL;//malloc(2);
 	double resultnumber = 0;
 

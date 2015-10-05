@@ -276,28 +276,30 @@ char *processArguments(int pid, int sizelimit)
 			int stringpos = 0;
 			result = malloc((unsigned int)resultlen + 1);
 
-			for(int i = 0; i < (int)(resultoffset + resultlen - 1); ++i) {
-				currentchar = arglist[currentargpos];
+			if(result != NULL) {
+				for(int i = 0; i < (int)(resultoffset + resultlen - 1); ++i) {
+					currentchar = arglist[currentargpos];
 
-				if(i >= resultoffset) {
-					if(currentchar != '\0'){
-						result[stringpos] = currentchar;
-					} else {
-						result[stringpos] = ' ';
+					if(i >= resultoffset) {
+						if(currentchar != '\0'){
+							result[stringpos] = currentchar;
+						} else {
+							result[stringpos] = ' ';
+						}
+						++stringpos;
+					} else if (i >= (resultoffset - TRUNC_STRING_LENGTH)) {
+						result[stringpos] = TRUNC_CHAR;
+						++stringpos;
 					}
-					++stringpos;
-				} else if (i >= (resultoffset - TRUNC_STRING_LENGTH)) {
-					result[stringpos] = TRUNC_CHAR;
-					++stringpos;
-				}
 
-				++currentargpos;
-				if(currentargpos > (argstarts[currentarg] + argsizes[currentarg])) {
-					++currentarg;
-					currentargpos = argstarts[currentarg];
+					++currentargpos;
+					if(currentargpos > (argstarts[currentarg] + argsizes[currentarg])) {
+						++currentarg;
+						currentargpos = argstarts[currentarg];
+					}
 				}
+				result[stringpos] = '\0';
 			}
-			result[stringpos] = '\0';
 		}
 	}
 	free(arglist);

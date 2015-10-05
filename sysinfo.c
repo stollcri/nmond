@@ -169,6 +169,9 @@ void getsysresinfo(struct sysres *inres)
 	if (!inres->cpucount || (newcpucount != inres->cpucount)) {
 		inres->cpucount = newcpucount;
 		inres->cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)inres->cpucount);
+		if(inres->cpus == NULL) {
+			// TODO: handle memory allocation failure
+		}
 
 		int physcpu = (int)intFromSysctlByName("hw.physicalcpu");
 		int logicpu = (int)intFromSysctlByName("hw.logicalcpu");
@@ -256,6 +259,9 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 	// struct sysproc **procsin;
 	if(procsin == NULL) {
 		procsin = (struct sysproc **)malloc(sizeof(struct sysproc*) * (size_t)count);
+		if(procsin == NULL) {
+			// TODO: handle memory allocation failure
+		}
 	} else {
 		struct sysproc **procsold = procsin;
 		procsin = (struct sysproc **)realloc(procsold, sizeof(struct sysproc*) * (size_t)count);
