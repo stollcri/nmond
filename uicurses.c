@@ -1329,8 +1329,6 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 				heapsort(procs, (size_t)processcount, sizeof(struct sysproc *), compareresmemdes);
 				break;
 		}
-
-		fprintf(stderr, " \n");
 	}
 
 	switch(topmode) {
