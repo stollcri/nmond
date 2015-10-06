@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mach/host_info.h>
+#include <mach/mach.h>
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
@@ -204,7 +205,10 @@ void getsysresinfo(struct sysres *inres)
 	natural_t cpuCount;
 	host_info_t hostinfo;
 	mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
+	// TODO: consider using host_statistics() instead 
+	//  -- http://stackoverflow.com/questions/20471920/how-to-get-total-cpu-idle-time-in-objective-c-c-on-os-x
 	error = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &hostinfo, &count);
+    
 	if (!error) {
 		processor_cpu_load_info_data_t* r_load = (processor_cpu_load_info_data_t*)hostinfo;
 
@@ -267,6 +271,7 @@ void getsysresinfo(struct sysres *inres)
 			inres->avgpercentnice /= (inres->cpucount / inres->cpuhyperthreadmod);
 		}
 	}
+	vm_deallocate(mach_task_self(), (vm_address_t)hostinfo, count);
 }
 
 //
