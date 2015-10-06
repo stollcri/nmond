@@ -84,6 +84,7 @@ void uiheader(int *xin, int usecolor, int blinkon, char *hostname, char *message
 	}
 	mvprintw(*xin, 64, "%1.0fs", elapsed);
 	mvprintw(*xin, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
+	free(tim);
 	wnoutrefresh(stdscr);
 
 	*xin = *xin + 1;

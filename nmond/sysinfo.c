@@ -153,6 +153,7 @@ void getsyskerninfo(struct syskern *kern)
 	struct tm *ptm = localtime(&timet);
 	char boottimestring[64];
 	strftime(boottimestring, sizeof(boottimestring), DATE_TIME_FORMAT, ptm);
+    free(ptm);
 	kern->boottimestring = boottimestring;
 
 	// struct timeval tv;
