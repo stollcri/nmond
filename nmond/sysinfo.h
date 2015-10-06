@@ -41,7 +41,6 @@
 #include <stdlib.h>
 #include "pidhash.h"
 
-#define STR_INIT NULL
 #define DATE_FORMAT "%Y-%m-%d"
 #define TIME_FORMAT "%H:%M:%S"
 #define DATE_TIME_FORMAT "%Y-%m-%d %H:%M:%S"
@@ -88,7 +87,7 @@ struct syshw { // CTL_HW
 #define SYSHW_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
 0, 0, 0, 0, 0, 0, 0, \
 0, 0, 0, 0, 0, \
-STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT };
+NULL, NULL, NULL, NULL, NULL };
 
 extern void getsyshwinfo(struct syshw*);
 
@@ -138,7 +137,7 @@ struct syskern { // CTL_KERN
 #define SYSKERN_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, \
 0, 0, 0, 0, 0, \
 0, 0, \
-STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, STR_INIT, \
+NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, \
 { 0, 0 }, { 0, 0 } }
 
 extern void getsyskerninfo(struct syskern*);

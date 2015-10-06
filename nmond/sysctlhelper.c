@@ -274,32 +274,29 @@ void processArguments(int pid, int sizelimit, char *resultLoc)
 			char currentchar = 0;
 
 			int stringpos = 0;
-			// result = malloc((unsigned int)resultlen + 1);
 
-			// if(result != NULL) {
-				for(int i = 0; i < (int)(resultoffset + resultlen - 1); ++i) {
-					currentchar = arglist[currentargpos];
+			for(int i = 0; i < (int)(resultoffset + resultlen - 1); ++i) {
+				currentchar = arglist[currentargpos];
 
-					if(i >= resultoffset) {
-						if(currentchar != '\0'){
-							resultLoc[stringpos] = currentchar;
-						} else {
-							resultLoc[stringpos] = ' ';
-						}
-						++stringpos;
-					} else if (i >= (resultoffset - TRUNC_STRING_LENGTH)) {
-						resultLoc[stringpos] = TRUNC_CHAR;
-						++stringpos;
+				if(i >= resultoffset) {
+					if(currentchar != '\0'){
+						resultLoc[stringpos] = currentchar;
+					} else {
+						resultLoc[stringpos] = ' ';
 					}
-
-					++currentargpos;
-					if(currentargpos > (argstarts[currentarg] + argsizes[currentarg])) {
-						++currentarg;
-						currentargpos = argstarts[currentarg];
-					}
+					++stringpos;
+				} else if (i >= (resultoffset - TRUNC_STRING_LENGTH)) {
+					resultLoc[stringpos] = TRUNC_CHAR;
+					++stringpos;
 				}
-				resultLoc[stringpos] = '\0';
-			// }
+
+				++currentargpos;
+				if(currentargpos > (argstarts[currentarg] + argsizes[currentarg])) {
+					++currentarg;
+					currentargpos = argstarts[currentarg];
+				}
+			}
+			resultLoc[stringpos] = '\0';
 		}
 		free(arglist);
 	}

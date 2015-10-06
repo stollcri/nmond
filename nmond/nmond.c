@@ -413,9 +413,6 @@ int main(int argc, char **argv)
 			getsyskerninfo(&thiskern);
 			getsysresinfo(&thisres);
 			processcount = 0;
-			//
-			// TODO: should use the hash map instead of constantly freeing/allocing
-			// TODO: there is a memory leak somewhere in the folling line
 			thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
 
 			// data changes are pending gui update
