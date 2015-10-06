@@ -190,6 +190,7 @@ void getsysresinfo(struct sysres *inres)
 	// does the CPU count really change? Set it on the first pass
 	if (!inres->cpucount || (newcpucount != inres->cpucount)) {
 		inres->cpucount = newcpucount;
+		free(inres->cpus);
 		inres->cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)inres->cpucount);
 		if(inres->cpus == NULL) {
 			// TODO: handle memory allocation failure
