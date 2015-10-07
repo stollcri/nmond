@@ -330,6 +330,8 @@ int main(int argc, char **argv)
 	}
 	// read input character by character
 	cbreak();
+	// do not echo out read cahracters
+	noecho();
 	// move the cursor to the top left
 	move(0, 0);
 
