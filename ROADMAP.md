@@ -110,6 +110,7 @@
 
 ## v1.6 -- Phase 5
 - APP: Plugins
+- GUI: When the window is wide enough show top processes in another column (is that possible with curses?)
 
 # Development Notes
 
