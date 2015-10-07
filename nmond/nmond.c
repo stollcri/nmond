@@ -399,7 +399,9 @@ int main(int argc, char **argv)
 	for(;;) {
 		// Reset the cursor position to top left
 		x = 0;
-		// y = 0;
+
+		// update the header
+		uiheader(&x, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
 
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
@@ -420,92 +422,91 @@ int main(int argc, char **argv)
 
 			// flash on/off once per itteration
 			flash_on = flash_on ? false : true;
-		}
 
-		// update the header
-		uiheader(&x, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
-
-		// update the in-use panes
-		if(wins.welcome.visible) {
-			uiwelcome(&wins.welcome.win, &x, COLS, LINES, currentstate.color, thishw);
-		}
-		if (wins.help.visible) {
-			uihelp(&wins.help.win, &x, COLS, LINES);
-		}
-		if (wins.sys.visible) {
-			uisys(&wins.sys.win, &x, COLS, LINES, thishw, thiskern);
-		}
-		if (wins.cpulong.visible) {
-			uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
-		}
-		if (wins.cpu.visible) {
-			uicpu(&wins.cpu.win, &x, COLS, LINES, currentstate.color, thisres, show_raw);
-		}
-		if (wins.memory.visible) {
-			uimemory(&wins.memory.win, &x, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
-		}
-		if (wins.disks.visible) {
-			uidisks(&wins.disks.win, &x, COLS, LINES, currentstate.color, (unsigned int)(thisres.diskuser - thisres.diskuserlast), (unsigned int)(thisres.diskusew - thisres.diskusewlast));
-		}
+			// update the in-use panes
+			if(wins.welcome.visible) {
+				uiwelcome(&wins.welcome.win, &x, COLS, LINES, currentstate.color, thishw);
+			}
+			if (wins.help.visible) {
+				uihelp(&wins.help.win, &x, COLS, LINES);
+			}
+			if (wins.sys.visible) {
+				uisys(&wins.sys.win, &x, COLS, LINES, thishw, thiskern);
+			}
+			if (wins.cpulong.visible) {
+				uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
+			}
+			if (wins.cpu.visible) {
+				uicpu(&wins.cpu.win, &x, COLS, LINES, currentstate.color, thisres, show_raw);
+			}
+			if (wins.memory.visible) {
+				uimemory(&wins.memory.win, &x, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
+			}
+			if (wins.disks.visible) {
+				uidisks(&wins.disks.win, &x, COLS, LINES, currentstate.color, \
+					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
+					(unsigned int)(thisres.diskusew - thisres.diskusewlast));
+			}
 
 
-		if (wins.diskgroup.visible) {
-			uidiskgroup(&wins.diskgroup.win, &x, COLS, LINES);
-		}
-		if (wins.diskmap.visible) {
-			uidiskmap(&wins.diskmap.win, &x, COLS, LINES);
-		}
-		if (wins.filesys.visible) {
-			uifilesys(&wins.filesys.win, &x, COLS, LINES);
-		}
-		if (wins.kernel.visible) {
-			uikernel(&wins.kernel.win, &x, COLS, LINES);
-		}
-		if (wins.memlarge.visible) {
-			uimemlarge(&wins.memlarge.win, &x, COLS, LINES);
-		}
-		if (wins.memvirtual.visible) {
-			uimemvirtual(&wins.memvirtual.win, &x, COLS, LINES);
-		}
-		if (wins.netfilesys.visible) {
-			uinetfilesys(&wins.netfilesys.win, &x, COLS, LINES);
-		}
-		if (wins.network.visible) {
-			uinetwork(&wins.network.win, &x, COLS, LINES);
+			if (wins.diskgroup.visible) {
+				uidiskgroup(&wins.diskgroup.win, &x, COLS, LINES);
+			}
+			if (wins.diskmap.visible) {
+				uidiskmap(&wins.diskmap.win, &x, COLS, LINES);
+			}
+			if (wins.filesys.visible) {
+				uifilesys(&wins.filesys.win, &x, COLS, LINES);
+			}
+			if (wins.kernel.visible) {
+				uikernel(&wins.kernel.win, &x, COLS, LINES);
+			}
+			if (wins.memlarge.visible) {
+				uimemlarge(&wins.memlarge.win, &x, COLS, LINES);
+			}
+			if (wins.memvirtual.visible) {
+				uimemvirtual(&wins.memvirtual.win, &x, COLS, LINES);
+			}
+			if (wins.netfilesys.visible) {
+				uinetfilesys(&wins.netfilesys.win, &x, COLS, LINES);
+			}
+			if (wins.network.visible) {
+				uinetwork(&wins.network.win, &x, COLS, LINES);
+				
+				int errors = 0;
+				for (int i = 0; i < networks; i++) {
+					// errors += p->ifnets[i].if_ierrs - q->ifnets[i].if_ierrs
+					// + p->ifnets[i].if_oerrs - q->ifnets[i].if_oerrs
+					// + p->ifnets[i].if_ocolls - q->ifnets[i].if_ocolls;
+				}
+				if(errors) {
+					currentstate.neterrors = 3;
+				}
+
+				if (currentstate.neterrors) {
+					uineterrors(&wins.neterrors.win, &x, COLS, LINES);
+				}
+			}
+			if (wins.top.visible) {
+				// wclear(wins.top.win);
+				uitop(&wins.top.win, &x, COLS, LINES, currentstate.color, thisproc, \
+					(int)processcount, currentstate.topmode, pendingdata, currentstate.user);
+			}
+			if (wins.warn.visible) {
+				uiwarn(&wins.warn.win, &x, COLS, LINES);
+			}
+
+			// all data changes posted by here
+			pendingdata = false;
 			
-			int errors = 0;
-			for (int i = 0; i < networks; i++) {
-				// errors += p->ifnets[i].if_ierrs - q->ifnets[i].if_ierrs
-				// + p->ifnets[i].if_oerrs - q->ifnets[i].if_oerrs
-				// + p->ifnets[i].if_ocolls - q->ifnets[i].if_ocolls;
+			// underline the end of the stats area border
+			if(x < LINES-2) {
+				mvwhline(stdscr, x, 1, ACS_HLINE, COLS-2);
 			}
-			if(errors) {
-				currentstate.neterrors = 3;
-			}
-
-			if (currentstate.neterrors) {
-				uineterrors(&wins.neterrors.win, &x, COLS, LINES);
-			}
+			wmove(stdscr, 0, 0);
+			wrefresh(stdscr);
+			doupdate();
 		}
-		if (wins.top.visible) {
-			// wclear(wins.top.win);
-			uitop(&wins.top.win, &x, COLS, LINES, currentstate.color, thisproc, (int)processcount, currentstate.topmode, pendingdata, currentstate.user);
-		}
-		if (wins.warn.visible) {
-			uiwarn(&wins.warn.win, &x, COLS, LINES);
-		}
-
-
-		// all data changes posted by here
-		pendingdata = false;
-		
-		// underline the end of the stats area border
-		if(x < LINES-2) {
-			mvwhline(stdscr, x, 1, ACS_HLINE, COLS-2);
-		}
-		wmove(stdscr, 0, 0);
-		wrefresh(stdscr);
-		doupdate();
 
 		// handle input
 		pressedkey = getch();
