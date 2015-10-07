@@ -60,8 +60,8 @@ nmond:
 	$(CC) $(CFLAGS) $(LFLAGS) -o $(AOFILE) $(CFILES)
 
 install:
-	cp bin/nmond /usr/bin/nmond
-	chown root:wheel /usr/bin/nmond
-	chmod 4555 /usr/bin/nmond
+	cp bin/nmond /usr/local/bin/nmond
+	chown root:wheel /usr/local/bin/nmond
+	chmod 4555 /usr/local/bin/nmond
 
 .PHONY: default, test, debug, analysis, run, clean, nmond, install
