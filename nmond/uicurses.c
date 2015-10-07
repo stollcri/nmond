@@ -392,7 +392,7 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 	uidisplay(*win, xin, cols, 21, rows);
 }
 
-static void uidiskdetail(WINDOW *win, int usecolor, unsigned long diskr, unsigned long diskw)
+static void uidiskdetail(WINDOW *win, int x, int usecolor, unsigned long diskr, unsigned long diskw, double unitdivisor, char *units, int scale)
 {
 	char *bytestring = NULL;
 
@@ -419,14 +419,34 @@ static void uidiskdetail(WINDOW *win, int usecolor, unsigned long diskr, unsigne
 		wattrset(win, COLOR_PAIR(0));
 	}
 
-	mvwprintw(win, 2, 27, "|");
-	wmove(win, 2, 28);
-
 	char *metermark = "#";
-	int readquant = (int)(floor(diskr) / (BYTES_IN_MB * 2)) - 1;
-	int writequant = (int)(floor(diskw) / (BYTES_IN_MB * 2)) - 1;
+	int readquant;
+	int writequant;
+	double disktotal;
+
+	if(!scale) {
+		if((diskr > 0) || (diskw > 0)) {
+			double disktotal = (double)(diskr + diskw);
+			int tmpquant = (int)floor(log10(disktotal) * 4.9);
+			// TODO: this ratio cannot be right for logrithmic output
+			readquant = (int)(tmpquant * (diskr / (disktotal))) - 1;
+			writequant = (int)(tmpquant * (diskw / (disktotal))) - 1;
+		} else {
+			readquant = -1;
+			writequant = -1;
+		}
+		mvwprintw(win, 1, 22, "  LOG");
+		mvwprintw(win, 2, 22, "SCALE");
+	} else {
+		readquant = (int)(floor(diskr) / (unitdivisor * 2 * scale)) - 1;
+		writequant = (int)(floor(diskw) / (unitdivisor * 2 * scale)) - 1;
+		mvwprintw(win, x, 24, "%2.2s", units);
+	}
+
+	mvwprintw(win, x, 27, "|");
+	wmove(win, x, 28);
 	
-	for(int i=28; i<77; ++i){
+	for(int i = 28; i < 77; ++i){
 		if(((i + 3) % 5) == 0) {
 			metermark = "|";
 		} else {
@@ -457,7 +477,7 @@ static void uidiskdetail(WINDOW *win, int usecolor, unsigned long diskr, unsigne
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, 2, 77, "|");
+	mvwprintw(win, x, 77, "|");
 }
 
 extern void uidisks(WINDOW **win, int *xin, int cols, int rows, int usecolor, unsigned int diskr, unsigned int diskw)
@@ -466,10 +486,54 @@ extern void uidisks(WINDOW **win, int *xin, int cols, int rows, int usecolor, un
 		return;
 	}
 
+	unsigned int disktotal = diskr + diskw;
+
 	uibanner(*win, cols, "Disk Use");
-	mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
- 	mvwprintw(*win, 2, 77, "|");
-	uidiskdetail(*win, usecolor, diskr, diskw);
+	if(DISK_METER_MODE == DISK_METER_LOG) {
+		mvwprintw(*win, 1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
+ 		mvwprintw(*win, 2, 77, "|");
+ 		uidiskdetail(*win, 2, usecolor, diskr, diskw, 0, "", 0);
+
+	} else if(DISK_METER_MODE == DISK_METER_SCALE) {
+	 	if(disktotal <= (BYTES_IN_KB * 100)) {
+	 		mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+	 		mvwprintw(*win, 2, 77, "|");
+	 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 1);
+	 	
+	 	} else if(disktotal <= (BYTES_IN_KB * 1000)) {
+	 		mvwprintw(*win, 1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+	 		mvwprintw(*win, 2, 77, "|");
+	 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 10);
+	 	
+	 	} else {
+	 		if(disktotal <= (BYTES_IN_MB * 100)) {
+	 			mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+		 		mvwprintw(*win, 2, 77, "|");
+		 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
+	 		
+	 		} else if(disktotal <= (BYTES_IN_MB * 1000)) {
+		 		mvwprintw(*win, 1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+		 		mvwprintw(*win, 2, 77, "|");
+		 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 10);
+		 	
+		 	} else {
+		 		if(disktotal <= (BYTES_IN_GB * 100)) {
+		 			mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+			 		mvwprintw(*win, 2, 77, "|");
+			 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 1);
+
+			 	} else {
+			 		mvwprintw(*win, 1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+			 		mvwprintw(*win, 2, 77, "|");
+			 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 10);
+			 	}
+			}
+	 	}
+	} else {
+		mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+ 		mvwprintw(*win, 2, 77, "|");
+ 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
+	}
 	uidisplay(*win, xin, cols, 3, rows);
 /*
 				if(show_disk) {
