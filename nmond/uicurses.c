@@ -125,12 +125,12 @@ void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct 
 		wattrset(*win, COLOR_PAIR(0));
 	}
 	mvwprintw(*win, *xin+13, 2, "Use these keys to toggle statistics on/off:");
-	mvwprintw(*win, *xin+14, 2, "  c = CPU               r = Top-procs,mem-sort  - = Reduce refresh delay  ");
-	mvwprintw(*win, *xin+15, 2, "  C = CPU, Long-term    R = Top-procs/cmnd,mem  + = Increase refresh delay");
-	mvwprintw(*win, *xin+16, 2, "  d = Disk Usage        t = Top-processes       ? = Help                  ");
-	mvwprintw(*win, *xin+17, 2, "  i = About this Mac    T = Top-procs/command                             ");
-	mvwprintw(*win, *xin+18, 2, "  m = Memory Usage                              q = Quit                  ");
-	mvwprintw(*win, *xin+20, 1, "To start the same way every time set the NMOND variable: 'export NMOND=cdmT'");
+	mvwprintw(*win, *xin+14, 2, "  c = CPU               n = Network Usage       - = Reduce refresh delay  ");
+	mvwprintw(*win, *xin+15, 2, "  C = CPU, Long-term    r = Top-procs,mem-sort  + = Increase refresh delay");
+	mvwprintw(*win, *xin+16, 2, "  d = Disk Usage        R = Top-procs/cmnd,mem  ? = Help                  ");
+	mvwprintw(*win, *xin+17, 2, "  i = About this Mac    t = Top-processes                                 ");
+	mvwprintw(*win, *xin+18, 2, "  m = Memory Usage      T = Top-procs/command   q = Quit                  ");
+	mvwprintw(*win, *xin+20, 1, "To start the same way every time set an NMOND variable: 'export NMOND=cdmnT'");
 	pnoutrefresh(*win, 0, 0, *xin, 1, rows-2, cols-2);
 	wnoutrefresh(stdscr);
 	
@@ -159,7 +159,7 @@ void uihelp(WINDOW **win, int *xin, int cols, int rows)
 	mvwprintw(*win, 13, 2, "[ k =                               ][                                   ]");
 	mvwprintw(*win, 14, 2, "[ m = Memory Usage                  ][ ? = Help                          ]");
 	mvwprintw(*win, 15, 2, "[ M =                               ][                                   ]");
-	mvwprintw(*win, 16, 2, "[ n =                               ][ q = Quit/Exit                     ]");
+	mvwprintw(*win, 16, 2, "[ n = Network Usage                 ][ q = Quit/Exit                     ]");
 	mvwprintw(*win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
 	mvwprintw(*win, 19, 2, "              Christopher Stoll, 2015 (%s)", APPURL);
 	
@@ -1294,8 +1294,113 @@ extern void uinetfilesys(WINDOW **winin, int *xin, int cols, int rows)
 */
 }
 
-extern void uinetwork(WINDOW **winin, int *xin, int cols, int rows)
+static void uinetdetail(WINDOW *win, int x, int usecolor, unsigned long netin, unsigned long netout, double unitdivisor, char *units, int scale)
 {
+	char *bytestring = NULL;
+
+	bytestring = uireadablebyteslong(netin);
+	mvwprintw(win, 1, 2, "In:     %9.9s", bytestring);
+	free(bytestring);
+	bytestring = NULL;
+	bytestring = uireadablebyteslong(netout);
+	mvwprintw(win, 2, 2, "Out:    %9.9s", bytestring);
+	free(bytestring);
+	bytestring = NULL;
+
+	if(usecolor) {
+		wattrset(win, COLOR_PAIR(4));
+		bytestring = uireadablebyteslong(netin);
+		mvwprintw(win, 1, 10, "%9.9s", bytestring);
+		free(bytestring);
+		bytestring = NULL;
+		wattrset(win, COLOR_PAIR(1));
+        bytestring = uireadablebyteslong(netout);
+		mvwprintw(win, 2, 10, "%9.9s", bytestring);
+		free(bytestring);
+		bytestring = NULL;
+		wattrset(win, COLOR_PAIR(0));
+	}
+
+	char *metermark = "#";
+	int readquant;
+	int writequant;
+	double nettotal;
+
+	if(!scale) {
+		if((netin > 0) || (netout > 0)) {
+			double nettotal = (double)(netin + netout);
+			int tmpquant = (int)floor(log10(nettotal) * 4.9);
+			// TODO: this ratio cannot be right for logrithmic output
+			readquant = (int)(tmpquant * (netin / (nettotal))) - 1;
+			writequant = (int)(tmpquant * (netout / (nettotal))) - 1;
+		} else {
+			readquant = -1;
+			writequant = -1;
+		}
+		mvwprintw(win, 1, 22, "  LOG");
+		mvwprintw(win, 2, 22, "SCALE");
+	} else {
+		readquant = (int)(floor(netin) / (unitdivisor * 2 * scale)) - 1;
+		writequant = (int)(floor(netout) / (unitdivisor * 2 * scale)) - 1;
+		mvwprintw(win, x, 24, "%2.2s", units);
+	}
+
+	mvwprintw(win, x, 27, "|");
+	wmove(win, x, 28);
+	
+	for(int i = 28; i < 77; ++i){
+		if(((i + 3) % 5) == 0) {
+			metermark = "|";
+		} else {
+			metermark = " ";
+		}
+
+		if(readquant >= 0) {
+			if(usecolor) {
+				wattrset(win, COLOR_PAIR(10));
+				wprintw(win, metermark);
+			} else {
+				wprintw(win, "#");
+			}
+			--readquant;
+		} else {
+			if(writequant >= 0) {
+				if(usecolor) {
+					wattrset(win, COLOR_PAIR(8));
+					wprintw(win, metermark);
+				} else {
+					wprintw(win, "#");
+				}
+				--writequant;
+			} else {
+				wattrset(win, COLOR_PAIR(0));
+				wprintw(win, metermark);
+			}
+		}
+	}
+	wattrset(win, COLOR_PAIR(0));
+	mvwprintw(win, x, 77, "|");
+}
+
+extern void uinetwork(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysnet thisnet)
+{
+	if (*win == NULL) {
+		return;
+	}
+
+	uibanner(*win, cols, "Network Use");
+	if(DISK_METER_MODE == DISK_METER_LOG) {
+		mvwprintw(*win, 1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
+ 		mvwprintw(*win, 2, 77, "|");
+ 		fprintf(stderr, "%llu => %llu\n", thisnet.oldibytes, thisnet.ibytes);
+ 		fprintf(stderr, "%llu => %llu\n", thisnet.oldobytes, thisnet.obytes);
+ 		fprintf(stderr, "=====\n");
+ 		uinetdetail(*win, 2, usecolor, \
+ 			(thisnet.ibytes - thisnet.oldibytes), \
+ 			(thisnet.obytes - thisnet.oldobytes), \
+ 			0, "", 0);
+	}
+	uidisplay(*win, xin, cols, 3, rows);
 /*
 				BANNER(padnet,"Network I/O");
 				mvwprintw(padnet,1, 0, "I/F Name Recv=KB/s Trans=KB/s packin packout insize outsize Peak->Recv Trans");

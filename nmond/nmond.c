@@ -167,6 +167,13 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 		case 'M':
 			break;
 		case 'n':
+			if(wins->network.visible) {
+				wins->network.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				wins->network.visible = true;
+				wins->visiblecount += 1;
+			}
 			break;
 		case 'N':
 			break;
@@ -305,12 +312,6 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 int main(int argc, char **argv)
 {
-	struct sysnet thisnet = SYSNET_INIT;
-	getsysnetinfo(&thisnet);
-	exitapp();
-
-
-
 	// first thing, prepare to be interupted
 	setinterupthandlers();
 
@@ -356,6 +357,8 @@ int main(int argc, char **argv)
 	getsyskerninfo(&thiskern);
 	struct sysres thisres = SYSRES_INIT;
 	getsysresinfo(&thisres);
+	struct sysnet thisnet = SYSNET_INIT;
+	getsysnetinfo(&thisnet);
 	size_t processcount = 0;
 	struct sysproc **thisproc = NULL;
 	struct hashitem *thishash = hashtnew();
@@ -391,7 +394,7 @@ int main(int argc, char **argv)
 	// wins.memvirtual.win = newpad(20, MAXCOLS);
 	// wins.neterrors.win = newpad(MAXROWS, MAXCOLS);
 	// wins.netfilesys.win = newpad(25, MAXCOLS);
-	// wins.network.win = newpad(MAXROWS, MAXCOLS);
+	wins.network.win = newpad(MAXROWS, MAXCOLS);
 	wins.top.win = newpad(MAXROWS, MAXCOLS);
 	wins.sys.win = newpad(10, MAXCOLS);
 	// wins.warn.win = newpad(8, MAXCOLS);
@@ -422,6 +425,7 @@ int main(int argc, char **argv)
 			getsyshwinfo(&thishw);
 			getsyskerninfo(&thiskern);
 			getsysresinfo(&thisres);
+			getsysnetinfo(&thisnet);
 			processcount = 0;
 			thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
 
@@ -478,9 +482,11 @@ int main(int argc, char **argv)
 			if (wins.netfilesys.visible) {
 				uinetfilesys(&wins.netfilesys.win, &x, COLS, LINES);
 			}
+
+
 			if (wins.network.visible) {
-				uinetwork(&wins.network.win, &x, COLS, LINES);
-				
+				uinetwork(&wins.disks.win, &x, COLS, LINES, currentstate.color, thisnet);
+				/*
 				int errors = 0;
 				for (int i = 0; i < networks; i++) {
 					// errors += p->ifnets[i].if_ierrs - q->ifnets[i].if_ierrs
@@ -494,12 +500,15 @@ int main(int argc, char **argv)
 				if (currentstate.neterrors) {
 					uineterrors(&wins.neterrors.win, &x, COLS, LINES);
 				}
+				*/
 			}
 			if (wins.top.visible) {
 				// wclear(wins.top.win);
 				uitop(&wins.top.win, &x, COLS, LINES, currentstate.color, thisproc, \
 					(int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 			}
+
+
 			if (wins.warn.visible) {
 				uiwarn(&wins.warn.win, &x, COLS, LINES);
 			}

@@ -44,7 +44,7 @@
 #include <sys/time.h>
 
 #define APPNAME "nmond"
-#define VERSION "0.1.7"
+#define VERSION "0.1.8"
 #define VERDATE "2015-10-07"
 #define APPURL "https://github.com/stollcri/nmond"
 
@@ -117,7 +117,7 @@ extern void uimemlarge(WINDOW**, int*, int, int);
 extern void uimemvirtual(WINDOW**, int*, int, int);
 extern void uineterrors(WINDOW**, int*, int, int);
 extern void uinetfilesys(WINDOW**, int*, int, int);
-extern void uinetwork(WINDOW**, int*, int, int);
+extern void uinetwork(WINDOW**, int*, int, int, int, struct sysnet);
 extern void uitop(WINDOW**, int*, int, int, int, struct sysproc**, int, int, bool, char*);
 extern void uisys(WINDOW**, int*, int, int, struct syshw, struct syskern);
 extern void uiwarn(WINDOW**, int*, int, int);

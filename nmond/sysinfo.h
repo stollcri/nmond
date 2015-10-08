@@ -255,10 +255,42 @@ extern struct sysproc getsysprocinfobyruid(int, size_t);
 // Network information
 //
 
-struct sysnet {
-	char status;
+struct sysnetif {
+	unsigned long long ipackets;
+	unsigned long long ierrors;
+	unsigned long long ibytes;
+	unsigned long long oldibytes;
+
+	unsigned long long opackets;
+	unsigned long long oerrors;
+	unsigned long long obytes;
+	unsigned long long oldobytes;
+
+	unsigned long long drops;
+	unsigned long long noproto;
 };
-#define SYSNET_INIT { ' ' }
+
+struct sysnet {
+	int ifcount;
+	struct sysnetif *ifs;
+
+	unsigned long long ipackets;
+	unsigned long long ierrors;
+	unsigned long long ibytes;
+	unsigned long long oldibytes;
+
+	unsigned long long opackets;
+	unsigned long long oerrors;
+	unsigned long long obytes;
+	unsigned long long oldobytes;
+
+	unsigned long long drops;
+	unsigned long long noproto;
+};
+#define SYSNET_INIT { 0, NULL, \
+0, 0, 0, 0, \
+0, 0, 0, 0, \
+0, 0 }
 
 extern void getsysnetinfo(struct sysnet *net);
 
