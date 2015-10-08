@@ -305,6 +305,12 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 int main(int argc, char **argv)
 {
+	struct sysnet thisnet = SYSNET_INIT;
+	getsysnetinfo(&thisnet);
+	exitapp();
+
+
+
 	// first thing, prepare to be interupted
 	setinterupthandlers();
 

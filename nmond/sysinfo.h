@@ -252,6 +252,17 @@ extern struct sysproc getsysprocinfobyruid(int, size_t);
 */
 
 //
+// Network information
+//
+
+struct sysnet {
+	char status;
+};
+#define SYSNET_INIT { ' ' }
+
+extern void getsysnetinfo(struct sysnet *net);
+
+//
 // Mem
 // 
 // vm.swapusage: total = 2048.00M  used = 988.00M  free = 1060.00M  (encrypted)

@@ -38,13 +38,16 @@
 #include "sysinfo.h"
 #include <assert.h>
 #include <errno.h>
+#include <ifaddrs.h>
 #include <libproc.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 #include <mach/host_info.h>
 #include <mach/mach.h>
 #include <mach/mach_host.h>
+#include <sys/ioctl.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
 
@@ -537,3 +540,168 @@ struct sysproc getsysprocinfobyruid(int realuserid, size_t length)
 	return getsysprocinfo(KERN_PROC_RUID, realuserid, &length);
 }
 */
+
+void getsysnetinfo(struct sysnet *net)
+{
+	printf("\n");
+
+	struct ifaddrs *if_list, *if_info;
+	struct ifreq if_request;
+	char buffer[INET_ADDRSTRLEN];
+	u_short flags;
+	int sockfd;
+	char *if_description;
+
+	/* Get the interface information */
+	if (getifaddrs(&if_list) < 0)
+	{
+		printf("Failed to get interface information: %s.\n",
+			strerror(errno));
+		return;
+	}
+	if (if_list == NULL)
+	{
+		printf("No network interfaces were found.\n");
+		return;
+	}
+	if_info = if_list;
+
+	/* Get a socket handle for interface queries */
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0)
+	{
+		printf("failed to get socket: %s\n",
+			strerror(errno));
+	}
+
+	/* Print out the list of interfaces */
+	for (if_info = if_list; if_info != NULL; if_info = if_info->ifa_next) {
+
+		if(if_info->ifa_addr->sa_family == AF_LINK) {
+			struct if_data *ifdat = (struct if_data *)if_info->ifa_data;
+			if(ifdat) {
+				printf(" %s: %u\n", if_info->ifa_name, ifdat->ifi_ipackets);
+			}
+		}
+
+		/* Only display IPv4 Interfaces */
+		if (!if_info->ifa_addr || if_info->ifa_addr->sa_family != AF_INET)
+			continue;
+
+		/* Figure out what type of interface this is */
+		if (strncmp(if_info->ifa_name, "eth", 3) == 0)
+			if_description = "Ethernet";
+		else if (strncmp(if_info->ifa_name, "lo", 2) == 0)
+			if_description = "Loopback";
+		else if (strncmp(if_info->ifa_name, "ppp", 3) == 0)
+			if_description = "Point-to-Point";
+		else
+			if_description = "Unknown";
+
+		/* Display the interface information */
+		flags = if_info->ifa_flags;
+		printf("%s Interface %s\n", if_description, if_info->ifa_name);
+		printf("Interface State: %s, %sRunning\n",
+			(flags & IFF_UP)?"Up":"Down", (flags & IFF_RUNNING)?"":"Not ");
+
+		/* Display the interface type.  Technically, certain combinations
+		 * of these flags are not valid, but print them all out anyway
+		 * to aid debugging.
+		 */
+		printf("Interface Type: ");
+		if (flags & IFF_POINTOPOINT)
+			printf("Point-to-Point ");
+		if (flags & IFF_LOOPBACK)
+			printf("Loopback ");
+		if (flags & IFF_BROADCAST)
+			printf("Broadcast ");
+		if (flags & IFF_MULTICAST)
+			printf("Multicast ");
+
+		/* Display address information */
+		printf("Netmask: %s\n",
+			inet_ntop(AF_INET,
+			(const void *)&(((struct sockaddr_in *)if_info->ifa_netmask)->sin_addr),
+			buffer, sizeof(buffer)));
+		printf("Local Address: %s\n",
+			inet_ntop(AF_INET,
+			(const void *)&(((struct sockaddr_in *)if_info->ifa_addr)->sin_addr),
+			buffer, sizeof(buffer)));
+		if (flags & IFF_POINTOPOINT)
+		{
+			printf("Remote Address: %s\n",
+				inet_ntop(AF_INET,
+				(const void *)&(((struct sockaddr_in *)if_info->ifa_dstaddr)->sin_addr),
+				buffer, sizeof(buffer)));
+		}
+		if (flags & IFF_BROADCAST)
+		{
+			printf("Broadcast Address: %s\n",
+				inet_ntop(AF_INET,
+				(const void *)&(((struct sockaddr_in *)if_info->ifa_broadaddr)->sin_addr),
+				buffer, sizeof(buffer)));
+		}
+
+		/* If possible, get the MTU setting */
+		strcpy(if_request.ifr_name, if_info->ifa_name);
+		if (sockfd >= 0 && ioctl(sockfd, SIOCGIFMTU, &if_request) == 0) {
+			printf("Maximum Transmit Unit (MTU): %u\n",
+				if_request.ifr_mtu);
+		}
+
+		/* If present, get the hardware address */
+		if (sockfd >= 0 && ioctl(sockfd, SIOCGIFMAC, &if_request) == 0) {
+			printf("Hardware Address: "
+				"%d\n", if_request.ifr_ifru.ifru_phys
+				);
+				// "%02X:%02X:%02X:%02X:%02X:%02X",
+				// (char)if_request.ifr_hwaddr.sa_data[0],
+				// (char)if_request.ifr_hwaddr.sa_data[1],
+				// (char)if_request.ifr_hwaddr.sa_data[2],
+				// (char)if_request.ifr_hwaddr.sa_data[3],
+				// (char)if_request.ifr_hwaddr.sa_data[4],
+				// (char)if_request.ifr_hwaddr.sa_data[5]);
+		}
+
+		printf("Other Flags: 0x%04X\n", flags);
+#ifdef 	CYGPKG_NET
+		/* Get SNMP interface statistics */
+		if (sockfd >= 0)
+		{
+			struct ether_drv_stats eth_stats;
+
+			memset(&eth_stats, 0, sizeof(eth_stats));
+			eth_stats.ifreq = if_request;	/* Structure copy */
+			if (ioctl(sockfd, SIOCGIFSTATS, &eth_stats) == 0)
+			{
+				if (eth_stats.speed != 0)
+				{
+					printf("Speed: ");
+					if (eth_stats.speed >= 1000000)
+						printf("%uMb", eth_stats.speed/1000000);
+					else
+						printf("%u", eth_stats.speed);
+				}
+				if ((eth_stats.duplex == 2) || (eth_stats.duplex == 3)) {
+					printf("Duplex: %s", (eth_stats.duplex==3)?"Full":"Half");
+				}
+				printf("TX Packets: %u", eth_stats.tx_count);
+				printf("Good TX Packets: %u", eth_stats.tx_good);
+				printf("TX Carrier Loss: %u", eth_stats.tx_carrier_loss);
+				printf("TX Collisions: %u", eth_stats.tx_total_collisions);
+				printf("RX Packets: %u", eth_stats.rx_count);
+				printf("Good RX Packets: %u", eth_stats.rx_good);
+				printf("RX Packets Delivered: %u", eth_stats.rx_deliver);
+				printf("RX CRC Errors: %u", eth_stats.rx_crc_errors);
+				printf("RX Align Errors: %u", eth_stats.rx_align_errors);
+				printf("RX Resource Errors: %u", eth_stats.rx_resource_errors + eth_stats.rx_resource);
+				printf("RX Overrun Errors: %u", eth_stats.rx_overrun_errors);
+				printf("RX Collisions: %u", eth_stats.rx_collisions);
+				printf("RX Short Frames: %u", eth_stats.rx_short_frames);
+				printf("RX Long Frames: %u", eth_stats.rx_too_long_frames);
+				printf("RX Symbol Errors: %u", eth_stats.rx_symbol_errors);
+			}
+		}
+#endif
+	}
+}
