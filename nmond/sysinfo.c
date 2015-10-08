@@ -576,11 +576,19 @@ void getsysnetinfo(struct sysnet *net)
 
 	/* Print out the list of interfaces */
 	for (if_info = if_list; if_info != NULL; if_info = if_info->ifa_next) {
+		printf("==========\n %s (%d) %d\n", if_info->ifa_name, if_info->ifa_addr->sa_family, if_info->noifmedia);
 
-		if(if_info->ifa_addr->sa_family == AF_LINK) {
+		if(if_info->ifa_flags & IFF_UP) {
+			printf(" UP\n");
+		}
+		if(if_info->ifa_flags & IFF_RUNNING) {
+			printf(" RUNNING\n");
+		}
+
+		if(if_info->ifa_addr->sa_family == AF_LINK) { // sys/socket.h
 			struct if_data *ifdat = (struct if_data *)if_info->ifa_data;
 			if(ifdat) {
-				printf(" %s: %u\n", if_info->ifa_name, ifdat->ifi_ipackets);
+				printf(" %u\n", ifdat->ifi_ipackets); // net/if_var.h
 			}
 		}
 
