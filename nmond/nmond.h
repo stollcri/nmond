@@ -47,6 +47,7 @@
 
 #define MINIMUM_REFRESH_RATE 1
 #define MINIMUM_TIME_ELAPSED 1.0
+#define MINIMUM_TIME_KEYPRESS 0.25
 
 struct nmondstate {
 	int color;

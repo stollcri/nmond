@@ -417,7 +417,7 @@ int main(int argc, char **argv)
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
 		currentstate.elapsed = currentstate.timenow - currentstate.timelast;
-		if (pressedkey || (currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
+		if ((pressedkey && (currentstate.elapsed > MINIMUM_TIME_KEYPRESS)) || (currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
 			currentstate.timelast = time(NULL);
 
 			// TODO: only check statistics which are used
@@ -531,6 +531,9 @@ int main(int argc, char **argv)
 		// handle input
 		pressedkey = getch();
 		if(pressedkey) {
+			//
+			// TODO: catch mouse movement (up/down key presses) and prevent constant screen updates
+			//
 			// move the cursor back
 			wmove(stdscr, 0, 0);
 			// update app state
