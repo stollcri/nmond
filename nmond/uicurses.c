@@ -1392,9 +1392,6 @@ extern void uinetwork(WINDOW **win, int *xin, int cols, int rows, int usecolor, 
 	if(DISK_METER_MODE == DISK_METER_LOG) {
 		mvwprintw(*win, 1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
  		mvwprintw(*win, 2, 77, "|");
- 		fprintf(stderr, "%llu => %llu\n", thisnet.oldibytes, thisnet.ibytes);
- 		fprintf(stderr, "%llu => %llu\n", thisnet.oldobytes, thisnet.obytes);
- 		fprintf(stderr, "=====\n");
  		uinetdetail(*win, 2, usecolor, \
  			(thisnet.ibytes - thisnet.oldibytes), \
  			(thisnet.obytes - thisnet.oldobytes), \
