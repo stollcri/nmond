@@ -414,7 +414,7 @@ int main(int argc, char **argv)
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
 		currentstate.elapsed = currentstate.timenow - currentstate.timelast;
-		if ((currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
+		if (pressedkey || (currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
 			currentstate.timelast = time(NULL);
 
 			// TODO: only check statistics which are used
@@ -514,6 +514,9 @@ int main(int argc, char **argv)
 			wmove(stdscr, 0, 0);
 			wrefresh(stdscr);
 			doupdate();
+
+			// clear pressed key
+			pressedkey = 0;
 		}
 
 		// handle input
@@ -523,8 +526,6 @@ int main(int argc, char **argv)
 			wmove(stdscr, 0, 0);
 			// update app state
 			setwinstate(&wins, &currentstate, pressedkey);
-			// reset variable
-			pressedkey = 0;
 
 			// un-underline the end of the stats area border
 			if(x < LINES-2) {
