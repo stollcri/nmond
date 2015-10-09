@@ -369,6 +369,8 @@ int main(int argc, char **argv)
 	gethostname(hostname, sizeof(hostname));
 	bool pendingdata = false;
 	int pressedkey = 0;
+	int lastpressedkeya = 0;
+	int lastpressedkeyb = 0;
 	int cpulongitter = 0;
 	int	networks = 0;
 	int	flash_on = 0;
@@ -417,7 +419,7 @@ int main(int argc, char **argv)
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
 		currentstate.elapsed = currentstate.timenow - currentstate.timelast;
-		if ((pressedkey && (currentstate.elapsed > MINIMUM_TIME_KEYPRESS)) || (currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
+		if (pressedkey || (currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
 			currentstate.timelast = time(NULL);
 
 			// TODO: only check statistics which are used
@@ -533,15 +535,25 @@ int main(int argc, char **argv)
 		if(pressedkey) {
 			//
 			// TODO: catch mouse movement (up/down key presses) and prevent constant screen updates
+			//       (do something better than what is currently implemented)
 			//
-			// move the cursor back
-			wmove(stdscr, 0, 0);
-			// update app state
-			setwinstate(&wins, &currentstate, pressedkey);
+			if((pressedkey != ERR) && (pressedkey != 0x1b) && (lastpressedkeya != 0x1b) && (lastpressedkeyb != 0x1b)) {
+				// move the cursor back
+				wmove(stdscr, 0, 0);
+				// update app state
+				setwinstate(&wins, &currentstate, pressedkey);
 
-			// un-underline the end of the stats area border
-			if(x < LINES-2) {
-				mvwhline(stdscr, x, 1, ' ', COLS-2);
+				// un-underline the end of the stats area border
+				if(x < LINES-2) {
+					mvwhline(stdscr, x, 1, ' ', COLS-2);
+				}
+
+				lastpressedkeyb = lastpressedkeya;
+				lastpressedkeya = pressedkey;
+			} else {
+				lastpressedkeyb = lastpressedkeya;
+				lastpressedkeya = pressedkey;
+				pressedkey = 0;
 			}
 		}
 

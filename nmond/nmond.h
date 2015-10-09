@@ -46,8 +46,7 @@
 #include <stdbool.h>
 
 #define MINIMUM_REFRESH_RATE 1
-#define MINIMUM_TIME_ELAPSED 1.0
-#define MINIMUM_TIME_KEYPRESS 0.25
+#define MINIMUM_TIME_ELAPSED 0.5
 
 struct nmondstate {
 	int color;
