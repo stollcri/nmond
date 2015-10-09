@@ -176,6 +176,13 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 			}
 			break;
 		case 'N':
+			if(wins->netlong.visible) {
+				wins->netlong.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				wins->netlong.visible = true;
+				wins->visiblecount += 1;
+			}
 			break;
 		case 'o':
 			break;
@@ -372,6 +379,7 @@ int main(int argc, char **argv)
 	int lastpressedkeya = 0;
 	int lastpressedkeyb = 0;
 	int cpulongitter = 0;
+	int netlongitter = 0;
 	int	networks = 0;
 	int	flash_on = 0;
 	int	show_raw = 0;
@@ -397,6 +405,7 @@ int main(int argc, char **argv)
 	// wins.neterrors.win = newpad(MAXROWS, MAXCOLS);
 	// wins.netfilesys.win = newpad(25, MAXCOLS);
 	wins.network.win = newpad(MAXROWS, MAXCOLS);
+	wins.netlong.win = newpad(21, MAXCOLS);
 	wins.top.win = newpad(MAXROWS, MAXCOLS);
 	wins.sys.win = newpad(10, MAXCOLS);
 	// wins.warn.win = newpad(8, MAXCOLS);
@@ -449,6 +458,9 @@ int main(int argc, char **argv)
 			}
 			if (wins.cpulong.visible) {
 				uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
+			}
+			if (wins.netlong.visible) {
+				uinetlong(&wins.netlong.win, &x, COLS, LINES, &netlongitter, currentstate.color, thisnet, pendingdata);
 			}
 			if (wins.cpu.visible) {
 				uicpu(&wins.cpu.win, &x, COLS, LINES, currentstate.color, thisres, show_raw);

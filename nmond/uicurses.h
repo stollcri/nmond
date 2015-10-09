@@ -44,8 +44,8 @@
 #include <sys/time.h>
 
 #define APPNAME "nmond"
-#define VERSION "0.1.8"
-#define VERDATE "2015-10-07"
+#define VERSION "0.1.9"
+#define VERDATE "2015-10-08"
 #define APPURL "https://github.com/stollcri/nmond"
 
 #define MAXROWS 256
@@ -89,6 +89,7 @@ struct uiwins {
 	struct uiwin neterrors;
 	struct uiwin netfilesys;
 	struct uiwin network;
+	struct uiwin netlong;
 	struct uiwin top;
 
 	struct uiwin sys;
@@ -105,7 +106,7 @@ extern void uiheader(int*, int, int, char*, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int*, int, int);
 extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
-extern void uicpulong(WINDOW **padlong, int*, int, int, int*, int, struct sysres, bool);
+extern void uicpulong(WINDOW **, int*, int, int, int*, int, struct sysres, bool);
 
 extern void uidisks(WINDOW**, int*, int, int, int, unsigned int, unsigned int);
 extern void uidiskgroup(WINDOW**, int*, int, int);
@@ -118,6 +119,7 @@ extern void uimemvirtual(WINDOW**, int*, int, int);
 extern void uineterrors(WINDOW**, int*, int, int);
 extern void uinetfilesys(WINDOW**, int*, int, int);
 extern void uinetwork(WINDOW**, int*, int, int, int, struct sysnet);
+extern void uinetlong(WINDOW **, int*, int, int, int*, int, struct sysnet, bool);
 extern void uitop(WINDOW**, int*, int, int, int, struct sysproc**, int, int, bool, char*);
 extern void uisys(WINDOW**, int*, int, int, struct syshw, struct syskern);
 extern void uiwarn(WINDOW**, int*, int, int);
