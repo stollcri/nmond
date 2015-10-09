@@ -164,7 +164,10 @@ struct sysrescpu {
 	double percentidle;
 	double percentnice;
 };
-#define SYSRESCPU_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 0.0, 0.0 }
+#define SYSRESCPU_INIT { \
+0, 0, 0, 0, 0, \
+0, 0, 0, 0, 0, \
+0.0, 0.0, 0.0, 0.0 }
 
 struct sysres {
 	int cpucount;

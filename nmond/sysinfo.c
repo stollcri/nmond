@@ -199,6 +199,14 @@ void getsysresinfo(struct sysres *inres)
 			// TODO: handle memory allocation failure
 		}
 
+		for (int cpuno = 0; cpuno < inres->cpucount; ++cpuno) {
+			inres->cpus[cpuno].olduser = 0;
+			inres->cpus[cpuno].oldsys = 0;
+			inres->cpus[cpuno].oldidle = 0;
+			inres->cpus[cpuno].oldnice = 0;
+			inres->cpus[cpuno].oldtotal = 0;
+		}
+
 		int physcpu = (int)intFromSysctlByName("hw.physicalcpu");
 		int logicpu = (int)intFromSysctlByName("hw.logicalcpu");
 		inres->cpuhyperthreadmod = logicpu / physcpu;
@@ -208,12 +216,12 @@ void getsysresinfo(struct sysres *inres)
 	natural_t cpuCount;
 	host_info_t hostinfo;
 	mach_msg_type_number_t count = HOST_CPU_LOAD_INFO_COUNT;
-	// TODO: consider using host_statistics() instead 
+	// TODO: consider using host_statistics() instead?
 	//  -- http://stackoverflow.com/questions/20471920/how-to-get-total-cpu-idle-time-in-objective-c-c-on-os-x
 	error = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &hostinfo, &count);
     
 	if (!error) {
-		processor_cpu_load_info_data_t* r_load = (processor_cpu_load_info_data_t*)hostinfo;
+		processor_cpu_load_info_data_t *r_load = (processor_cpu_load_info_data_t*)hostinfo;
 
 		inres->avgpercentuser = 0;
 		inres->avgpercentsys = 0;
@@ -237,14 +245,21 @@ void getsysresinfo(struct sysres *inres)
 
 			total = (double)(inres->cpus[cpuno].total - inres->cpus[cpuno].oldtotal);
 
-			inres->cpus[cpuno].percentuser = 
-				(double)(inres->cpus[cpuno].user - inres->cpus[cpuno].olduser) / total * 100;
-			inres->cpus[cpuno].percentsys = 
-				(double)(inres->cpus[cpuno].sys - inres->cpus[cpuno].oldsys) / total * 100;
-			inres->cpus[cpuno].percentidle = 
-				(double)(inres->cpus[cpuno].idle - inres->cpus[cpuno].oldidle) / total * 100;
-			inres->cpus[cpuno].percentnice = 
-				(double)(inres->cpus[cpuno].nice - inres->cpus[cpuno].oldnice) / total * 100;
+			if(total > 0){
+				inres->cpus[cpuno].percentuser = 
+					(double)(inres->cpus[cpuno].user - inres->cpus[cpuno].olduser) / total * 100;
+				inres->cpus[cpuno].percentsys = 
+					(double)(inres->cpus[cpuno].sys - inres->cpus[cpuno].oldsys) / total * 100;
+				inres->cpus[cpuno].percentidle = 
+					(double)(inres->cpus[cpuno].idle - inres->cpus[cpuno].oldidle) / total * 100;
+				inres->cpus[cpuno].percentnice = 
+					(double)(inres->cpus[cpuno].nice - inres->cpus[cpuno].oldnice) / total * 100;
+			} else {
+				inres->cpus[cpuno].percentuser = 0;
+				inres->cpus[cpuno].percentsys = 0;
+				inres->cpus[cpuno].percentidle = 0;
+				inres->cpus[cpuno].percentnice = 0;
+			}
 
 			if(COUNT_HYPERTHREADS_IN_CPU_AVG) {
 				inres->avgpercentuser += inres->cpus[cpuno].percentuser;
