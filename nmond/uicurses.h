@@ -103,7 +103,7 @@ struct uiwins {
 {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
 {NULL, false}, {NULL, false} }
 
-extern void uiheader(int, int, int, char*, char*, double, time_t);
+extern void uiheader(WINDOW**, int, int, int, char*, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int*, int, int);
 extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);

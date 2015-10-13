@@ -391,8 +391,8 @@ int main(int argc, char **argv)
 	int	networks = 0;
 	int	flash_on = 0;
 	int	show_raw = 0;
-	int x;
-	// int y;
+	int x = 1;
+	int xoffset = 0;
 
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
@@ -429,10 +429,11 @@ int main(int argc, char **argv)
 	// Main program loop
 	for(;;) {
 		// Reset the cursor position to top left
-		x = 0;
+		// x = 1;
+		x = 1 + xoffset;
 
 		// update the header
-		uiheader(0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
+		uiheader(&stdscr, 0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
 
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
@@ -574,6 +575,12 @@ int main(int argc, char **argv)
 				if(x < LINES-2) {
 					mvwhline(stdscr, x, 1, ' ', COLS-2);
 				}
+
+				// if(pressedkey == 'a') {
+				// 	++xoffset;
+				// } else if(pressedkey == 's') {
+				// 	--xoffset;
+				// }
 
 				lastpressedkeyb = lastpressedkeya;
 				lastpressedkeya = pressedkey;
