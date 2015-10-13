@@ -198,11 +198,8 @@ struct timeval timevalFromSysctl(int mib0, int mib1)
 /*
  * Get process name and arguments given a PID
  */
-#include <stdio.h>
 void processArguments(int pid, int sizelimit, char *resultLoc)
 {
-	// char *result = NULL;
-
 	int mib[4];
 	mib[0] = CTL_KERN;
 	mib[1] = KERN_PROCARGS;//KERN_PROCARGS2;
@@ -300,6 +297,4 @@ void processArguments(int pid, int sizelimit, char *resultLoc)
 		}
 		free(arglist);
 	}
-
-	// return result;
 }
