@@ -58,6 +58,7 @@ struct nmondstate {
 	double timelast;
 	double elapsed;
 
+	int xoffset;
 	int topmode;
 
 	bool pendingchanges;
@@ -65,6 +66,6 @@ struct nmondstate {
 
 	char *user;
 };
-#define NMONDSTATE_INIT { 0, 2, 2000, 0, 0.0, 0.0, 0.0, 0, false, false, NULL }
+#define NMONDSTATE_INIT { 0, 2, 2000, 0, 0.0, 0.0, 0.0, 0, 0, false, false, NULL }
 
 #endif

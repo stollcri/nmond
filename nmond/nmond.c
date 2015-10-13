@@ -361,6 +361,7 @@ int main(int argc, char **argv)
 	currentstate.color = has_colors();
 	currentstate.timenow = time(NULL);
 	currentstate.user = getlogin();
+	currentstate.xoffset = 0;
 	// set wait time for getch()
 	timeout(currentstate.refreshms);
 
@@ -392,7 +393,6 @@ int main(int argc, char **argv)
 	int	flash_on = 0;
 	int	show_raw = 0;
 	int x = 1;
-	int xoffset = 0;
 
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
 	for(;;) {
 		// Reset the cursor position to top left
 		// x = 1;
-		x = 1 + xoffset;
+		x = 1 + currentstate.xoffset;
 
 		// update the header
 		uiheader(&stdscr, 0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
