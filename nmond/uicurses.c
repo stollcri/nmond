@@ -1331,17 +1331,17 @@ static void uinetdetail(WINDOW *win, int x, int usecolor, unsigned long netin, u
 			double nettotal = (double)(netin + netout);
 			int tmpquant = (int)floor(log10(nettotal) * 4.9);
 			// TODO: this ratio cannot be right for logrithmic output
-			readquant = (int)(tmpquant * (netin / (nettotal))) - 1;
-			writequant = (int)(tmpquant * (netout / (nettotal))) - 1;
+			readquant = (int)(tmpquant * (netin / (nettotal)));
+			writequant = (int)(tmpquant * (netout / (nettotal)));
 		} else {
-			readquant = -1;
-			writequant = -1;
+			readquant = 0;
+			writequant = 0;
 		}
 		mvwprintw(win, 1, 22, "  LOG");
 		mvwprintw(win, 2, 22, "SCALE");
 	} else {
-		readquant = (int)(floor(netin) / (unitdivisor * 2 * scale)) - 1;
-		writequant = (int)(floor(netout) / (unitdivisor * 2 * scale)) - 1;
+		readquant = (int)(floor(netin) / (unitdivisor * 2 * scale));
+		writequant = (int)(floor(netout) / (unitdivisor * 2 * scale));
 		mvwprintw(win, x, 24, "%2.2s", units);
 	}
 
@@ -1355,7 +1355,7 @@ static void uinetdetail(WINDOW *win, int x, int usecolor, unsigned long netin, u
 			metermark = " ";
 		}
 
-		if(readquant >= 0) {
+		if(readquant) {
 			if(usecolor) {
 				wattrset(win, COLOR_PAIR(10));
 				wprintw(win, metermark);
@@ -1364,7 +1364,7 @@ static void uinetdetail(WINDOW *win, int x, int usecolor, unsigned long netin, u
 			}
 			--readquant;
 		} else {
-			if(writequant >= 0) {
+			if(writequant) {
 				if(usecolor) {
 					wattrset(win, COLOR_PAIR(8));
 					wprintw(win, metermark);
