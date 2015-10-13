@@ -12,7 +12,7 @@
 - ☐ APP: Create long output for:
 	- ✓ cpu
 	- ✗ mem (this is not, or should not be, very interesting)
-	- ☐ disk
+	- ✓ disk
 	- ✓ net
 - ☐ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
 	- ✓ Improve spacing

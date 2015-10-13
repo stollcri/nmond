@@ -77,6 +77,7 @@ struct uiwins {
 	struct uiwin cpulong;
 
 	struct uiwin disks;
+	struct uiwin disklong;
 	struct uiwin diskgroup;
 	struct uiwin diskmap;
 	struct uiwin filesys;
@@ -97,9 +98,9 @@ struct uiwins {
 };
 #define UIWINS_INIT { 0, \
 {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
+{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
 {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
-{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
-{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
+{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
 {NULL, false}, {NULL, false} }
 
 extern void uiheader(int*, int, int, char*, char*, double, time_t);
@@ -109,6 +110,7 @@ extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
 extern void uicpulong(WINDOW **, int*, int, int, int*, int, struct sysres, bool);
 
 extern void uidisks(WINDOW**, int*, int, int, int, unsigned int, unsigned int);
+extern void uidisklong(WINDOW **, int*, int, int, int*, int, unsigned int, unsigned int, bool);
 extern void uidiskgroup(WINDOW**, int*, int, int);
 extern void uidiskmap(WINDOW**, int*, int, int);
 extern void uifilesys(WINDOW**, int*, int, int);

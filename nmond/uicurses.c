@@ -537,6 +537,124 @@ extern void uidisks(WINDOW **win, int *xin, int cols, int rows, int usecolor, un
 	uidisplay(*win, xin, cols, 3, rows);
 }
 
+void uidisklong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int usecolor, unsigned int diskr, unsigned int diskw, bool updategraph)
+{
+	if (*win == NULL) {
+		return;
+	}
+
+	mvwprintw(*win, 0, 0, "DISK +---Long-Term-----------------------------------------------------------+");
+	if (usecolor){
+		wattrset(*win, COLOR_PAIR(4));
+		mvwprintw(*win, 0, 27, "In");
+		wattrset(*win, COLOR_PAIR(1));
+		mvwprintw(*win, 0, 35, "Out");
+		// wattrset(*win, COLOR_PAIR(2));
+		// mvwprintw(*win, 0, 45, "Nice%%");
+		wattrset(*win, COLOR_PAIR(0));
+	}
+	mvwprintw(*win,  1, 0, " 10G-|");
+	mvwprintw(*win,  2, 0, "     |");
+	mvwprintw(*win,  3, 0, "  1G-|");
+	mvwprintw(*win,  4, 0, "     |");
+	mvwprintw(*win,  5, 0, "100M-|");
+	mvwprintw(*win,  6, 0, "     |");
+	mvwprintw(*win,  7, 0, " 10M-|");
+	mvwprintw(*win,  8, 0, "     |");
+	mvwprintw(*win,  9, 0, "  1M-|");
+	mvwprintw(*win, 10, 0, "     |");
+	mvwprintw(*win, 11, 0, "100K-|");
+	mvwprintw(*win, 12, 0, "     |");
+	mvwprintw(*win, 13, 0, " 10K-|");
+	mvwprintw(*win, 14, 0, "     |");
+	mvwprintw(*win, 15, 0, "  1K-|");
+	mvwprintw(*win, 16, 0, "     |");
+	mvwprintw(*win, 17, 0, "100B-|");
+	mvwprintw(*win, 18, 0, "     |");
+	mvwprintw(*win, 19, 0, " 10B-|");
+	mvwprintw(*win, 20, 0, "     |");
+	
+	if(updategraph) {
+		int graphcols = 70;
+		int graphrows = 20;
+		int offset = 6;
+
+		char *metermark = NULL;
+		char *blankmark = NULL;
+		char *leadermark = NULL;
+
+		int readquant = 0;
+		int writequant = 0;
+		int zzzzquant = 0;
+
+		double disktotal = (double)(diskr + diskw);
+
+		int tmpquant = 0;
+		if(disktotal) {
+			tmpquant = (int)floor(log10(disktotal) * 2);
+			// TODO: this ratio cannot be right for logrithmic output
+			readquant = (int)(tmpquant * (diskr / (disktotal))) - 0;
+			writequant = (int)(tmpquant * (diskw / (disktotal))) - 0;
+		}
+
+		for (int i = graphrows; i > 0; --i) {
+			wmove(*win, i, *itterin+offset);
+			
+			if((i > 1) && (((i - 1) % 4) == 0)) {
+				metermark = "+";
+				blankmark = "-";
+				leadermark = "+";
+			} else {
+				metermark = "|";
+				blankmark = " ";
+				leadermark = "|";
+			}
+
+			if(readquant) {
+				if(usecolor) {
+					wattrset(*win, COLOR_PAIR(10));
+					wprintw(*win, metermark);
+				} else {
+					wprintw(*win, "R");
+				}
+				--readquant;
+			} else {
+				if(writequant) {
+					if(usecolor) {
+						wattrset(*win, COLOR_PAIR(8));
+						wprintw(*win, metermark);
+					} else {
+						wprintw(*win, "W");
+					}
+					--writequant;
+				} else {
+					if(zzzzquant) {
+						if(usecolor) {
+							wattrset(*win, COLOR_PAIR(9));
+							wprintw(*win, metermark);
+						} else {
+							wprintw(*win, "#");
+						}
+						--zzzzquant;
+					} else {
+						wattrset(*win, COLOR_PAIR(0));
+						wprintw(*win, blankmark);
+					}
+				}
+			}
+			wattrset(*win, COLOR_PAIR(0));
+			wmove(*win, i, *itterin+offset+1);
+			wprintw(*win, leadermark);
+		}
+
+		*itterin += 1;
+		if(*itterin > graphcols) {
+			*itterin = 0;
+		}
+	}
+	uidisplay(*win, xin, cols, 21, rows);
+}
+
 extern void uidiskgroup(WINDOW **winin, int *xin, int cols, int rows)
 {
 	return;

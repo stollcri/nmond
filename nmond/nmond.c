@@ -126,6 +126,13 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 			}
 			break;
 		case 'D':
+			if(wins->disklong.visible) {
+				wins->disklong.visible = false;
+				wins->visiblecount -= 1;
+			} else {
+				wins->disklong.visible = true;
+				wins->visiblecount += 1;
+			}
 			break;
 		case 'f':
 			break;
@@ -380,6 +387,7 @@ int main(int argc, char **argv)
 	int lastpressedkeyb = 0;
 	int cpulongitter = 0;
 	int netlongitter = 0;
+	int disklongitter = 0;
 	int	networks = 0;
 	int	flash_on = 0;
 	int	show_raw = 0;
@@ -395,6 +403,7 @@ int main(int argc, char **argv)
 	wins.cpu.win = newpad((thisres.cpucount+3), MAXCOLS);
 	wins.cpulong.win = newpad(21, MAXCOLS);
 	wins.disks.win = newpad(3, MAXCOLS);
+	wins.disklong.win = newpad(21, MAXCOLS);
 	// wins.diskgroup.win = newpad(MAXROWS, MAXCOLS);
 	// wins.diskmap.win = newpad(24, MAXCOLS);
 	// wins.filesys.win = newpad(MAXROWS, MAXCOLS);
@@ -458,6 +467,12 @@ int main(int argc, char **argv)
 			}
 			if (wins.cpulong.visible) {
 				uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
+			}
+			if (wins.disklong.visible) {
+				uidisklong(&wins.disklong.win, &x, COLS, LINES, &disklongitter, currentstate.color, \
+					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
+					(unsigned int)(thisres.diskusew - thisres.diskusewlast), \
+					pendingdata);
 			}
 			if (wins.netlong.visible) {
 				uinetlong(&wins.netlong.win, &x, COLS, LINES, &netlongitter, currentstate.color, thisnet, pendingdata);
