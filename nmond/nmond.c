@@ -566,8 +566,6 @@ int main(int argc, char **argv)
 			//       (do something better than what is currently implemented)
 			//
 			if((pressedkey != ERR) && (pressedkey != 0x1b) && (lastpressedkeya != 0x1b) && (lastpressedkeyb != 0x1b)) {
-				// move the cursor back
-				wmove(stdscr, 0, 0);
 				// update app state
 				setwinstate(&wins, &currentstate, pressedkey);
 
