@@ -4,6 +4,8 @@ This is a near complete rewrite of [nmon](http://nmon.sourceforge.net/) (file lm
 
 Since there is already a working version for Linux (and some UNIX distributions), this project does not seek to preserve compatibility with them. All of the special code required to work with those distros was be removed to make porting easier. The program was designed and tested for OS X, but the code should compile on any other BSD variant as well.
 
+![Screenshot of the nmond app](screenshot_01.png)
+
 ## Building
 
 Just type `make` in the nmond direectory to build nmond. It can be installed by issuing the `sudo make install` command.
