@@ -429,17 +429,17 @@ static void uidiskdetail(WINDOW *win, int x, int usecolor, unsigned long diskr, 
 			double disktotal = (double)(diskr + diskw);
 			int tmpquant = (int)floor(log10(disktotal) * 4.9);
 			// TODO: this ratio cannot be right for logrithmic output
-			readquant = (int)(tmpquant * (diskr / (disktotal))) - 1;
-			writequant = (int)(tmpquant * (diskw / (disktotal))) - 1;
+			readquant = (int)(tmpquant * (diskr / (disktotal)));
+			writequant = (int)(tmpquant * (diskw / (disktotal)));
 		} else {
-			readquant = -1;
-			writequant = -1;
+			readquant = 0;
+			writequant = 0;
 		}
 		mvwprintw(win, 1, 22, "  LOG");
 		mvwprintw(win, 2, 22, "SCALE");
 	} else {
-		readquant = (int)(floor(diskr) / (unitdivisor * 2 * scale)) - 1;
-		writequant = (int)(floor(diskw) / (unitdivisor * 2 * scale)) - 1;
+		readquant = (int)(floor(diskr) / (unitdivisor * 2 * scale));
+		writequant = (int)(floor(diskw) / (unitdivisor * 2 * scale));
 		mvwprintw(win, x, 24, "%2.2s", units);
 	}
 
@@ -453,7 +453,7 @@ static void uidiskdetail(WINDOW *win, int x, int usecolor, unsigned long diskr, 
 			metermark = " ";
 		}
 
-		if(readquant >= 0) {
+		if(readquant) {
 			if(usecolor) {
 				wattrset(win, COLOR_PAIR(10));
 				wprintw(win, metermark);
@@ -462,7 +462,7 @@ static void uidiskdetail(WINDOW *win, int x, int usecolor, unsigned long diskr, 
 			}
 			--readquant;
 		} else {
-			if(writequant >= 0) {
+			if(writequant) {
 				if(usecolor) {
 					wattrset(win, COLOR_PAIR(8));
 					wprintw(win, metermark);
