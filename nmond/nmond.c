@@ -360,6 +360,8 @@ int main(int argc, char **argv)
 	cbreak();
 	// do not echo out read cahracters
 	noecho();
+	// capture keypad input
+	keypad(stdscr, TRUE);
 	// move the cursor to the top left
 	move(0, 0);
 
@@ -568,11 +570,7 @@ int main(int argc, char **argv)
 		// handle input
 		pressedkey = getch();
 		if(pressedkey) {
-			//
-			// TODO: catch mouse movement (up/down key presses) and prevent constant screen updates
-			//       (do something better than what is currently implemented)
-			//
-			if((pressedkey != ERR) && (pressedkey != 0x1b) && (lastpressedkeya != 0x1b) && (lastpressedkeyb != 0x1b)) {
+			if(pressedkey != ERR) {
 				// update app state
 				if(!setwinstate(&wins, &currentstate, pressedkey)) {
 					pressedkey = 0;
@@ -588,12 +586,7 @@ int main(int argc, char **argv)
 				// } else if(pressedkey == 's') {
 				// 	--xoffset;
 				// }
-
-				lastpressedkeyb = lastpressedkeya;
-				lastpressedkeya = pressedkey;
 			} else {
-				lastpressedkeyb = lastpressedkeya;
-				lastpressedkeya = pressedkey;
 				pressedkey = 0;
 			}
 		}
