@@ -93,6 +93,22 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 	int result = 1;
 
 	switch (input) {
+		case KEY_DOWN:
+			if(state->debug) {
+				state->xoffset -= 1;
+			} else {
+				result = 0;
+			}
+			break;
+		case KEY_UP:
+			if(state->debug) {
+				if(state->xoffset < 0) {
+					state->xoffset += 1;
+				}
+			} else {
+				result = 0;
+			}
+			break;
 		case 'a':
 			break;
 		case 'A':
@@ -438,8 +454,11 @@ int main(int argc, char **argv)
 	// Main program loop
 	for(;;) {
 		// Reset the cursor position to top left
-		// x = 1;
-		x = 1 + currentstate.xoffset;
+		if(currentstate.debug) {
+			x = 1 + currentstate.xoffset;
+		} else {
+			x = 1;
+		}
 
 		// update the header
 		uiheader(&stdscr, 0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
@@ -580,12 +599,6 @@ int main(int argc, char **argv)
 				if(x < LINES-2) {
 					mvwhline(stdscr, x, 1, ' ', COLS-2);
 				}
-
-				// if(pressedkey == 'a') {
-				// 	++xoffset;
-				// } else if(pressedkey == 's') {
-				// 	--xoffset;
-				// }
 			} else {
 				pressedkey = 0;
 			}
