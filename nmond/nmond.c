@@ -88,8 +88,10 @@ static inline void setinterupthandlers()
 	signal(SIGWINCH, handleinterupt);
 }
 
-static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
+static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 {
+	int result = 1;
+
 	switch (input) {
 		case 'a':
 			break;
@@ -278,12 +280,17 @@ static void setwinstate(struct uiwins *wins, struct nmondstate *state, int input
 				state->pendingchanges = true;
 			}
 			break;
+		default:
+			result = 0;
+			break;
 	}
 	if(wins->visiblecount) {
 		wins->welcome.visible = false;
 	} else {
 		wins->welcome.visible = true;
 	}
+
+	return result;
 }
 
 static void processenvars(struct uiwins *wins, struct nmondstate *state)
@@ -567,7 +574,9 @@ int main(int argc, char **argv)
 			//
 			if((pressedkey != ERR) && (pressedkey != 0x1b) && (lastpressedkeya != 0x1b) && (lastpressedkeyb != 0x1b)) {
 				// update app state
-				setwinstate(&wins, &currentstate, pressedkey);
+				if(!setwinstate(&wins, &currentstate, pressedkey)) {
+					pressedkey = 0;
+				}
 
 				// un-underline the end of the stats area border
 				if(x < LINES-2) {
