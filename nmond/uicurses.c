@@ -67,26 +67,24 @@ static inline void uidisplay(WINDOW *win, int *xin, int cols, int rows, int line
 	}
 }
 
-void uiheader(int *xin, int usecolor, int blinkon, char *hostname, char *message, double elapsed, time_t timer)
+void uiheader(int xin, int usecolor, int blinkon, char *hostname, char *message, double elapsed, time_t timer)
 {
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvprintw(*xin, 3, APPNAME);
-	mvprintw(*xin, 11, "%s", hostname);
+	mvprintw(xin, 3, APPNAME);
+	mvprintw(xin, 11, "%s", hostname);
 	if(blinkon) {
 		if(strlen(message)) {
 			attrset(COLOR_PAIR(8));
 			// TODO: should limit to 26 characters
-			mvprintw(*xin, 35, "%s", message);
+			mvprintw(xin, 35, "%s", message);
 			attrset(COLOR_PAIR(0));
 		}
 	}
-	mvprintw(*xin, 64, "%1.0fs", elapsed);
-	mvprintw(*xin, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
+	mvprintw(xin, 64, "%1.0fs", elapsed);
+	mvprintw(xin, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
 	wnoutrefresh(stdscr);
-
-	*xin = *xin + 1;
 }
 
 void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct syshw hw)

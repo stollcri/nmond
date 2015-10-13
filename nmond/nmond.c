@@ -432,7 +432,7 @@ int main(int argc, char **argv)
 		x = 0;
 
 		// update the header
-		uiheader(&x, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
+		uiheader(0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
 
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
