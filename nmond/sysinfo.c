@@ -524,38 +524,6 @@ struct sysproc **getsysprocinfoall(size_t *length, struct sysproc **procs, struc
 	return getsysprocinfo(KERN_PROC_ALL, 0, length, procs, hashtable, cpupercent, res);
 }
 
-/*
-struct sysproc getsysprocinfobypid(int processid, size_t length)
-{
-	struct sysres thisres = SYSRES_INIT;
-	return getsysprocinfo(KERN_PROC_PID, processid, &length);
-}
-
-struct sysproc getsysprocinfobypgrp(int processgroupid, size_t length)
-{
-	struct sysres thisres = SYSRES_INIT;
-	return getsysprocinfo(KERN_PROC_PGRP, processgroupid, &length);
-}
-
-struct sysproc getsysprocinfobytty(int tty, size_t length)
-{
-	struct sysres thisres = SYSRES_INIT;
-	return getsysprocinfo(KERN_PROC_TTY, tty, &length);
-}
-
-struct sysproc getsysprocinfobyuid(int userid, size_t length)
-{
-	struct sysres thisres = SYSRES_INIT;
-	return getsysprocinfo(KERN_PROC_UID, userid, &length);
-}
-
-struct sysproc getsysprocinfobyruid(int realuserid, size_t length)
-{
-	struct sysres thisres = SYSRES_INIT;
-	return getsysprocinfo(KERN_PROC_RUID, realuserid, &length);
-}
-*/
-
 void getsysnetinfo(struct sysnet *net)
 {
 	struct ifaddrs *if_list;

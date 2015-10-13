@@ -246,13 +246,6 @@ struct sysproc {
 // 0, 0.0 }
 
 extern struct sysproc **getsysprocinfoall(size_t*, struct sysproc**, struct hashitem**, double, struct sysres*);
-/*
-extern struct sysproc getsysprocinfobypid(int, size_t);
-extern struct sysproc getsysprocinfobypgrp(int, size_t);
-extern struct sysproc getsysprocinfobytty(int, size_t);
-extern struct sysproc getsysprocinfobyuid(int, size_t);
-extern struct sysproc getsysprocinfobyruid(int, size_t);
-*/
 
 //
 // Network information
