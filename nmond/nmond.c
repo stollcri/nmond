@@ -94,19 +94,11 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 
 	switch (input) {
 		case KEY_DOWN:
-			if(state->debug) {
-				state->xoffset -= 1;
-			} else {
-				result = 0;
-			}
+			state->rowoffset -= 1;
 			break;
 		case KEY_UP:
-			if(state->debug) {
-				if(state->xoffset < 0) {
-					state->xoffset += 1;
-				}
-			} else {
-				result = 0;
+			if(state->rowoffset < 0) {
+				state->rowoffset += 1;
 			}
 			break;
 		case 'a':
@@ -386,7 +378,7 @@ int main(int argc, char **argv)
 	currentstate.color = has_colors();
 	currentstate.timenow = time(NULL);
 	currentstate.user = getlogin();
-	currentstate.xoffset = 0;
+	currentstate.rowoffset = 0;
 	// set wait time for getch()
 	timeout(currentstate.refreshms);
 
@@ -417,7 +409,7 @@ int main(int argc, char **argv)
 	int	networks = 0;
 	int	flash_on = 0;
 	int	show_raw = 0;
-	int x = 1;
+	int currentrow = 0;
 
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
@@ -454,11 +446,7 @@ int main(int argc, char **argv)
 	// Main program loop
 	for(;;) {
 		// Reset the cursor position to top left
-		if(currentstate.debug) {
-			x = 1 + currentstate.xoffset;
-		} else {
-			x = 1;
-		}
+		currentrow = 0 + currentstate.rowoffset;
 
 		// update the header
 		uiheader(&stdscr, 0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
@@ -486,64 +474,64 @@ int main(int argc, char **argv)
 
 			// update the in-use panes
 			if(wins.welcome.visible) {
-				uiwelcome(&wins.welcome.win, &x, COLS, LINES, currentstate.color, thishw);
+				uiwelcome(&wins.welcome.win, &currentrow, COLS, LINES, currentstate.color, thishw);
 			}
 			if (wins.help.visible) {
-				uihelp(&wins.help.win, &x, COLS, LINES);
+				uihelp(&wins.help.win, &currentrow, COLS, LINES);
 			}
 			if (wins.sys.visible) {
-				uisys(&wins.sys.win, &x, COLS, LINES, thishw, thiskern);
+				uisys(&wins.sys.win, &currentrow, COLS, LINES, thishw, thiskern);
 			}
 			if (wins.cpulong.visible) {
-				uicpulong(&wins.cpulong.win, &x, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
+				uicpulong(&wins.cpulong.win, &currentrow, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
 			}
 			if (wins.disklong.visible) {
-				uidisklong(&wins.disklong.win, &x, COLS, LINES, &disklongitter, currentstate.color, \
+				uidisklong(&wins.disklong.win, &currentrow, COLS, LINES, &disklongitter, currentstate.color, \
 					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
 					(unsigned int)(thisres.diskusew - thisres.diskusewlast), \
 					pendingdata);
 			}
 			if (wins.netlong.visible) {
-				uinetlong(&wins.netlong.win, &x, COLS, LINES, &netlongitter, currentstate.color, thisnet, pendingdata);
+				uinetlong(&wins.netlong.win, &currentrow, COLS, LINES, &netlongitter, currentstate.color, thisnet, pendingdata);
 			}
 			if (wins.cpu.visible) {
-				uicpu(&wins.cpu.win, &x, COLS, LINES, currentstate.color, thisres, show_raw);
+				uicpu(&wins.cpu.win, &currentrow, COLS, LINES, currentstate.color, thisres, show_raw);
 			}
 			if (wins.memory.visible) {
-				uimemory(&wins.memory.win, &x, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
+				uimemory(&wins.memory.win, &currentrow, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
 			}
 			if (wins.disks.visible) {
-				uidisks(&wins.disks.win, &x, COLS, LINES, currentstate.color, \
+				uidisks(&wins.disks.win, &currentrow, COLS, LINES, currentstate.color, \
 					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
 					(unsigned int)(thisres.diskusew - thisres.diskusewlast));
 			}
 
 
 			if (wins.diskgroup.visible) {
-				uidiskgroup(&wins.diskgroup.win, &x, COLS, LINES);
+				uidiskgroup(&wins.diskgroup.win, &currentrow, COLS, LINES);
 			}
 			if (wins.diskmap.visible) {
-				uidiskmap(&wins.diskmap.win, &x, COLS, LINES);
+				uidiskmap(&wins.diskmap.win, &currentrow, COLS, LINES);
 			}
 			if (wins.filesys.visible) {
-				uifilesys(&wins.filesys.win, &x, COLS, LINES);
+				uifilesys(&wins.filesys.win, &currentrow, COLS, LINES);
 			}
 			if (wins.kernel.visible) {
-				uikernel(&wins.kernel.win, &x, COLS, LINES);
+				uikernel(&wins.kernel.win, &currentrow, COLS, LINES);
 			}
 			if (wins.memlarge.visible) {
-				uimemlarge(&wins.memlarge.win, &x, COLS, LINES);
+				uimemlarge(&wins.memlarge.win, &currentrow, COLS, LINES);
 			}
 			if (wins.memvirtual.visible) {
-				uimemvirtual(&wins.memvirtual.win, &x, COLS, LINES);
+				uimemvirtual(&wins.memvirtual.win, &currentrow, COLS, LINES);
 			}
 			if (wins.netfilesys.visible) {
-				uinetfilesys(&wins.netfilesys.win, &x, COLS, LINES);
+				uinetfilesys(&wins.netfilesys.win, &currentrow, COLS, LINES);
 			}
 
 
 			if (wins.network.visible) {
-				uinetwork(&wins.disks.win, &x, COLS, LINES, currentstate.color, thisnet);
+				uinetwork(&wins.disks.win, &currentrow, COLS, LINES, currentstate.color, thisnet);
 				/*
 				int errors = 0;
 				for (int i = 0; i < networks; i++) {
@@ -556,27 +544,27 @@ int main(int argc, char **argv)
 				}
 
 				if (currentstate.neterrors) {
-					uineterrors(&wins.neterrors.win, &x, COLS, LINES);
+					uineterrors(&wins.neterrors.win, &currentrow, COLS, LINES);
 				}
 				*/
 			}
 			if (wins.top.visible) {
 				// wclear(wins.top.win);
-				uitop(&wins.top.win, &x, COLS, LINES, currentstate.color, thisproc, \
+				uitop(&wins.top.win, &currentrow, COLS, LINES, currentstate.color, thisproc, \
 					(int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 			}
 
 
 			if (wins.warn.visible) {
-				uiwarn(&wins.warn.win, &x, COLS, LINES);
+				uiwarn(&wins.warn.win, &currentrow, COLS, LINES);
 			}
 
 			// all data changes posted by here
 			pendingdata = false;
 			
 			// underline the end of the stats area border
-			if(x < LINES-2) {
-				mvwhline(stdscr, x, 1, ACS_HLINE, COLS-2);
+			if(currentrow < LINES-2) {
+				mvwhline(stdscr, currentrow, 1, ACS_HLINE, COLS-2);
 			}
 			wmove(stdscr, 0, 0);
 			wrefresh(stdscr);
@@ -596,8 +584,8 @@ int main(int argc, char **argv)
 				}
 
 				// un-underline the end of the stats area border
-				if(x < LINES-2) {
-					mvwhline(stdscr, x, 1, ' ', COLS-2);
+				if(currentrow < LINES-2) {
+					mvwhline(stdscr, currentrow, 1, ' ', COLS-2);
 				}
 			} else {
 				pressedkey = 0;
