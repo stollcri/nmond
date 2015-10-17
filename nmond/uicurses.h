@@ -50,6 +50,7 @@
 
 #define MAXROWS 256
 #define MAXCOLS 150
+#define BORDER_WIDTH 2
 
 #define DISK_METER_MODE 1  // change me
 #define DISK_METER_MB 0    // do NOT change
@@ -67,6 +68,7 @@
 struct uiwin {
 	WINDOW *win;
 	bool visible;
+	int height;
 };
 struct uiwins {
 	int visiblecount;
@@ -104,26 +106,27 @@ struct uiwins {
 {NULL, false}, {NULL, false} }
 
 extern void uiheader(WINDOW**, int, int, int, char*, char*, double, time_t);
-extern void uiwelcome(WINDOW**, int*, int, int, int, struct syshw);
-extern void uihelp(WINDOW**, int*, int, int);
-extern void uicpu(WINDOW**, int*, int, int, int, struct sysres, int);
-extern void uicpulong(WINDOW **, int*, int, int, int*, int, struct sysres, bool);
 
-extern void uidisks(WINDOW**, int*, int, int, int, unsigned int, unsigned int);
-extern void uidisklong(WINDOW **, int*, int, int, int*, int, unsigned int, unsigned int, bool);
-extern void uidiskgroup(WINDOW**, int*, int, int);
-extern void uidiskmap(WINDOW**, int*, int, int);
-extern void uifilesys(WINDOW**, int*, int, int);
-extern void uikernel(WINDOW**, int*, int, int);
-extern void uimemory(WINDOW**, int*, int, int, int, unsigned long long, unsigned long long);
-extern void uimemlarge(WINDOW**, int*, int, int);
-extern void uimemvirtual(WINDOW**, int*, int, int);
-extern void uineterrors(WINDOW**, int*, int, int);
-extern void uinetfilesys(WINDOW**, int*, int, int);
-extern void uinetwork(WINDOW**, int*, int, int, int, struct sysnet);
-extern void uinetlong(WINDOW **, int*, int, int, int*, int, struct sysnet, bool);
-extern void uitop(WINDOW**, int*, int, int, int, struct sysproc**, int, int, bool, char*);
-extern void uisys(WINDOW**, int*, int, int, struct syshw, struct syskern);
-extern void uiwarn(WINDOW**, int*, int, int);
+extern void uiwelcome(WINDOW**, int, int*, int, int, int, struct syshw);
+extern void uihelp(WINDOW**, int, int*, int, int);
+extern void uicpu(WINDOW**, int, int*, int, int, int, struct sysres, int);
+extern void uicpulong(WINDOW**, int, int*, int, int, int*, int, struct sysres, bool);
+
+extern void uidisks(WINDOW**, int, int*, int, int, int, unsigned int, unsigned int);
+extern void uidisklong(WINDOW**, int, int*, int, int, int*, int, unsigned int, unsigned int, bool);
+extern void uidiskgroup(WINDOW**, int, int*, int, int);
+extern void uidiskmap(WINDOW**, int, int*, int, int);
+extern void uifilesys(WINDOW**, int, int*, int, int);
+extern void uikernel(WINDOW**, int, int*, int, int);
+extern void uimemory(WINDOW**, int, int*, int, int, int, unsigned long long, unsigned long long);
+extern void uimemlarge(WINDOW**, int, int*, int, int);
+extern void uimemvirtual(WINDOW**, int, int*, int, int);
+extern void uineterrors(WINDOW**, int, int*, int, int);
+extern void uinetfilesys(WINDOW**, int, int*, int, int);
+extern void uinetwork(WINDOW**, int, int*, int, int, int, struct sysnet);
+extern void uinetlong(WINDOW**, int, int*, int, int, int*, int, struct sysnet, bool);
+extern void uitop(WINDOW**, int, int*, int, int, int, struct sysproc**, int, int, bool, char*);
+extern void uisys(WINDOW**, int, int*, int, int, struct syshw, struct syskern);
+extern void uiwarn(WINDOW**, int, int*, int, int);
 
 #endif

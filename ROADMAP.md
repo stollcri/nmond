@@ -30,6 +30,12 @@
 	- ✓ CPU Load: increase number of divisions on scale
 	- ✓ CPU L-T: remove top/bottom graph bars, move legend to top line (begins with "CPU")
 	- ✗ Move titles to the left side
+- ☐ GUI: Allow for window scrolling (up/down arrows and mouse)
+	- ✓ Scroll window
+	- ☐ update scroll position when above screen pane is hidden
+	- ☐ properly update long-term graphs (requires saving hiostrical data)
+	- ☐ stop scolling when the bottom is reached
+	- ☐ prevent flicker on rapid scroll (e.g. with mouse wheel)
 - ☐ APP: restructure command options (lower-case for horizontal graph, upper-case for vertical graph)
 	- ☐      a -- All-in-one display (cpu long + disk + mem + net + top) <= shortcut to my preferences ;-)
 	- ☐      A -- All-in-one raw data display
@@ -89,7 +95,7 @@
 	- ☐
 	- ☐
 - ☐ APP: Create a manpage
-- ☐ APP: Clean out dead (reference) code
+- ✓ APP: Clean out dead (reference) code
 - ☐ APP: Create dedicated branch for dev
 
 ## 0.3
@@ -97,10 +103,6 @@
 - ☐ GUI: Horizontal window resizing (update ncurses when terminal width changes
 	- ☐ check how goaccess does it (http://goaccess.io)
 - ☐ GUI: Allow for per-pane sorting
-	- ☐ check how goaccess does it (http://goaccess.io)
-- ☐ GUI: Allow for window scrolling (up/down arrows and mouse)
-	- ☐ `scrollok()`
-	- ☐ `int wscrl(WINDOW *win, int n);`
 	- ☐ check how goaccess does it (http://goaccess.io)
 
 ## 0.4

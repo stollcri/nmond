@@ -53,41 +53,51 @@ static inline void uibanner(WINDOW *win, int cols, char *string)
 }
 
 
-static inline void uidisplay(WINDOW *win, int *xin, int cols, int rows, int lines)
+static inline void uidisplay(WINDOW *win, int *currow, int cols, int lines, int rows)
 {
-	if((*xin + rows + 2) > lines) {
-		pnoutrefresh(win, 0, 0, *xin, 1, (lines - 2), (cols - 2));
-	} else {
-		pnoutrefresh(win, 0, 0, *xin, 1, (*xin + rows), (cols - 2));
+	int rowstart = *currow + 1;
+	int rowend = *currow + rows;
+	int colstart = BORDER_WIDTH / 2;
+	int colend = cols - BORDER_WIDTH;
+
+	if(*currow < 0) {
+		rowstart = 1;
 	}
 
-	*xin = *xin + rows;
-	if((*xin + 1) > lines) {
+	if((rowend + BORDER_WIDTH) > lines) {
+		rowend = lines - BORDER_WIDTH;
+	}
+
+	pnoutrefresh(win, 0, 0, rowstart, colstart, rowend, colend);
+
+	*currow = *currow + rows;
+	if((*currow + 1) > lines) {
 		mvwprintw(stdscr, lines-1, 10, MSG_WRN_NOT_SHOWN);
 	}
 }
 
-void uiheader(WINDOW **win, int xin, int usecolor, int blinkon, char *hostname, char *message, double elapsed, time_t timer)
+void uiheader(WINDOW **win, int currow, int usecolor, int blinkon, char *hostname, char *message, double elapsed, time_t timer)
 {
 	struct tm *tim = localtime(&timer);
 
 	box(stdscr, 0, 0);
-	mvwprintw(*win, xin, 3, APPNAME);
-	mvwprintw(*win, xin, 11, "%s", hostname);
+	mvwprintw(*win, currow, 3, APPNAME);
+	mvwprintw(*win, currow, 11, "%s", hostname);
 	if(blinkon) {
 		if(strlen(message)) {
 			attrset(COLOR_PAIR(8));
 			// TODO: should limit to 26 characters
-			mvwprintw(*win, xin, 35, "%s", message);
+			mvwprintw(*win, currow, 35, "%s", message);
 			attrset(COLOR_PAIR(0));
 		}
 	}
-	mvwprintw(*win, xin, 64, "%1.0fs", elapsed);
-	mvwprintw(*win, xin, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
-	wnoutrefresh(stdscr);
+	mvwprintw(*win, currow, 64, "%1.0fs", elapsed);
+	mvwprintw(*win, currow, 70, "%02d:%02d.%02d", tim->tm_hour, tim->tm_min, tim->tm_sec);
+
+	wnoutrefresh(*win);
 }
 
-void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct syshw hw)
+void uiwelcome(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, struct syshw hw)
 {
 	if (*win == NULL) {
 		return;
@@ -97,73 +107,81 @@ void uiwelcome(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(2));
 	}
-	mvwprintw(*win, *xin+0, 18, "                                         __");
-	mvwprintw(*win, *xin+1, 18, "    ____   ____ ___   ____   ____   ____/ /");
-	mvwprintw(*win, *xin+2, 18, "   / __ \\ / __ `__ \\ / __ \\ / __ \\ / __  / ");
-	mvwprintw(*win, *xin+3, 18, "  / / / // / / / / // /_/ // / / // /_/ /  ");
-	mvwprintw(*win, *xin+4, 18, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
-	mvwprintw(*win, *xin+5, 18, "=======================================    ");
-	// mvwprintw(*win, *xin+5, 18, "================================/nmond/    ");
-	// mvwprintw(*win, *xin+5, 18, "-------------------------------[nmond]-    ");
+	mvwprintw(*win, *currow+1, 18, "                                         __");
+	mvwprintw(*win, *currow+2, 18, "    ____   ____ ___   ____   ____   ____/ /");
+	mvwprintw(*win, *currow+3, 18, "   / __ \\ / __ `__ \\ / __ \\ / __ \\ / __  / ");
+	mvwprintw(*win, *currow+4, 18, "  / / / // / / / / // /_/ // / / // /_/ /  ");
+	mvwprintw(*win, *currow+5, 18, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
+	mvwprintw(*win, *currow+6, 18, "=======================================    ");
+	// mvwprintw(*win, *currow+6, 18, "================================/nmond/    ");
+	// mvwprintw(*win, *currow+6, 18, "-------------------------------[nmond]-    ");
 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	// mvwprintw(*win, *xin+1, 45, "For help type H or ...");
-	// mvwprintw(*win, *xin+2, 45, " nmond -?  - hint");
-	// mvwprintw(*win, *xin+3, 45, " nmond -h  - full");
+	// mvwprintw(*win, *currow+2, 45, "For help type H or ...");
+	// mvwprintw(*win, *currow+3, 45, " nmond -?  - hint");
+	// mvwprintw(*win, *currow+4, 45, " nmond -h  - full");
 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(1));
 	}
-	mvwprintw(*win, *xin+8,  2, "%s", hw.model);
-	mvwprintw(*win, *xin+9,  2, "%s", hw.cpubrand);
-	mvwprintw(*win, *xin+10, 2, "CPU Count    = %2d   Physcal Cores = %d", hw.cpucount, hw.physicalcpucount);
-	mvwprintw(*win, *xin+11, 2, "Hyperthreads = %2d   Virtual CPUs  = %d", hw.hyperthreads, hw.logicalcpucount);
+	mvwprintw(*win, *currow+9,  0, "  %s", hw.model);
+	mvwprintw(*win, *currow+10, 0, "  %s", hw.cpubrand);
+	mvwprintw(*win, *currow+11, 0, "  CPU Count    = %2d   Physcal Cores = %d", hw.cpucount, hw.physicalcpucount);
+	mvwprintw(*win, *currow+12, 0, "  Hyperthreads = %2d   Virtual CPUs  = %d", hw.hyperthreads, hw.logicalcpucount);
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	mvwprintw(*win, *xin+13, 2, "Use these keys to toggle statistics on/off:");
-	mvwprintw(*win, *xin+14, 2, "  c = CPU               n = Network Usage       - = Reduce refresh delay  ");
-	mvwprintw(*win, *xin+15, 2, "  C = CPU, Long-term    r = Top-procs,mem-sort  + = Increase refresh delay");
-	mvwprintw(*win, *xin+16, 2, "  d = Disk Usage        R = Top-procs/cmnd,mem  ? = Help                  ");
-	mvwprintw(*win, *xin+17, 2, "  i = About this Mac    t = Top-processes                                 ");
-	mvwprintw(*win, *xin+18, 2, "  m = Memory Usage      T = Top-procs/command   q = Quit                  ");
-	mvwprintw(*win, *xin+20, 1, "To start the same way every time set an NMOND variable: 'export NMOND=cdmnT'");
-	pnoutrefresh(*win, 0, 0, *xin, 1, rows-2, cols-2);
-	wnoutrefresh(stdscr);
+	mvwprintw(*win, *currow+14, 0, "  Use these keys to toggle statistics on/off:");
+	mvwprintw(*win, *currow+15, 0, "    c = CPU               n = Network Usage       - = Reduce refresh delay  ");
+	mvwprintw(*win, *currow+16, 0, "    C = CPU, Long-term    r = Top-procs,mem-sort  + = Increase refresh delay");
+	mvwprintw(*win, *currow+17, 0, "    d = Disk Usage        R = Top-procs/cmnd,mem  ? = Help                  ");
+	mvwprintw(*win, *currow+18, 0, "    i = About this Mac    t = Top-processes                                 ");
+	mvwprintw(*win, *currow+19, 0, "    m = Memory Usage      T = Top-procs/command   q = Quit                  ");
+	mvwprintw(*win, *currow+21, 0, " To start the same way every time set an NMOND variable: 'export NMOND=cdmnT'");
 	
-	*xin = *xin + 22;
+	// pnoutrefresh(*win, 0, 0, 1, 1, lines-2, cols-2);
+	// wnoutrefresh(stdscr);	
+	// *currow = *currow + 22;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uihelp(WINDOW **win, int *xin, int cols, int rows)
+void uihelp(WINDOW **win, int winheight, int *currow, int cols, int lines)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
 
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
+	mvwprintw(*win, *currow+1,  0, "  [ a =                               ][ N =  Network Usage, long-term     ]");
+	mvwprintw(*win, *currow+2,  0, "  [ b = Black & White mode            ][ o =                               ]");
+	mvwprintw(*win, *currow+3,  0, "  [ c = CPU Load                      ][ r = Top Processes, order by mem   ]");
+	mvwprintw(*win, *currow+4,  0, "  [ C = CPU Load, long-term           ][ R = Top Processes, command by mem ]");
+	mvwprintw(*win, *currow+5,  0, "  [ d =                               ][ t = Top Processes, order by proc  ]");
+	mvwprintw(*win, *currow+6,  0, "  [ D =                               ][ T = Top Processes, command by prc ]");
+	mvwprintw(*win, *currow+7,  0, "  [ f =                               ][ v =                               ]");
+	mvwprintw(*win, *currow+8,  0, "  [ F =                               ][ w =                               ]");
+	mvwprintw(*win, *currow+9,  0, "  [ h = Help                          ][                                   ]");
+	mvwprintw(*win, *currow+10, 0, "  [ H = Help                          ][                                   ]");
+	mvwprintw(*win, *currow+11, 0, "  [ i = About This Mac                ][ - = Reduce refresh delay (half)   ]");
+	mvwprintw(*win, *currow+12, 0, "  [ I =                               ][ + = Increase refresh delay (2x)   ]");
+	mvwprintw(*win, *currow+13, 0, "  [ k =                               ][                                   ]");
+	mvwprintw(*win, *currow+14, 0, "  [ m = Memory Usage                  ][ ? = Help                          ]");
+	mvwprintw(*win, *currow+15, 0, "  [ M =                               ][                                   ]");
+	mvwprintw(*win, *currow+16, 0, "  [ n = Network Usage                 ][ q = Quit/Exit                     ]");
+	mvwprintw(*win, *currow+17, 0, "                                                                            ");
+	mvwprintw(*win, *currow+18, 0, "          %s version %s build %s", APPNAME, VERSION, VERDATE);
+	mvwprintw(*win, *currow+19, 0, "                Christopher Stoll, 2015 (%s)", APPURL);
 	uibanner(*win, cols, "HELP");
-	mvwprintw(*win,  1, 2, "[ a =                               ][ N =  Network Usage, long-term     ]");
-	mvwprintw(*win,  2, 2, "[ b = Black & White mode            ][ o =                               ]");
-	mvwprintw(*win,  3, 2, "[ c = CPU Load                      ][ r = Top Processes, order by mem   ]");
-	mvwprintw(*win,  4, 2, "[ C = CPU Load, long-term           ][ R = Top Processes, command by mem ]");
-	mvwprintw(*win,  5, 2, "[ d =                               ][ t = Top Processes, order by proc  ]");
-	mvwprintw(*win,  6, 2, "[ D =                               ][ T = Top Processes, command by prc ]");
-	mvwprintw(*win,  7, 2, "[ f =                               ][ v =                               ]");
-	mvwprintw(*win,  8, 2, "[ F =                               ][ w =                               ]");
-	mvwprintw(*win,  9, 2, "[ h = Help                          ][                                   ]");
-	mvwprintw(*win, 10, 2, "[ H = Help                          ][                                   ]");
-	mvwprintw(*win, 11, 2, "[ i = About This Mac                ][ - = Reduce refresh delay (half)   ]");
-	mvwprintw(*win, 12, 2, "[ I =                               ][ + = Increase refresh delay (2x)   ]");
-	mvwprintw(*win, 13, 2, "[ k =                               ][                                   ]");
-	mvwprintw(*win, 14, 2, "[ m = Memory Usage                  ][ ? = Help                          ]");
-	mvwprintw(*win, 15, 2, "[ M =                               ][                                   ]");
-	mvwprintw(*win, 16, 2, "[ n = Network Usage                 ][ q = Quit/Exit                     ]");
-	mvwprintw(*win, 18, 2, "        %s version %s build %s", APPNAME, VERSION, VERDATE);
-	mvwprintw(*win, 19, 2, "              Christopher Stoll, 2015 (%s)", APPURL);
-	
-	pnoutrefresh(*win, 0, 0, *xin, 1, rows-2, cols-2);
-	uidisplay(*win, xin, cols, 20, rows);
+
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
 static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double user, double sys, double idle, double nice)
@@ -238,35 +256,40 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 	mvwprintw(win, row, 77, "|");
 }
 
-void uicpu(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysres thisres, int show_raw)
+void uicpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, struct sysres thisres, int show_raw)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
 
-	uibanner(*win, cols, "CPU Load");
-	mvwprintw(*win, 1, 0, "CPU");
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
+	mvwprintw(*win, *currow+1, 0, "CPU");
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(4));
-		mvwprintw(*win, 1, 4, "User%%");
+		mvwprintw(*win, *currow+1, 4, "User%%");
 		wattrset(*win, COLOR_PAIR(1));
-		mvwprintw(*win, 1, 10, "Sys %%");
+		mvwprintw(*win, *currow+1, 10, "Sys %%");
 		wattrset(*win, COLOR_PAIR(2));
-		mvwprintw(*win, 1, 16, "Nice%%");
+		mvwprintw(*win, *currow+1, 16, "Nice%%");
 		wattrset(*win, COLOR_PAIR(0));
-		mvwprintw(*win, 1, 22, "Idle");
+		mvwprintw(*win, *currow+1, 22, "Idle");
 	} else {
-		mvwprintw(*win, 1, 4, "User%%");
-		mvwprintw(*win, 1, 10, "Sys %%");
-		mvwprintw(*win, 1, 16, "Wait%%");
-		mvwprintw(*win, 1, 22, "Idle");
+		mvwprintw(*win, *currow+1, 4, "User%%");
+		mvwprintw(*win, *currow+1, 10, "Sys %%");
+		mvwprintw(*win, *currow+1, 16, "Wait%%");
+		mvwprintw(*win, *currow+1, 22, "Idle");
 	}
-	mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+	mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
 
 	int cpuno = 0;
 	for (cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
-	 	mvwprintw(*win, (2 + cpuno), 77, "|");
-		uicpudetail(*win, cpuno, (cpuno + 2), usecolor,
+	 	mvwprintw(*win, (*currow+2 + cpuno), 77, "|");
+		uicpudetail(*win, cpuno, (*currow+2 + cpuno), usecolor,
 			thisres.cpus[cpuno].percentuser, 
 			thisres.cpus[cpuno].percentsys,
 			thisres.cpus[cpuno].percentidle,
@@ -274,55 +297,64 @@ void uicpu(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysr
 	}
 
 	if (thisres.cpucount > 1) {
-		uicpudetail(*win, -1, (cpuno + 2), usecolor,
+		uicpudetail(*win, -1, (*currow+2 + cpuno), usecolor,
 			thisres.avgpercentuser, 
 			thisres.avgpercentsys, 
 			thisres.avgpercentidle, 
 			thisres.avgpercentnice);
 	}
-	uidisplay(*win, xin, cols, (cpuno + 3), rows);
+
+	uibanner(*win, cols, "CPU Load");
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int usecolor, struct sysres thisres, bool updategraph)
+void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, int *itterin, int usecolor, struct sysres thisres, bool updategraph)
 {
 	if (*win == NULL) {
 		return;
 	}
+	// wclear(*win);
 
-	mvwprintw(*win, 0, 0, " CPU +---Long-Term-----------------------------------------------------------+");
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
+	mvwprintw(*win, *currow, 0, " CPU +---Long-Term-----------------------------------------------------------+");
 	if (usecolor){
 		wattrset(*win, COLOR_PAIR(4));
-		mvwprintw(*win, 0, 27, "User%%");
+		mvwprintw(*win, *currow, 27, "User%%");
 		wattrset(*win, COLOR_PAIR(1));
-		mvwprintw(*win, 0, 35, "System%%");
+		mvwprintw(*win, *currow, 35, "System%%");
 		wattrset(*win, COLOR_PAIR(2));
-		mvwprintw(*win, 0, 45, "Nice%%");
+		mvwprintw(*win, *currow, 45, "Nice%%");
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	mvwprintw(*win, 1, 0, "100%%-|");
-	mvwprintw(*win, 2, 1, "95%%-|");
-	mvwprintw(*win, 3, 1, "90%%-|");
-	mvwprintw(*win, 4, 1, "85%%-|");
-	mvwprintw(*win, 5, 1, "80%%-|");
-	mvwprintw(*win, 6, 1, "75%%-|");
-	mvwprintw(*win, 7, 1, "70%%-|");
-	mvwprintw(*win, 8, 1, "65%%-|");
-	mvwprintw(*win, 9, 1, "60%%-|");
-	mvwprintw(*win, 10, 1, "55%%-|");
-	mvwprintw(*win, 11, 1, "50%%-|");
-	mvwprintw(*win, 12, 1, "45%%-|");
-	mvwprintw(*win, 13, 1, "40%%-|");
-	mvwprintw(*win, 14, 1, "35%%-|");
-	mvwprintw(*win, 15, 1, "30%%-|");
-	mvwprintw(*win, 16, 1, "25%%-|");
-	mvwprintw(*win, 17, 1, "20%%-|");
-	mvwprintw(*win, 18, 1, "15%%-|");
-	mvwprintw(*win, 19, 1, "10%%-|");
-	mvwprintw(*win, 20, 1, " 5%%-|");
+	mvwprintw(*win, *currow+1,  0, "100%%-|");
+	mvwprintw(*win, *currow+2,  0, " 95%%-|");
+	mvwprintw(*win, *currow+3,  0, " 90%%-|");
+	mvwprintw(*win, *currow+4,  0, " 85%%-|");
+	mvwprintw(*win, *currow+5,  0, " 80%%-|");
+	mvwprintw(*win, *currow+6,  0, " 75%%-|");
+	mvwprintw(*win, *currow+7,  0, " 70%%-|");
+	mvwprintw(*win, *currow+8,  0, " 65%%-|");
+	mvwprintw(*win, *currow+9,  0, " 60%%-|");
+	mvwprintw(*win, *currow+10, 0, " 55%%-|");
+	mvwprintw(*win, *currow+11, 0, " 50%%-|");
+	mvwprintw(*win, *currow+12, 0, " 45%%-|");
+	mvwprintw(*win, *currow+13, 0, " 40%%-|");
+	mvwprintw(*win, *currow+14, 0, " 35%%-|");
+	mvwprintw(*win, *currow+15, 0, " 30%%-|");
+	mvwprintw(*win, *currow+16, 0, " 25%%-|");
+	mvwprintw(*win, *currow+17, 0, " 20%%-|");
+	mvwprintw(*win, *currow+18, 0, " 15%%-|");
+	mvwprintw(*win, *currow+19, 0, " 10%%-|");
+	mvwprintw(*win, *currow+20, 0, "  5%%-|");
 	
 	if(updategraph) {
 		int graphcols = 70;
-		int graphrows = 20;
+		int graphlines = 20;
 		int offset = 6;
 
 		char *metermark = NULL;
@@ -333,7 +365,7 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 		int systquant = (int)(round(thisres.avgpercentsys) / 5);
 		int nicequant = (int)(round(thisres.avgpercentnice) / 5);
 
-		for (int i = graphrows; i > 0; --i) {
+		for (int i = graphlines; i > 0; --i) {
 			wmove(*win, i, *itterin+offset);
 			
 			if((i > 1) && (((i - 1) % 4) == 0)) {
@@ -388,31 +420,32 @@ void uicpulong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 			*itterin = 0;
 		}
 	}
-	uidisplay(*win, xin, cols, 21, rows);
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-static void uidiskdetail(WINDOW *win, int x, int usecolor, unsigned long diskr, unsigned long diskw, double unitdivisor, char *units, int scale)
+static void uidiskdetail(WINDOW *win, int currow, int usecolor, unsigned long diskr, unsigned long diskw, double unitdivisor, char *units, int scale)
 {
 	char *bytestring = NULL;
 
 	bytestring = uireadablebyteslong(diskr);
-	mvwprintw(win, 1, 2, "Reads:  %9.9s", bytestring);
+	mvwprintw(win, currow-1, 2, "Reads:  %9.9s", bytestring);
 	free(bytestring);
 	bytestring = NULL;
 	bytestring = uireadablebyteslong(diskw);
-	mvwprintw(win, 2, 2, "Writes: %9.9s", bytestring);
+	mvwprintw(win, currow, 2, "Writes: %9.9s", bytestring);
 	free(bytestring);
 	bytestring = NULL;
 
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
 		bytestring = uireadablebyteslong(diskr);
-		mvwprintw(win, 1, 10, "%9.9s", bytestring);
+		mvwprintw(win, currow-1, 10, "%9.9s", bytestring);
 		free(bytestring);
 		bytestring = NULL;
 		wattrset(win, COLOR_PAIR(1));
         bytestring = uireadablebyteslong(diskw);
-		mvwprintw(win, 2, 10, "%9.9s", bytestring);
+		mvwprintw(win, currow, 10, "%9.9s", bytestring);
 		free(bytestring);
 		bytestring = NULL;
 		wattrset(win, COLOR_PAIR(0));
@@ -434,16 +467,16 @@ static void uidiskdetail(WINDOW *win, int x, int usecolor, unsigned long diskr, 
 			readquant = 0;
 			writequant = 0;
 		}
-		mvwprintw(win, 1, 22, "  LOG");
-		mvwprintw(win, 2, 22, "SCALE");
+		mvwprintw(win, currow-1, 22, "  LOG");
+		mvwprintw(win, currow, 22, "SCALE");
 	} else {
 		readquant = (int)(floor(diskr) / (unitdivisor * 2 * scale));
 		writequant = (int)(floor(diskw) / (unitdivisor * 2 * scale));
-		mvwprintw(win, x, 24, "%2.2s", units);
+		mvwprintw(win, currow, 24, "%2.2s", units);
 	}
 
-	mvwprintw(win, x, 27, "|");
-	wmove(win, x, 28);
+	mvwprintw(win, currow, 27, "|");
+	wmove(win, currow, 28);
 	
 	for(int i = 28; i < 77; ++i){
 		if(((i + 3) % 5) == 0) {
@@ -476,106 +509,118 @@ static void uidiskdetail(WINDOW *win, int x, int usecolor, unsigned long diskr, 
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, x, 77, "|");
+	mvwprintw(win, currow, 77, "|");
 }
 
-extern void uidisks(WINDOW **win, int *xin, int cols, int rows, int usecolor, unsigned int diskr, unsigned int diskw)
+extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, unsigned int diskr, unsigned int diskw)
 {
 	if (*win == NULL) {
 		return;
+	}
+	wclear(*win);
+
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
 	}
 
 	unsigned int disktotal = diskr + diskw;
 
-	uibanner(*win, cols, "Disk Use");
 	if(DISK_METER_MODE == DISK_METER_LOG) {
-		mvwprintw(*win, 1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
- 		mvwprintw(*win, 2, 77, "|");
- 		uidiskdetail(*win, 2, usecolor, diskr, diskw, 0, "", 0);
+		mvwprintw(*win, *currow+1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
+ 		mvwprintw(*win, *currow+2, 77, "|");
+ 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, 0, "", 0);
 
 	} else if(DISK_METER_MODE == DISK_METER_SCALE) {
 	 	if(disktotal <= (BYTES_IN_KB * 100)) {
-	 		mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-	 		mvwprintw(*win, 2, 77, "|");
-	 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 1);
+	 		mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+	 		mvwprintw(*win, *currow+2, 77, "|");
+	 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 1);
 	 	
 	 	} else if(disktotal <= (BYTES_IN_KB * 1000)) {
-	 		mvwprintw(*win, 1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-	 		mvwprintw(*win, 2, 77, "|");
-	 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 10);
+	 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+	 		mvwprintw(*win, *currow+2, 77, "|");
+	 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 10);
 	 	
 	 	} else {
 	 		if(disktotal <= (BYTES_IN_MB * 100)) {
-	 			mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-		 		mvwprintw(*win, 2, 77, "|");
-		 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
+	 			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+		 		mvwprintw(*win, *currow+2, 77, "|");
+		 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
 	 		
 	 		} else if(disktotal <= (BYTES_IN_MB * 1000)) {
-		 		mvwprintw(*win, 1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-		 		mvwprintw(*win, 2, 77, "|");
-		 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 10);
+		 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+		 		mvwprintw(*win, *currow+2, 77, "|");
+		 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 10);
 		 	
 		 	} else {
 		 		if(disktotal <= (BYTES_IN_GB * 100)) {
-		 			mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-			 		mvwprintw(*win, 2, 77, "|");
-			 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 1);
+		 			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+			 		mvwprintw(*win, *currow+2, 77, "|");
+			 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 1);
 
 			 	} else {
-			 		mvwprintw(*win, 1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-			 		mvwprintw(*win, 2, 77, "|");
-			 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 10);
+			 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+			 		mvwprintw(*win, *currow+2, 77, "|");
+			 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 10);
 			 	}
 			}
 	 	}
 	} else {
-		mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
- 		mvwprintw(*win, 2, 77, "|");
- 		uidiskdetail(*win, 2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
+		mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+ 		mvwprintw(*win, *currow+2, 77, "|");
+ 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
 	}
-	uidisplay(*win, xin, cols, 3, rows);
+
+	uibanner(*win, cols, "Disk Usage");
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uidisklong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int usecolor, unsigned int diskr, unsigned int diskw, bool updategraph)
+void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, int *itterin, int usecolor, unsigned int diskr, unsigned int diskw, bool updategraph)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
 
-	mvwprintw(*win, 0, 0, "DISK +---Long-Term-----------------------------------------------------------+");
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
+	mvwprintw(*win, *currow, 0, "DISK +---Long-Term-----------------------------------------------------------+");
 	if (usecolor){
 		wattrset(*win, COLOR_PAIR(4));
-		mvwprintw(*win, 0, 27, "In");
+		mvwprintw(*win, *currow, 27, "In");
 		wattrset(*win, COLOR_PAIR(1));
-		mvwprintw(*win, 0, 35, "Out");
-		// wattrset(*win, COLOR_PAIR(2));
-		// mvwprintw(*win, 0, 45, "Nice%%");
+		mvwprintw(*win, *currow, 35, "Out");
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	mvwprintw(*win,  1, 0, " 10G-|");
-	mvwprintw(*win,  2, 0, "     |");
-	mvwprintw(*win,  3, 0, "  1G-|");
-	mvwprintw(*win,  4, 0, "     |");
-	mvwprintw(*win,  5, 0, "100M-|");
-	mvwprintw(*win,  6, 0, "     |");
-	mvwprintw(*win,  7, 0, " 10M-|");
-	mvwprintw(*win,  8, 0, "     |");
-	mvwprintw(*win,  9, 0, "  1M-|");
-	mvwprintw(*win, 10, 0, "     |");
-	mvwprintw(*win, 11, 0, "100K-|");
-	mvwprintw(*win, 12, 0, "     |");
-	mvwprintw(*win, 13, 0, " 10K-|");
-	mvwprintw(*win, 14, 0, "     |");
-	mvwprintw(*win, 15, 0, "  1K-|");
-	mvwprintw(*win, 16, 0, "     |");
-	mvwprintw(*win, 17, 0, "100B-|");
-	mvwprintw(*win, 18, 0, "     |");
-	mvwprintw(*win, 19, 0, " 10B-|");
-	mvwprintw(*win, 20, 0, "     |");
+	mvwprintw(*win, *currow+1,  0, " 10G-|");
+	mvwprintw(*win, *currow+2,  0, "     |");
+	mvwprintw(*win, *currow+3,  0, "  1G-|");
+	mvwprintw(*win, *currow+4,  0, "     |");
+	mvwprintw(*win, *currow+5,  0, "100M-|");
+	mvwprintw(*win, *currow+6,  0, "     |");
+	mvwprintw(*win, *currow+7,  0, " 10M-|");
+	mvwprintw(*win, *currow+8,  0, "     |");
+	mvwprintw(*win, *currow+9,  0, "  1M-|");
+	mvwprintw(*win, *currow+10, 0, "     |");
+	mvwprintw(*win, *currow+11, 0, "100K-|");
+	mvwprintw(*win, *currow+12, 0, "     |");
+	mvwprintw(*win, *currow+13, 0, " 10K-|");
+	mvwprintw(*win, *currow+14, 0, "     |");
+	mvwprintw(*win, *currow+15, 0, "  1K-|");
+	mvwprintw(*win, *currow+16, 0, "     |");
+	mvwprintw(*win, *currow+17, 0, "100B-|");
+	mvwprintw(*win, *currow+18, 0, "     |");
+	mvwprintw(*win, *currow+19, 0, " 10B-|");
+	mvwprintw(*win, *currow+20, 0, "     |");
 	
 	if(updategraph) {
 		int graphcols = 70;
-		int graphrows = 20;
+		int graphlines = 20;
 		int offset = 6;
 
 		char *metermark = NULL;
@@ -596,7 +641,7 @@ void uidisklong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int us
 			writequant = (int)(tmpquant * (diskw / (disktotal))) - 0;
 		}
 
-		for (int i = graphrows; i > 0; --i) {
+		for (int i = graphlines; i > 0; --i) {
 			wmove(*win, i, *itterin+offset);
 			
 			if((i > 1) && (((i - 1) % 4) == 0)) {
@@ -651,49 +696,50 @@ void uidisklong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int us
 			*itterin = 0;
 		}
 	}
-	uidisplay(*win, xin, cols, 21, rows);
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-extern void uidiskgroup(WINDOW **winin, int *xin, int cols, int rows)
+extern void uidiskgroup(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-extern void uidiskmap(WINDOW **winin, int *xin, int cols, int rows)
+extern void uidiskmap(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-extern void uifilesys(WINDOW **winin, int *xin, int cols, int rows)
+extern void uifilesys(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-extern void uikernel(WINDOW **winin, int *xin, int cols, int rows)
+extern void uikernel(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-static void uimemdetail(WINDOW *win, int usecolor, unsigned long long used, unsigned long long total, double percent)
+static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long long used, unsigned long long total, double percent)
 {
 	char *bytestring = NULL;
 
 	bytestring = uireadablebyteslonglong(total);
-	mvwprintw(win, 1, 2, "Total: %9.9s", bytestring);
+	mvwprintw(win, currow-1, 2, "Total: %9.9s", bytestring);
 	free(bytestring);
 	bytestring = NULL;
 	bytestring = uireadablebyteslonglong(used);
-	mvwprintw(win, 2, 2, "Used:  %9.9s  %5.2f%%", bytestring, percent);
+	mvwprintw(win, currow, 2, "Used:  %9.9s  %5.2f%%", bytestring, percent);
 	free(bytestring);
 	bytestring = NULL;
 
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
-		mvwprintw(win, 2, 20, "%5.2f%%", percent);
+		mvwprintw(win, currow, 20, "%5.2f%%", percent);
 		wattrset(win, COLOR_PAIR(0));
 	}
-	mvwprintw(win, 2, 27, "|");
-	wmove(win, 2, 28);
+	mvwprintw(win, currow, 27, "|");
+	wmove(win, currow, 28);
 
 	char *metermark = "#";
 	int usedquant = (int)(floor(percent) / 2) - 1;
@@ -719,65 +765,74 @@ static void uimemdetail(WINDOW *win, int usecolor, unsigned long long used, unsi
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, 2, 77, "|");
+	mvwprintw(win, currow, 77, "|");
 }
 
-extern void uimemory(WINDOW **win, int *xin, int cols, int rows, int usecolor, unsigned long long memused, unsigned long long memtotal)
+extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, unsigned long long memused, unsigned long long memtotal)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
+
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
 
 	double percent = (double)((memused / 100.0) / (memtotal / 100.0) * 100);
-	uibanner(*win, cols, "Memory Use");
-	mvwprintw(*win, 1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
- 	mvwprintw(*win, 2, 77, "|");
-	uimemdetail(*win, usecolor, memused, memtotal, percent);
-	uidisplay(*win, xin, cols, 3, rows);
+
+	mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+ 	mvwprintw(*win, *currow+2, 77, "|");
+	uimemdetail(*win, *currow+2, usecolor, memused, memtotal, percent);
+
+	uibanner(*win, cols, "Memory Usage");
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-extern void uimemlarge(WINDOW **winin, int *xin, int cols, int rows)
+extern void uimemlarge(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-extern void uimemvirtual(WINDOW **winin, int *xin, int cols, int rows)
+extern void uimemvirtual(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-extern void uineterrors(WINDOW **winin, int *xin, int cols, int rows)
+extern void uineterrors(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-extern void uinetfilesys(WINDOW **winin, int *xin, int cols, int rows)
+extern void uinetfilesys(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
 }
 
-static void uinetdetail(WINDOW *win, int x, int usecolor, unsigned long netin, unsigned long netout, double unitdivisor, char *units, int scale)
+static void uinetdetail(WINDOW *win, int currow, int usecolor, unsigned long netin, unsigned long netout, double unitdivisor, char *units, int scale)
 {
 	char *bytestring = NULL;
 
 	bytestring = uireadablebyteslong(netin);
-	mvwprintw(win, 1, 2, "In:     %9.9s", bytestring);
+	mvwprintw(win, currow-1, 2, "In:     %9.9s", bytestring);
 	free(bytestring);
 	bytestring = NULL;
 	bytestring = uireadablebyteslong(netout);
-	mvwprintw(win, 2, 2, "Out:    %9.9s", bytestring);
+	mvwprintw(win, currow, 2, "Out:    %9.9s", bytestring);
 	free(bytestring);
 	bytestring = NULL;
 
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
 		bytestring = uireadablebyteslong(netin);
-		mvwprintw(win, 1, 10, "%9.9s", bytestring);
+		mvwprintw(win, currow-1, 10, "%9.9s", bytestring);
 		free(bytestring);
 		bytestring = NULL;
 		wattrset(win, COLOR_PAIR(1));
         bytestring = uireadablebyteslong(netout);
-		mvwprintw(win, 2, 10, "%9.9s", bytestring);
+		mvwprintw(win, currow, 10, "%9.9s", bytestring);
 		free(bytestring);
 		bytestring = NULL;
 		wattrset(win, COLOR_PAIR(0));
@@ -799,16 +854,16 @@ static void uinetdetail(WINDOW *win, int x, int usecolor, unsigned long netin, u
 			readquant = 0;
 			writequant = 0;
 		}
-		mvwprintw(win, 1, 22, "  LOG");
-		mvwprintw(win, 2, 22, "SCALE");
+		mvwprintw(win, currow-1, 22, "  LOG");
+		mvwprintw(win, currow, 22, "SCALE");
 	} else {
 		readquant = (int)(floor(netin) / (unitdivisor * 2 * scale));
 		writequant = (int)(floor(netout) / (unitdivisor * 2 * scale));
-		mvwprintw(win, x, 24, "%2.2s", units);
+		mvwprintw(win, currow, 24, "%2.2s", units);
 	}
 
-	mvwprintw(win, x, 27, "|");
-	wmove(win, x, 28);
+	mvwprintw(win, currow, 27, "|");
+	wmove(win, currow, 28);
 	
 	for(int i = 28; i < 77; ++i){
 		if(((i + 3) % 5) == 0) {
@@ -841,67 +896,79 @@ static void uinetdetail(WINDOW *win, int x, int usecolor, unsigned long netin, u
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, x, 77, "|");
+	mvwprintw(win, currow, 77, "|");
 }
 
-extern void uinetwork(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysnet thisnet)
+extern void uinetwork(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, struct sysnet thisnet)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
 
-	uibanner(*win, cols, "Network Use");
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
 	if(DISK_METER_MODE == DISK_METER_LOG) {
-		mvwprintw(*win, 1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
- 		mvwprintw(*win, 2, 77, "|");
- 		uinetdetail(*win, 2, usecolor, \
+		mvwprintw(*win, *currow+1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
+ 		mvwprintw(*win, *currow+2, 77, "|");
+ 		uinetdetail(*win, *currow+2, usecolor, \
  			(thisnet.ibytes - thisnet.oldibytes), \
  			(thisnet.obytes - thisnet.oldobytes), \
  			0, "", 0);
 	}
-	uidisplay(*win, xin, cols, 3, rows);
+
+	uibanner(*win, cols, "Network Usage");
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uinetlong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int usecolor, struct sysnet thisnet, bool updategraph)
+void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, int *itterin, int usecolor, struct sysnet thisnet, bool updategraph)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
 
-	mvwprintw(*win, 0, 0, " NET +---Long-Term-----------------------------------------------------------+");
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
+	mvwprintw(*win, *currow, 0, " NET +---Long-Term-----------------------------------------------------------+");
 	if (usecolor){
 		wattrset(*win, COLOR_PAIR(4));
-		mvwprintw(*win, 0, 27, "In");
+		mvwprintw(*win, *currow, 27, "In");
 		wattrset(*win, COLOR_PAIR(1));
-		mvwprintw(*win, 0, 35, "Out");
-		// wattrset(*win, COLOR_PAIR(2));
-		// mvwprintw(*win, 0, 45, "Nice%%");
+		mvwprintw(*win, *currow, 35, "Out");
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	mvwprintw(*win,  1, 0, " 10G-|");
-	mvwprintw(*win,  2, 0, "     |");
-	mvwprintw(*win,  3, 0, "  1G-|");
-	mvwprintw(*win,  4, 0, "     |");
-	mvwprintw(*win,  5, 0, "100M-|");
-	mvwprintw(*win,  6, 0, "     |");
-	mvwprintw(*win,  7, 0, " 10M-|");
-	mvwprintw(*win,  8, 0, "     |");
-	mvwprintw(*win,  9, 0, "  1M-|");
-	mvwprintw(*win, 10, 0, "     |");
-	mvwprintw(*win, 11, 0, "100K-|");
-	mvwprintw(*win, 12, 0, "     |");
-	mvwprintw(*win, 13, 0, " 10K-|");
-	mvwprintw(*win, 14, 0, "     |");
-	mvwprintw(*win, 15, 0, "  1K-|");
-	mvwprintw(*win, 16, 0, "     |");
-	mvwprintw(*win, 17, 0, "100B-|");
-	mvwprintw(*win, 18, 0, "     |");
-	mvwprintw(*win, 19, 0, " 10B-|");
-	mvwprintw(*win, 20, 0, "     |");
+	mvwprintw(*win, *currow+1,  0, " 10G-|");
+	mvwprintw(*win, *currow+2,  0, "     |");
+	mvwprintw(*win, *currow+3,  0, "  1G-|");
+	mvwprintw(*win, *currow+4,  0, "     |");
+	mvwprintw(*win, *currow+5,  0, "100M-|");
+	mvwprintw(*win, *currow+6,  0, "     |");
+	mvwprintw(*win, *currow+7,  0, " 10M-|");
+	mvwprintw(*win, *currow+8,  0, "     |");
+	mvwprintw(*win, *currow+9,  0, "  1M-|");
+	mvwprintw(*win, *currow+10, 0, "     |");
+	mvwprintw(*win, *currow+11, 0, "100K-|");
+	mvwprintw(*win, *currow+12, 0, "     |");
+	mvwprintw(*win, *currow+13, 0, " 10K-|");
+	mvwprintw(*win, *currow+14, 0, "     |");
+	mvwprintw(*win, *currow+15, 0, "  1K-|");
+	mvwprintw(*win, *currow+16, 0, "     |");
+	mvwprintw(*win, *currow+17, 0, "100B-|");
+	mvwprintw(*win, *currow+18, 0, "     |");
+	mvwprintw(*win, *currow+19, 0, " 10B-|");
+	mvwprintw(*win, *currow+20, 0, "     |");
 	
 	if(updategraph) {
 		int graphcols = 70;
-		int graphrows = 20;
+		int graphlines = 20;
 		int offset = 6;
 
 		char *metermark = NULL;
@@ -924,7 +991,7 @@ void uinetlong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 			writequant = (int)(tmpquant * (netout / (nettotal))) - 0;
 		}
 
-		for (int i = graphrows; i > 0; --i) {
+		for (int i = graphlines; i > 0; --i) {
 			wmove(*win, i, *itterin+offset);
 			
 			if((i > 1) && (((i - 1) % 4) == 0)) {
@@ -979,31 +1046,40 @@ void uinetlong(WINDOW **win, int *xin, int cols, int rows, int *itterin, int use
 			*itterin = 0;
 		}
 	}
-	uidisplay(*win, xin, cols, 21, rows);
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uisys(WINDOW **win, int *xin, int cols, int rows, struct syshw hw, struct syskern kern)
+void uisys(WINDOW **win, int winheight, int *currow, int cols, int lines, struct syshw hw, struct syskern kern)
 {
 	if (*win == NULL) {
 		return;
+	}
+	wclear(*win);
+
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
 	}
 
 	char *bytestringa = uireadablebyteslong(hw.memorysize);
 	char *bytestringb = uireadablebyteslong(hw.usermemory);
 
-	uibanner(*win, cols, "About This Mac");
-	mvwprintw(*win, 1, 2, "%s", hw.model);
-	mvwprintw(*win, 2, 2, "%s %s", hw.cpuvendor, hw.cpubrand);
-	mvwprintw(*win, 3, 2, "%s", kern.version);
-	mvwprintw(*win, 4, 2, "OS Release: %s / OS Version: %s", kern.osrelease, kern.osversion);
-	mvwprintw(*win, 5, 2, "CPUs: %d (%d cores, %d physical, %d logical)", hw.cpucount, kern.corecount, hw.physicalcpucount, hw.logicalcpucount);
-	mvwprintw(*win, 6, 2, "Memory: %9.9s, %9.9s non-kernel in use", bytestringa, bytestringb);
+	mvwprintw(*win, *currow+1, 0, " %s", hw.model);
+	mvwprintw(*win, *currow+2, 0, " %s %s", hw.cpuvendor, hw.cpubrand);
+	mvwprintw(*win, *currow+3, 0, " %s", kern.version);
+	mvwprintw(*win, *currow+4, 0, " OS Release: %s / OS Version: %s", kern.osrelease, kern.osversion);
+	mvwprintw(*win, *currow+5, 0, " CPUs: %d (%d cores, %d physical, %d logical)", hw.cpucount, kern.corecount, hw.physicalcpucount, hw.logicalcpucount);
+	mvwprintw(*win, *currow+6, 0, " Memory: %9.9s, %9.9s non-kernel in use", bytestringa, bytestringb);
 	free(bytestringa);
 	free(bytestringb);
 	
-	mvwprintw(*win, 8, 2, "Domain   : %s", kern.domainname);
-	mvwprintw(*win, 9, 2, "Booted   : %s", kern.boottimestring);
-	uidisplay(*win, xin, cols, 10, rows);
+	mvwprintw(*win, *currow+8, 0, " Domain   : %s", kern.domainname);
+	mvwprintw(*win, *currow+9, 0, " Booted   : %s", kern.boottimestring);
+
+	uibanner(*win, cols, "About This Mac");
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
 static int comparepercentdes(const void *val1, const void *val2)
@@ -1034,26 +1110,30 @@ static int compareresmemdes(const void *val1, const void *val2)
 	}
 }
 
-void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysproc **procs, int processcount, int topmode, bool updateddata, char *user)
+void uitop(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, struct sysproc **procs, int processcount, int topmode, bool updateddata, char *user)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
 
 	if(!procs){
 		return;
 	}
 
-	int procstoshow = processcount;
-	if(procstoshow > rows) {
-		procstoshow = rows - 4;
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
 	}
 
-	wmove(*win, 1, 1);
+	int procstoshow = processcount;
+	if(procstoshow > lines) {
+		procstoshow = lines - 4;
+	}
+
+	wmove(*win, *currow, 1);
 	wclrtobot(*win);
 
-	// TODO: this is not working???
-	uibanner(*win, cols, "Top Processes");
 	if(updateddata) {
 		switch(topmode) {
 			case TOP_MODE_A:
@@ -1070,11 +1150,11 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 	switch(topmode) {
 		case TOP_MODE_A:
 		case TOP_MODE_C:
-			mvwprintw(*win, 1, 1, "ID     NAME             %%CPU     MEM      PHYS      USER   PGRP   PPID  STATE");
+			mvwprintw(*win, *currow+1, 1, "ID     NAME             %%CPU     MEM      PHYS      USER   PGRP   PPID  STATE");
 			break;
 		case TOP_MODE_B:
 		case TOP_MODE_D:
-			mvwprintw(*win, 1, 1, "PID    %%CPU   RESSIZE    USER   COMMAND                                      ");
+			mvwprintw(*win, *currow+1, 1, "PID    %%CPU   RESSIZE    USER   COMMAND                                      ");
 			break;
 	}
 
@@ -1118,7 +1198,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 			case TOP_MODE_C:
 				rmem = uireadablebyteslonglong(procs[i]->residentmem);
 				pmem = uireadablebyteslonglong(procs[i]->physicalmem);
-				mvwprintw(*win, (i + 2), 1, "%-6d %-16.16s%5.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
+				mvwprintw(*win, (*currow + 2 + i), 1, "%-6d %-16.16s%5.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
 					procs[i]->pid,
 					procs[i]->name,
 					procs[i]->percentage,
@@ -1134,14 +1214,14 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 
 				if(!strcmp(user, procs[i]->realusername)) {
 					wattron(*win, A_BOLD);
-					mvwprintw(*win, (i + 2), 50, "%9.9s", procs[i]->realusername);
+					mvwprintw(*win, (*currow + 2 + i), 50, "%9.9s", procs[i]->realusername);
 					wattroff(*win, A_BOLD);
 				}
 				break;
 			case TOP_MODE_B:
 			case TOP_MODE_D:
 				rmem = uireadablebyteslonglong(procs[i]->residentmem);
-				mvwprintw(*win, (i + 2), 1, "%-6d%5.1f %9.9s %9.9s %-45.45s", 
+				mvwprintw(*win, (*currow + 2 + i), 1, "%-6d%5.1f %9.9s %9.9s %-45.45s", 
 					procs[i]->pid,
 					procs[i]->percentage,
 					rmem,
@@ -1150,7 +1230,7 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 					);
 				if(!strcmp(user, procs[i]->realusername)) {
 					wattron(*win, A_BOLD);
-					mvwprintw(*win, (i + 2), 23, "%9.9s", procs[i]->realusername);
+					mvwprintw(*win, (*currow + 2 + i), 23, "%9.9s", procs[i]->realusername);
 					wattroff(*win, A_BOLD);
 				}
 				free(rmem);
@@ -1176,27 +1256,38 @@ void uitop(WINDOW **win, int *xin, int cols, int rows, int usecolor, struct sysp
 
 					wattrset(*win, COLOR_PAIR(5));
 					for(int j = appnamebegin; j < appnameend; ++j) {
-						mvwprintw(*win, (i + 2), (33 + j), "%c", tmppath[j]);
+						mvwprintw(*win, (*currow + 2 + i), (33 + j), "%c", tmppath[j]);
 					}
 					wattrset(*win, COLOR_PAIR(6));
 					for(int j = appnameend; j < tmppathlen; ++j) {
-						mvwprintw(*win, (i + 2), (33 + j), "%c", tmppath[j]);
+						mvwprintw(*win, (*currow + 2 + i), (33 + j), "%c", tmppath[j]);
 					} 
 					wattrset(*win, COLOR_PAIR(0));
 				}
 				break;
 		}
 	}
-	uidisplay(*win, xin, cols, 27, rows);
+
+	uibanner(*win, cols, "Top Processes");
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uiwarn(WINDOW **win, int *xin, int cols, int rows)
+void uiwarn(WINDOW **win, int winheight, int *currow, int cols, int lines)
 {
 	if (*win == NULL) {
 		return;
 	}
+	wclear(*win);
+
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
+	mvwprintw(*win, 1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
 
 	uibanner(*win, cols, "Verbose Mode");
-	mvwprintw(*win, 1, 0, " Code    Resource            Stats   Now\tWarn\tDanger ");
-	uidisplay(*win, xin, cols, 4, rows);
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
 }

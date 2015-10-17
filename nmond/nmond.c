@@ -94,11 +94,13 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 
 	switch (input) {
 		case KEY_DOWN:
-			state->rowoffset -= 1;
+			state->rowoffset += 1;
 			break;
 		case KEY_UP:
-			if(state->rowoffset < 0) {
-				state->rowoffset += 1;
+			if(state->rowoffset > 0) {
+				state->rowoffset -= 1;
+			} else {
+				result = 0;
 			}
 			break;
 		case 'a':
@@ -296,6 +298,7 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 		wins->welcome.visible = false;
 	} else {
 		wins->welcome.visible = true;
+		state->rowoffset = 0;
 	}
 
 	return result;
@@ -414,27 +417,47 @@ int main(int argc, char **argv)
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
 	struct uiwins wins = UIWINS_INIT;
-	wins.welcome.win = newpad(22, MAXCOLS);
+	wins.welcome.height = 22;
 	wins.welcome.visible = true;
-	wins.help.win = newpad(20, MAXCOLS);
-	wins.cpu.win = newpad((thisres.cpucount+3), MAXCOLS);
-	wins.cpulong.win = newpad(21, MAXCOLS);
-	wins.disks.win = newpad(3, MAXCOLS);
-	wins.disklong.win = newpad(21, MAXCOLS);
-	// wins.diskgroup.win = newpad(MAXROWS, MAXCOLS);
-	// wins.diskmap.win = newpad(24, MAXCOLS);
-	// wins.filesys.win = newpad(MAXROWS, MAXCOLS);
-	// wins.kernel.win = newpad(5, MAXCOLS);
-	wins.memory.win = newpad(3, MAXCOLS);
-	// wins.memlarge.win = newpad(20, MAXCOLS);
-	// wins.memvirtual.win = newpad(20, MAXCOLS);
-	// wins.neterrors.win = newpad(MAXROWS, MAXCOLS);
-	// wins.netfilesys.win = newpad(25, MAXCOLS);
-	wins.network.win = newpad(MAXROWS, MAXCOLS);
-	wins.netlong.win = newpad(21, MAXCOLS);
-	wins.top.win = newpad(MAXROWS, MAXCOLS);
-	wins.sys.win = newpad(10, MAXCOLS);
-	// wins.warn.win = newpad(8, MAXCOLS);
+	wins.welcome.win = newpad(wins.welcome.height, MAXCOLS);
+	wins.help.height = 20;
+	wins.help.win = newpad(wins.help.height, MAXCOLS);
+	wins.cpu.height = thisres.cpucount + 3;
+	wins.cpu.win = newpad(wins.cpu.height, MAXCOLS);
+	wins.cpulong.height = 21;
+	wins.cpulong.win = newpad(wins.cpulong.height, MAXCOLS);
+	wins.disks.height = 3;
+	wins.disks.win = newpad(wins.disks.height, MAXCOLS);
+	wins.disklong.height = 21;
+	wins.disklong.win = newpad(wins.disklong.height, MAXCOLS);
+	// wins.diskgroup.height = MAXROWS;
+	// wins.diskgroup.win = newpad(wins.diskgroup.height, MAXCOLS);
+	// wins.diskmap.height = 24;
+	// wins.diskmap.win = newpad(wins.diskmap.height, MAXCOLS);
+	// wins.filesys.height = MAXROWS;
+	// wins.filesys.win = newpad(wins.filesys.height, MAXCOLS);
+	// wins.kernel.height = 5;
+	// wins.kernel.win = newpad(wins.kernel.height, MAXCOLS);
+	wins.memory.height = 3;
+	wins.memory.win = newpad(wins.memory.height, MAXCOLS);
+	// wins.memlarge.height = 20;
+	// wins.memlarge.win = newpad(wins.memlarge.height, MAXCOLS);
+	// wins.memvirtual.height = 20;
+	// wins.memvirtual.win = newpad(wins.memvirtual.height, MAXCOLS);
+	// wins.neterrors.height = MAXROWS;
+	// wins.neterrors.win = newpad(wins.neterrors.height, MAXCOLS);
+	// wins.netfilesys.height = 25;
+	// wins.netfilesys.win = newpad(wins.netfilesys.height, MAXCOLS);
+	wins.network.height = MAXROWS;
+	wins.network.win = newpad(wins.network.height, MAXCOLS);
+	wins.netlong.height = 21;
+	wins.netlong.win = newpad(wins.netlong.height, MAXCOLS);
+	wins.top.height = MAXROWS;
+	wins.top.win = newpad(wins.top.height, MAXCOLS);
+	wins.sys.height = 10;
+	wins.sys.win = newpad(wins.sys.height, MAXCOLS);
+	// wins.warn.height = 8;
+	// wins.warn.win = newpad(wins.warn.height, MAXCOLS);
 
 	// change settings based upon environment variables
 	processenvars(&wins, &currentstate);
@@ -446,7 +469,7 @@ int main(int argc, char **argv)
 	// Main program loop
 	for(;;) {
 		// Reset the cursor position to top left
-		currentrow = 0 + currentstate.rowoffset;
+		currentrow = 0 - currentstate.rowoffset;
 
 		// update the header
 		uiheader(&stdscr, 0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
@@ -454,84 +477,86 @@ int main(int argc, char **argv)
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
 		currentstate.elapsed = currentstate.timenow - currentstate.timelast;
-		if (pressedkey || (currentstate.elapsed > MINIMUM_TIME_ELAPSED) || (currentstate.timelast <= 0)) {
+		if (pressedkey || (currentstate.elapsed >= currentstate.refresh) || (currentstate.timelast <= 0)) {
 			currentstate.timelast = time(NULL);
 
-			// TODO: only check statistics which are used
-			// update system information data structures
-			getsyshwinfo(&thishw);
-			getsyskerninfo(&thiskern);
-			getsysresinfo(&thisres);
-			getsysnetinfo(&thisnet);
-			processcount = 0;
-			thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
+			if((currentstate.elapsed >= currentstate.refresh) || (currentstate.timelast <= 0)) {
+				// TODO: only check statistics which are used
+				// update system information data structures
+				getsyshwinfo(&thishw);
+				getsyskerninfo(&thiskern);
+				getsysresinfo(&thisres);
+				getsysnetinfo(&thisnet);
+				processcount = 0;
+				thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
 
-			// data changes are pending gui update
-			pendingdata = true;
+				// data changes are pending gui update
+				pendingdata = true;
 
-			// flash on/off once per itteration
-			flash_on = flash_on ? false : true;
+				// flash on/off once per itteration
+				flash_on = flash_on ? false : true;
+			}
 
 			// update the in-use panes
 			if(wins.welcome.visible) {
-				uiwelcome(&wins.welcome.win, &currentrow, COLS, LINES, currentstate.color, thishw);
+				uiwelcome(&wins.welcome.win, wins.welcome.height, &currentrow, COLS, LINES, currentstate.color, thishw);
 			}
 			if (wins.help.visible) {
-				uihelp(&wins.help.win, &currentrow, COLS, LINES);
+				uihelp(&wins.help.win, wins.help.height, &currentrow, COLS, LINES);
 			}
 			if (wins.sys.visible) {
-				uisys(&wins.sys.win, &currentrow, COLS, LINES, thishw, thiskern);
+				uisys(&wins.sys.win, wins.sys.height, &currentrow, COLS, LINES, thishw, thiskern);
 			}
 			if (wins.cpulong.visible) {
-				uicpulong(&wins.cpulong.win, &currentrow, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
+				uicpulong(&wins.cpulong.win, wins.cpulong.height, &currentrow, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
 			}
 			if (wins.disklong.visible) {
-				uidisklong(&wins.disklong.win, &currentrow, COLS, LINES, &disklongitter, currentstate.color, \
+				uidisklong(&wins.disklong.win, wins.disklong.height, &currentrow, COLS, LINES, &disklongitter, currentstate.color, \
 					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
 					(unsigned int)(thisres.diskusew - thisres.diskusewlast), \
 					pendingdata);
 			}
 			if (wins.netlong.visible) {
-				uinetlong(&wins.netlong.win, &currentrow, COLS, LINES, &netlongitter, currentstate.color, thisnet, pendingdata);
+				uinetlong(&wins.netlong.win, wins.netlong.height, &currentrow, COLS, LINES, &netlongitter, currentstate.color, thisnet, pendingdata);
 			}
 			if (wins.cpu.visible) {
-				uicpu(&wins.cpu.win, &currentrow, COLS, LINES, currentstate.color, thisres, show_raw);
+				uicpu(&wins.cpu.win, wins.cpu.height, &currentrow, COLS, LINES, currentstate.color, thisres, show_raw);
 			}
 			if (wins.memory.visible) {
-				uimemory(&wins.memory.win, &currentrow, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
+				uimemory(&wins.memory.win, wins.memory.height, &currentrow, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
 			}
 			if (wins.disks.visible) {
-				uidisks(&wins.disks.win, &currentrow, COLS, LINES, currentstate.color, \
+				uidisks(&wins.disks.win, wins.disks.height, &currentrow, COLS, LINES, currentstate.color, \
 					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
 					(unsigned int)(thisres.diskusew - thisres.diskusewlast));
 			}
 
 
 			if (wins.diskgroup.visible) {
-				uidiskgroup(&wins.diskgroup.win, &currentrow, COLS, LINES);
+				uidiskgroup(&wins.diskgroup.win, wins.diskgroup.height, &currentrow, COLS, LINES);
 			}
 			if (wins.diskmap.visible) {
-				uidiskmap(&wins.diskmap.win, &currentrow, COLS, LINES);
+				uidiskmap(&wins.diskmap.win, wins.diskmap.height, &currentrow, COLS, LINES);
 			}
 			if (wins.filesys.visible) {
-				uifilesys(&wins.filesys.win, &currentrow, COLS, LINES);
+				uifilesys(&wins.filesys.win, wins.filesys.height, &currentrow, COLS, LINES);
 			}
 			if (wins.kernel.visible) {
-				uikernel(&wins.kernel.win, &currentrow, COLS, LINES);
+				uikernel(&wins.kernel.win, wins.kernel.height, &currentrow, COLS, LINES);
 			}
 			if (wins.memlarge.visible) {
-				uimemlarge(&wins.memlarge.win, &currentrow, COLS, LINES);
+				uimemlarge(&wins.memlarge.win, wins.memlarge.height, &currentrow, COLS, LINES);
 			}
 			if (wins.memvirtual.visible) {
-				uimemvirtual(&wins.memvirtual.win, &currentrow, COLS, LINES);
+				uimemvirtual(&wins.memvirtual.win, wins.memvirtual.height, &currentrow, COLS, LINES);
 			}
 			if (wins.netfilesys.visible) {
-				uinetfilesys(&wins.netfilesys.win, &currentrow, COLS, LINES);
+				uinetfilesys(&wins.netfilesys.win, wins.netfilesys.height, &currentrow, COLS, LINES);
 			}
 
 
 			if (wins.network.visible) {
-				uinetwork(&wins.disks.win, &currentrow, COLS, LINES, currentstate.color, thisnet);
+				uinetwork(&wins.disks.win, wins.disks.height, &currentrow, COLS, LINES, currentstate.color, thisnet);
 				/*
 				int errors = 0;
 				for (int i = 0; i < networks; i++) {
@@ -544,27 +569,27 @@ int main(int argc, char **argv)
 				}
 
 				if (currentstate.neterrors) {
-					uineterrors(&wins.neterrors.win, &currentrow, COLS, LINES);
+					uineterrors(&wins.neterrors.win, wins.neterrors.height, &currentrow, COLS, LINES);
 				}
 				*/
 			}
 			if (wins.top.visible) {
 				// wclear(wins.top.win);
-				uitop(&wins.top.win, &currentrow, COLS, LINES, currentstate.color, thisproc, \
+				uitop(&wins.top.win, wins.top.height, &currentrow, COLS, LINES, currentstate.color, thisproc, \
 					(int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 			}
 
 
 			if (wins.warn.visible) {
-				uiwarn(&wins.warn.win, &currentrow, COLS, LINES);
+				uiwarn(&wins.warn.win, wins.warn.height, &currentrow, COLS, LINES);
 			}
 
 			// all data changes posted by here
 			pendingdata = false;
 			
 			// underline the end of the stats area border
-			if(currentrow < LINES-2) {
-				mvwhline(stdscr, currentrow, 1, ACS_HLINE, COLS-2);
+			if((currentrow > 0) && (currentrow < LINES-2)) {
+				mvwhline(stdscr, currentrow+1, 1, ACS_HLINE, COLS-2);
 			}
 			wmove(stdscr, 0, 0);
 			wrefresh(stdscr);
@@ -584,8 +609,8 @@ int main(int argc, char **argv)
 				}
 
 				// un-underline the end of the stats area border
-				if(currentrow < LINES-2) {
-					mvwhline(stdscr, currentrow, 1, ' ', COLS-2);
+				if((currentrow > 0) && (currentrow < LINES-2)) {
+					mvwhline(stdscr, currentrow+1, 1, ' ', COLS-2);
 				}
 			} else {
 				pressedkey = 0;
