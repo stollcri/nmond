@@ -454,7 +454,6 @@ static void uidiskdetail(WINDOW *win, int currow, int usecolor, unsigned long di
 	char *metermark = "#";
 	int readquant;
 	int writequant;
-	double disktotal;
 
 	if(!scale) {
 		if((diskr > 0) || (diskw > 0)) {
@@ -841,7 +840,6 @@ static void uinetdetail(WINDOW *win, int currow, int usecolor, unsigned long net
 	char *metermark = "#";
 	int readquant;
 	int writequant;
-	double nettotal;
 
 	if(!scale) {
 		if((netin > 0) || (netout > 0)) {

@@ -14,14 +14,12 @@ endif
 
 CC = cc
 
-CFLAGS = -O3 -Wall -D NDEBUG -Weverything
+CFLAGS = -O3 -Wall -D NDEBUG -Wall
 LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
 CFILES = nmond.c sysctlhelper.c sysinfo.c pidhash.c $(LANGFILES)
 
-CFLAGS_DBG = -O0 -g -Weverything
-# be quiet, at least until I get further along with the update)
-# CFLAGS_DBG = -O0 -g
+CFLAGS_DBG = -O0 -g -Wall
 LFLAGS_DBG = -l ncurses
 AOFILE_DBG = ./bin/nmond
 CFILES_DBG = $(CFILES)

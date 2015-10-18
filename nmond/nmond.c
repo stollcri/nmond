@@ -404,12 +404,9 @@ int main(int argc, char **argv)
 	gethostname(hostname, sizeof(hostname));
 	bool pendingdata = false;
 	int pressedkey = 0;
-	int lastpressedkeya = 0;
-	int lastpressedkeyb = 0;
 	int cpulongitter = 0;
 	int netlongitter = 0;
 	int disklongitter = 0;
-	int	networks = 0;
 	int	flash_on = 0;
 	int	show_raw = 0;
 	int currentrow = 0;
