@@ -77,15 +77,15 @@
 	- ✓ - => - -- half refresh rate
 	- ✓ .      -- (removed: minimal display)
 	- ✓ ? => ? -- help
-- ☐ APP: Static analysis
-	- ☐ Valgrind checks
-	- ☐ scrutinize all malloc
-	- ☐ scrutinize all strcpy -- use strncpy or strlcpy (OpenBSD)
-	- ☐ scrutinize all strcat -- use strncat or strlcat (OpenBSD)
-	- ☐ scrutinize all printf
-	- ☐ scrutinize all scanf -- use fgets
-	- ☐ scrutinize all gets -- use fgets
-	- ☐ make sure variables are nulled after free to prevent double free (e.g. free(x); x = NULL;)
+- ✓ APP: Static analysis
+	- ✗ Valgrind checks (not working properly on El Capitan)
+	- ✓ scrutinize all malloc
+	- ✓ scrutinize all strcpy -- use strncpy or strlcpy (OpenBSD)
+	- ✓ scrutinize all strcat -- use strncat or strlcat (OpenBSD)
+	- ✓ scrutinize all printf
+	- ✓ scrutinize all scanf -- use fgets
+	- ✓ scrutinize all gets -- use fgets
+	- ✓ make sure variables are nulled after free to prevent double free (e.g. free(x); x = NULL;)
 - ✓ APP: Read environemnt variables
 	- ✓ Read new NMOND environment variable (process as if it contained key presses)
 	- ✓ Read old NMON environment variable and translate it

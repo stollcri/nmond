@@ -14,14 +14,14 @@ endif
 
 CC = cc
 
-CFLAGS = -O3 -Wall -D NDEBUG
+CFLAGS = -O3 -Wall -D NDEBUG -Weverything
 LFLAGS = -l ncurses
 AOFILE = ./bin/nmond
 CFILES = nmond.c sysctlhelper.c sysinfo.c pidhash.c $(LANGFILES)
 
-#CFLAGS_DBG = -O0 -g -Weverything
+CFLAGS_DBG = -O0 -g -Weverything
 # be quiet, at least until I get further along with the update)
-CFLAGS_DBG = -O0 -g
+# CFLAGS_DBG = -O0 -g
 LFLAGS_DBG = -l ncurses
 AOFILE_DBG = ./bin/nmond
 CFILES_DBG = $(CFILES)
@@ -35,7 +35,7 @@ ifeq ($(strip $(SCAN_BUILD_WHICH)),)
 endif
 
 
-default: nmond
+default: findtrouble nmond
 test: debug run
 
 debug:
@@ -43,8 +43,18 @@ debug:
 	$(CC) $(CFLAGS_DBG) $(LFLAGS_DBG) -o $(AOFILE_DBG) $(CFILES_DBG)
 
 analysis:
+	echo "Variables should be checked for null after malloc ... check the following ..."
+	grep -inlR -e malloc\( . | xargs grep -inR -A1 -e malloc\(
+	echo
+	echo "Variables should be nulled after free ... check the following output ..."
+	grep -inlR -e free\( . | xargs grep -inR -A1 -e free\(
+	echo
 	$(SCAN_BUILD_EXISTS)
 	scan-build -o tst/out -v -V make debug
+
+findtrouble:
+	grep -inR -e malloc\( .
+	grep -inR -e strcpy\( -e strcat\( -e scanf\( -e gets\( .
 
 run:
 	# bin/nmond noarg1 noarg2 2> errors.txt
