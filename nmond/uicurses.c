@@ -139,7 +139,7 @@ void uiwelcome(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	mvwprintw(*win, *currow+17, 0, "    d = Disk Usage        R = Top-procs/cmnd,mem  ? = Help                  ");
 	mvwprintw(*win, *currow+18, 0, "    i = About this Mac    t = Top-processes                                 ");
 	mvwprintw(*win, *currow+19, 0, "    m = Memory Usage      T = Top-procs/command   q = Quit                  ");
-	mvwprintw(*win, *currow+21, 0, " To start the same way every time set an NMOND variable: 'export NMOND=cdmnT'");
+	mvwprintw(*win, *currow+21, 0, " To start the same way every time set an NMOND variable: 'export NMOND=cdnT'");
 	
 	// pnoutrefresh(*win, 0, 0, 1, 1, lines-2, cols-2);
 	// wnoutrefresh(stdscr);	
@@ -321,62 +321,81 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 		*currow = 0;
 	}
 
-	mvwprintw(*win, *currow, 0, " CPU +---Long-Term-----------------------------------------------------------+");
-	if (usecolor){
-		wattrset(*win, COLOR_PAIR(4));
-		mvwprintw(*win, *currow, 27, "User%%");
-		wattrset(*win, COLOR_PAIR(1));
-		mvwprintw(*win, *currow, 35, "System%%");
-		wattrset(*win, COLOR_PAIR(2));
-		mvwprintw(*win, *currow, 45, "Nice%%");
-		wattrset(*win, COLOR_PAIR(0));
+	if(EXTRATALL){
+		mvwprintw(*win, *currow+1,  0, "100%%-|");
+		mvwprintw(*win, *currow+2,  0, " 95%%-|");
+		mvwprintw(*win, *currow+3,  0, " 90%%-|");
+		mvwprintw(*win, *currow+4,  0, " 85%%-|");
+		mvwprintw(*win, *currow+5,  0, " 80%%-|");
+		mvwprintw(*win, *currow+6,  0, " 75%%-|");
+		mvwprintw(*win, *currow+7,  0, " 70%%-|");
+		mvwprintw(*win, *currow+8,  0, " 65%%-|");
+		mvwprintw(*win, *currow+9,  0, " 60%%-|");
+		mvwprintw(*win, *currow+10, 0, " 55%%-|");
+		mvwprintw(*win, *currow+11, 0, " 50%%-|");
+		mvwprintw(*win, *currow+12, 0, " 45%%-|");
+		mvwprintw(*win, *currow+13, 0, " 40%%-|");
+		mvwprintw(*win, *currow+14, 0, " 35%%-|");
+		mvwprintw(*win, *currow+15, 0, " 30%%-|");
+		mvwprintw(*win, *currow+16, 0, " 25%%-|");
+		mvwprintw(*win, *currow+17, 0, " 20%%-|");
+		mvwprintw(*win, *currow+18, 0, " 15%%-|");
+		mvwprintw(*win, *currow+19, 0, " 10%%-|");
+		mvwprintw(*win, *currow+20, 0, "  5%%-|");
+	} else {
+		mvwprintw(*win, *currow+1,  0, "100%%-|");
+		mvwprintw(*win, *currow+2,  0, " 90%%-|");
+		mvwprintw(*win, *currow+3,  0, " 80%%-|");
+		mvwprintw(*win, *currow+4,  0, " 70%%-|");
+		mvwprintw(*win, *currow+5,  0, " 60%%-|");
+		mvwprintw(*win, *currow+6,  0, " 50%%-|");
+		mvwprintw(*win, *currow+7,  0, " 40%%-|");
+		mvwprintw(*win, *currow+8,  0, " 30%%-|");
+		mvwprintw(*win, *currow+9,  0, " 20%%-|");
+		mvwprintw(*win, *currow+10, 0, " 10%%-|");
+		mvwvline(*win, *currow+1, 5, ACS_VLINE, 10);
 	}
-	mvwprintw(*win, *currow+1,  0, "100%%-|");
-	mvwprintw(*win, *currow+2,  0, " 95%%-|");
-	mvwprintw(*win, *currow+3,  0, " 90%%-|");
-	mvwprintw(*win, *currow+4,  0, " 85%%-|");
-	mvwprintw(*win, *currow+5,  0, " 80%%-|");
-	mvwprintw(*win, *currow+6,  0, " 75%%-|");
-	mvwprintw(*win, *currow+7,  0, " 70%%-|");
-	mvwprintw(*win, *currow+8,  0, " 65%%-|");
-	mvwprintw(*win, *currow+9,  0, " 60%%-|");
-	mvwprintw(*win, *currow+10, 0, " 55%%-|");
-	mvwprintw(*win, *currow+11, 0, " 50%%-|");
-	mvwprintw(*win, *currow+12, 0, " 45%%-|");
-	mvwprintw(*win, *currow+13, 0, " 40%%-|");
-	mvwprintw(*win, *currow+14, 0, " 35%%-|");
-	mvwprintw(*win, *currow+15, 0, " 30%%-|");
-	mvwprintw(*win, *currow+16, 0, " 25%%-|");
-	mvwprintw(*win, *currow+17, 0, " 20%%-|");
-	mvwprintw(*win, *currow+18, 0, " 15%%-|");
-	mvwprintw(*win, *currow+19, 0, " 10%%-|");
-	mvwprintw(*win, *currow+20, 0, "  5%%-|");
 	
 	if(updategraph) {
+		int graphlines = 0;
+		if(EXTRATALL) {
+			graphlines = 20;
+		} else {
+			graphlines = 10;
+		}
 		int graphcols = 70;
-		int graphlines = 20;
 		int offset = 6;
 
 		char *metermark = NULL;
 		char *blankmark = NULL;
 		char *leadermark = NULL;
 
-		int userquant = (int)(round(thisres.avgpercentuser) / 5);
-		int systquant = (int)(round(thisres.avgpercentsys) / 5);
-		int nicequant = (int)(round(thisres.avgpercentnice) / 5);
+		int userquant = 0;
+		int systquant = 0;
+		int nicequant = 0;
+		if(EXTRATALL) {
+			userquant = (int)(round(thisres.avgpercentuser) / 5);
+			systquant = (int)(round(thisres.avgpercentsys) / 5);
+			nicequant = (int)(round(thisres.avgpercentnice) / 5);
+		} else {
+			userquant = (int)(round(thisres.avgpercentuser) / 10);
+			systquant = (int)(round(thisres.avgpercentsys) / 10);
+			nicequant = (int)(round(thisres.avgpercentnice) / 10);
+		}
 
 		for (int i = graphlines; i > 0; --i) {
 			wmove(*win, i, *itterin+offset);
 			
-			if((i > 1) && (((i - 1) % 4) == 0)) {
-				metermark = "+";
-				blankmark = "-";
-				leadermark = "+";
-			} else {
-				metermark = "|";
+			// if((i > 1) && (((i - 1) % 4) == 0)) {
+			// 	metermark = "|";
+			// 	blankmark = "-";
+			// 	leadermark = "|";
+			// } else {
+				// metermark = "|";
+				metermark = " ";
 				blankmark = " ";
 				leadermark = "|";
-			}
+			// }
 
 			if(userquant) {
 				if(usecolor) {
@@ -412,14 +431,17 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 			}
 			wattrset(*win, COLOR_PAIR(0));
 			wmove(*win, i, *itterin+offset+1);
-			wprintw(*win, leadermark);
+			// wprintw(*win, leadermark);
 		}
+		mvwvline(*win, *currow+1, *itterin+offset+1, ACS_VLINE, 10);
 
 		*itterin += 1;
 		if(*itterin > graphcols) {
 			*itterin = 0;
 		}
 	}
+
+	uibanner(*win, cols, "CPU Load");
 	*currow = currowsave;
 	uidisplay(*win, currow, cols, lines, winheight);
 }
@@ -581,45 +603,55 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 	if (*win == NULL) {
 		return;
 	}
-	wclear(*win);
+	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
 		*currow = 0;
 	}
 
-	mvwprintw(*win, *currow, 0, "DISK +---Long-Term-----------------------------------------------------------+");
-	if (usecolor){
-		wattrset(*win, COLOR_PAIR(4));
-		mvwprintw(*win, *currow, 27, "In");
-		wattrset(*win, COLOR_PAIR(1));
-		mvwprintw(*win, *currow, 35, "Out");
-		wattrset(*win, COLOR_PAIR(0));
+	if(EXTRATALL){
+		mvwprintw(*win, *currow+1,  0, " 10G-|");
+		mvwprintw(*win, *currow+2,  0, "     |");
+		mvwprintw(*win, *currow+3,  0, "  1G-|");
+		mvwprintw(*win, *currow+4,  0, "     |");
+		mvwprintw(*win, *currow+5,  0, "100M-|");
+		mvwprintw(*win, *currow+6,  0, "     |");
+		mvwprintw(*win, *currow+7,  0, " 10M-|");
+		mvwprintw(*win, *currow+8,  0, "     |");
+		mvwprintw(*win, *currow+9,  0, "  1M-|");
+		mvwprintw(*win, *currow+10, 0, "     |");
+		mvwprintw(*win, *currow+11, 0, "100K-|");
+		mvwprintw(*win, *currow+12, 0, "     |");
+		mvwprintw(*win, *currow+13, 0, " 10K-|");
+		mvwprintw(*win, *currow+14, 0, "     |");
+		mvwprintw(*win, *currow+15, 0, "  1K-|");
+		mvwprintw(*win, *currow+16, 0, "     |");
+		mvwprintw(*win, *currow+17, 0, "100B-|");
+		mvwprintw(*win, *currow+18, 0, "     |");
+		mvwprintw(*win, *currow+19, 0, " 10B-|");
+		mvwprintw(*win, *currow+20, 0, "     |");
+	} else {
+		mvwprintw(*win, *currow+1,  0, " 10G-|");
+		mvwprintw(*win, *currow+2,  0, "  1G-|");
+		mvwprintw(*win, *currow+3,  0, "100M-|");
+		mvwprintw(*win, *currow+4,  0, " 10M-|");
+		mvwprintw(*win, *currow+5,  0, "  1M-|");
+		mvwprintw(*win, *currow+6,  0, "100K-|");
+		mvwprintw(*win, *currow+7,  0, " 10K-|");
+		mvwprintw(*win, *currow+8,  0, "  1K-|");
+		mvwprintw(*win, *currow+9,  0, "100B-|");
+		mvwprintw(*win, *currow+10, 0, " 10B-|");
 	}
-	mvwprintw(*win, *currow+1,  0, " 10G-|");
-	mvwprintw(*win, *currow+2,  0, "     |");
-	mvwprintw(*win, *currow+3,  0, "  1G-|");
-	mvwprintw(*win, *currow+4,  0, "     |");
-	mvwprintw(*win, *currow+5,  0, "100M-|");
-	mvwprintw(*win, *currow+6,  0, "     |");
-	mvwprintw(*win, *currow+7,  0, " 10M-|");
-	mvwprintw(*win, *currow+8,  0, "     |");
-	mvwprintw(*win, *currow+9,  0, "  1M-|");
-	mvwprintw(*win, *currow+10, 0, "     |");
-	mvwprintw(*win, *currow+11, 0, "100K-|");
-	mvwprintw(*win, *currow+12, 0, "     |");
-	mvwprintw(*win, *currow+13, 0, " 10K-|");
-	mvwprintw(*win, *currow+14, 0, "     |");
-	mvwprintw(*win, *currow+15, 0, "  1K-|");
-	mvwprintw(*win, *currow+16, 0, "     |");
-	mvwprintw(*win, *currow+17, 0, "100B-|");
-	mvwprintw(*win, *currow+18, 0, "     |");
-	mvwprintw(*win, *currow+19, 0, " 10B-|");
-	mvwprintw(*win, *currow+20, 0, "     |");
 	
 	if(updategraph) {
+		int graphlines = 0;
+		if(EXTRATALL) {
+			graphlines = 20;
+		} else {
+			graphlines = 10;
+		}
 		int graphcols = 70;
-		int graphlines = 20;
 		int offset = 6;
 
 		char *metermark = NULL;
@@ -634,7 +666,11 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 
 		int tmpquant = 0;
 		if(disktotal) {
-			tmpquant = (int)floor(log10(disktotal) * 2);
+			if(EXTRATALL) {
+				tmpquant = (int)floor(log10(disktotal) * 2);
+			} else {
+				tmpquant = (int)floor(log10(disktotal));
+			}
 			// TODO: this ratio cannot be right for logrithmic output
 			readquant = (int)(tmpquant * (diskr / (disktotal))) - 0;
 			writequant = (int)(tmpquant * (diskw / (disktotal))) - 0;
@@ -643,15 +679,16 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 		for (int i = graphlines; i > 0; --i) {
 			wmove(*win, i, *itterin+offset);
 			
-			if((i > 1) && (((i - 1) % 4) == 0)) {
-				metermark = "+";
-				blankmark = "-";
-				leadermark = "+";
-			} else {
-				metermark = "|";
+			// if((i > 1) && (((i - 1) % 4) == 0)) {
+			// 	metermark = "+";
+			// 	blankmark = "-";
+			// 	leadermark = "+";
+			// } else {
+				// metermark = "|";
+				metermark = " ";
 				blankmark = " ";
 				leadermark = "|";
-			}
+			// }
 
 			if(readquant) {
 				if(usecolor) {
@@ -687,14 +724,17 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 			}
 			wattrset(*win, COLOR_PAIR(0));
 			wmove(*win, i, *itterin+offset+1);
-			wprintw(*win, leadermark);
+			// wprintw(*win, leadermark);
 		}
+		mvwvline(*win, *currow+1, *itterin+offset+1, ACS_VLINE, 10);
 
 		*itterin += 1;
 		if(*itterin > graphcols) {
 			*itterin = 0;
 		}
 	}
+
+	uibanner(*win, cols, "Disk Usage");
 	*currow = currowsave;
 	uidisplay(*win, currow, cols, lines, winheight);
 }
@@ -928,45 +968,55 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	if (*win == NULL) {
 		return;
 	}
-	wclear(*win);
+	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
 		*currow = 0;
 	}
 
-	mvwprintw(*win, *currow, 0, " NET +---Long-Term-----------------------------------------------------------+");
-	if (usecolor){
-		wattrset(*win, COLOR_PAIR(4));
-		mvwprintw(*win, *currow, 27, "In");
-		wattrset(*win, COLOR_PAIR(1));
-		mvwprintw(*win, *currow, 35, "Out");
-		wattrset(*win, COLOR_PAIR(0));
+	if(EXTRATALL){
+		mvwprintw(*win, *currow+1,  0, " 10G-|");
+		mvwprintw(*win, *currow+2,  0, "     |");
+		mvwprintw(*win, *currow+3,  0, "  1G-|");
+		mvwprintw(*win, *currow+4,  0, "     |");
+		mvwprintw(*win, *currow+5,  0, "100M-|");
+		mvwprintw(*win, *currow+6,  0, "     |");
+		mvwprintw(*win, *currow+7,  0, " 10M-|");
+		mvwprintw(*win, *currow+8,  0, "     |");
+		mvwprintw(*win, *currow+9,  0, "  1M-|");
+		mvwprintw(*win, *currow+10, 0, "     |");
+		mvwprintw(*win, *currow+11, 0, "100K-|");
+		mvwprintw(*win, *currow+12, 0, "     |");
+		mvwprintw(*win, *currow+13, 0, " 10K-|");
+		mvwprintw(*win, *currow+14, 0, "     |");
+		mvwprintw(*win, *currow+15, 0, "  1K-|");
+		mvwprintw(*win, *currow+16, 0, "     |");
+		mvwprintw(*win, *currow+17, 0, "100B-|");
+		mvwprintw(*win, *currow+18, 0, "     |");
+		mvwprintw(*win, *currow+19, 0, " 10B-|");
+		mvwprintw(*win, *currow+20, 0, "     |");
+	} else {
+		mvwprintw(*win, *currow+1,  0, " 10G-|");
+		mvwprintw(*win, *currow+2,  0, "  1G-|");
+		mvwprintw(*win, *currow+3,  0, "100M-|");
+		mvwprintw(*win, *currow+4,  0, " 10M-|");
+		mvwprintw(*win, *currow+5,  0, "  1M-|");
+		mvwprintw(*win, *currow+6,  0, "100K-|");
+		mvwprintw(*win, *currow+7,  0, " 10K-|");
+		mvwprintw(*win, *currow+8,  0, "  1K-|");
+		mvwprintw(*win, *currow+9,  0, "100B-|");
+		mvwprintw(*win, *currow+10, 0, " 10B-|");
 	}
-	mvwprintw(*win, *currow+1,  0, " 10G-|");
-	mvwprintw(*win, *currow+2,  0, "     |");
-	mvwprintw(*win, *currow+3,  0, "  1G-|");
-	mvwprintw(*win, *currow+4,  0, "     |");
-	mvwprintw(*win, *currow+5,  0, "100M-|");
-	mvwprintw(*win, *currow+6,  0, "     |");
-	mvwprintw(*win, *currow+7,  0, " 10M-|");
-	mvwprintw(*win, *currow+8,  0, "     |");
-	mvwprintw(*win, *currow+9,  0, "  1M-|");
-	mvwprintw(*win, *currow+10, 0, "     |");
-	mvwprintw(*win, *currow+11, 0, "100K-|");
-	mvwprintw(*win, *currow+12, 0, "     |");
-	mvwprintw(*win, *currow+13, 0, " 10K-|");
-	mvwprintw(*win, *currow+14, 0, "     |");
-	mvwprintw(*win, *currow+15, 0, "  1K-|");
-	mvwprintw(*win, *currow+16, 0, "     |");
-	mvwprintw(*win, *currow+17, 0, "100B-|");
-	mvwprintw(*win, *currow+18, 0, "     |");
-	mvwprintw(*win, *currow+19, 0, " 10B-|");
-	mvwprintw(*win, *currow+20, 0, "     |");
 	
 	if(updategraph) {
+		int graphlines = 0;
+		if(EXTRATALL) {
+			graphlines = 20;
+		} else {
+			graphlines = 10;
+		}
 		int graphcols = 70;
-		int graphlines = 20;
 		int offset = 6;
 
 		char *metermark = NULL;
@@ -983,7 +1033,11 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 
 		int tmpquant = 0;
 		if(nettotal) {
-			tmpquant = (int)floor(log10(nettotal) * 2);
+			if(EXTRATALL) {
+				tmpquant = (int)floor(log10(nettotal) * 2);
+			} else {
+				tmpquant = (int)floor(log10(nettotal));
+			}
 			// TODO: this ratio cannot be right for logrithmic output
 			readquant = (int)(tmpquant * (netin / (nettotal))) - 0;
 			writequant = (int)(tmpquant * (netout / (nettotal))) - 0;
@@ -992,15 +1046,16 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 		for (int i = graphlines; i > 0; --i) {
 			wmove(*win, i, *itterin+offset);
 			
-			if((i > 1) && (((i - 1) % 4) == 0)) {
-				metermark = "+";
-				blankmark = "-";
-				leadermark = "+";
-			} else {
-				metermark = "|";
+			// if((i > 1) && (((i - 1) % 4) == 0)) {
+			// 	metermark = "+";
+			// 	blankmark = "-";
+			// 	leadermark = "+";
+			// } else {
+				// metermark = "|";
+			metermark = " ";
 				blankmark = " ";
 				leadermark = "|";
-			}
+			// }
 
 			if(readquant) {
 				if(usecolor) {
@@ -1036,14 +1091,17 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 			}
 			wattrset(*win, COLOR_PAIR(0));
 			wmove(*win, i, *itterin+offset+1);
-			wprintw(*win, leadermark);
+			// wprintw(*win, leadermark);
 		}
+		mvwvline(*win, *currow+1, *itterin+offset+1, ACS_VLINE, 10);
 
 		*itterin += 1;
 		if(*itterin > graphcols) {
 			*itterin = 0;
 		}
 	}
+
+	uibanner(*win, cols, "Network Usage");
 	*currow = currowsave;
 	uidisplay(*win, currow, cols, lines, winheight);
 }

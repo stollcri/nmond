@@ -51,7 +51,8 @@
 #define MAXROWS 256
 #define MAXCOLS 150
 #define BORDER_WIDTH 2
-
+#define EXTRATALL 0
+ 
 #define DISK_METER_MODE 1  // change me
 #define DISK_METER_MB 0    // do NOT change
 #define DISK_METER_LOG 1   // do NOT change

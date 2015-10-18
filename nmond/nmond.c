@@ -421,11 +421,19 @@ int main(int argc, char **argv)
 	wins.help.win = newpad(wins.help.height, MAXCOLS);
 	wins.cpu.height = thisres.cpucount + 3;
 	wins.cpu.win = newpad(wins.cpu.height, MAXCOLS);
-	wins.cpulong.height = 21;
+	if(EXTRATALL){
+		wins.cpulong.height = 21;
+	} else {
+		wins.cpulong.height = 11;
+	}
 	wins.cpulong.win = newpad(wins.cpulong.height, MAXCOLS);
 	wins.disks.height = 3;
 	wins.disks.win = newpad(wins.disks.height, MAXCOLS);
-	wins.disklong.height = 21;
+	if(EXTRATALL){
+		wins.disklong.height = 21;
+	} else {
+		wins.disklong.height = 11;
+	}
 	wins.disklong.win = newpad(wins.disklong.height, MAXCOLS);
 	// wins.diskgroup.height = MAXROWS;
 	// wins.diskgroup.win = newpad(wins.diskgroup.height, MAXCOLS);
@@ -447,7 +455,11 @@ int main(int argc, char **argv)
 	// wins.netfilesys.win = newpad(wins.netfilesys.height, MAXCOLS);
 	wins.network.height = MAXROWS;
 	wins.network.win = newpad(wins.network.height, MAXCOLS);
-	wins.netlong.height = 21;
+	if(EXTRATALL){
+		wins.netlong.height = 21;
+	} else {
+		wins.netlong.height = 11;
+	}
 	wins.netlong.win = newpad(wins.netlong.height, MAXCOLS);
 	wins.top.height = MAXROWS;
 	wins.top.win = newpad(wins.top.height, MAXCOLS);
