@@ -195,65 +195,80 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 	mvwprintw(win, row, 10, "%4.2f ", sys);
 	mvwprintw(win, row, 16, "%4.2f ", nice);
 	mvwprintw(win, row, 22, "%4.2f ", idle);
-	mvwprintw(win, row, 27, "|");
+	if(((cpuno + 1) % 2) || (cpuno < 0)) {
+		mvwaddch(win, row, 27, ACS_VLINE);
+	} else {
+		mvwaddch(win, row, 27, ACS_LTEE);
+	}
 
 	wmove(win, row, 28);
 	
-	char *metermark = NULL;//malloc(1);
+	chtype metermark;
 	
 	int userquant = (int)(round(user) / 2);
 	int systquant = (int)(round(sys) / 2);
 	int nicequant = (int)(round(nice) / 2);
 	for(int i=28; i<77; ++i){
 		if(((i + 3) % 5) == 0) {
-			metermark = "|";
+			if(((cpuno + 1) % 2) || (cpuno < 0)) {
+				metermark = ACS_VLINE;
+			} else {
+				metermark = ACS_PLUS;
+			}
 		} else {
 			if(cpuno >= 0) {
-				if(((cpuno + 1) % 2) == 0) {
-					metermark = " ";
+				if((cpuno + 1) % 2) {
+					metermark = ' ';
 				} else {
-					metermark = "-";
+					metermark = ACS_HLINE;
 				}
 			} else {
-				metermark = "=";
+				metermark = ' ';
 			}
 		}
 
 		if(userquant) {
 			if(usecolor) {
 				wattrset(win, COLOR_PAIR(10));
-				wprintw(win, metermark);
+				waddch(win, metermark);
 			} else {
-				wprintw(win, "U");
+				// wprintw(win, "U");
+				waddch(win, ACS_CKBOARD);
 			}
 			--userquant;
 		} else {
 			if(systquant) {
 				if(usecolor) {
 					wattrset(win, COLOR_PAIR(8));
-					wprintw(win, metermark);
+					waddch(win, metermark);
 				} else {
-					wprintw(win, "S");
+					// wprintw(win, "S");
+					waddch(win, ACS_BLOCK);
 				}
 				--systquant;
 			} else {
 				if(nicequant) {
 					if(usecolor) {
 						wattrset(win, COLOR_PAIR(9));
-						wprintw(win, metermark);
+						waddch(win, metermark);
 					} else {
-						wprintw(win, "N");
+						// wprintw(win, "N");
+						waddch(win, ACS_DIAMOND);
 					}
 					--nicequant;
 				} else {
 					wattrset(win, COLOR_PAIR(0));
-					wprintw(win, metermark);
+					waddch(win, metermark);
 				}
 			}
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, row, 77, "|");
+	if(((cpuno + 1) % 2) || (cpuno < 0)) {
+		mvwaddch(win, row, 77, ACS_VLINE);
+	} else {
+		mvwaddch(win, row, 77, ACS_RTEE);
+	}
 }
 
 void uicpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, struct sysres thisres, int show_raw)
@@ -284,11 +299,26 @@ void uicpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 		mvwprintw(*win, *currow+1, 16, "Wait%%");
 		mvwprintw(*win, *currow+1, 22, "Idle");
 	}
-	mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+	mvwhline(*win, *currow+1, 27, ACS_HLINE, 50);
+	mvwaddch(*win, *currow+1, 27, ACS_ULCORNER);
+	mvwaddch(*win, *currow+1, 32, ACS_TTEE);
+	mvwprintw(*win, *currow+1, 35, "20");
+	mvwaddch(*win, *currow+1, 37, ACS_PLUS);
+	mvwaddch(*win, *currow+1, 42, ACS_TTEE);
+	mvwprintw(*win, *currow+1, 45, "40");
+	mvwaddch(*win, *currow+1, 47, ACS_PLUS);
+	mvwaddch(*win, *currow+1, 52, ACS_TTEE);
+	mvwprintw(*win, *currow+1, 55, "60");
+	mvwaddch(*win, *currow+1, 57, ACS_PLUS);
+	mvwaddch(*win, *currow+1, 62, ACS_TTEE);
+	mvwprintw(*win, *currow+1, 65, "80");
+	mvwaddch(*win, *currow+1, 67, ACS_PLUS);
+	mvwaddch(*win, *currow+1, 72, ACS_TTEE);
+	mvwaddch(*win, *currow+1, 77, ACS_URCORNER);
 
 	int cpuno = 0;
 	for (cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
-	 	mvwprintw(*win, (*currow+2 + cpuno), 77, "|");
+	 	mvwaddch(*win, (*currow+2 + cpuno), 77, ACS_VLINE);
 		uicpudetail(*win, cpuno, (*currow+2 + cpuno), usecolor,
 			thisres.cpus[cpuno].percentuser, 
 			thisres.cpus[cpuno].percentsys,
@@ -402,7 +432,8 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 					wattrset(*win, COLOR_PAIR(10));
 					wprintw(*win, metermark);
 				} else {
-					wprintw(*win, "U");
+					// wprintw(*win, "U");
+					waddch(*win, ACS_CKBOARD);
 				}
 				--userquant;
 			} else {
@@ -411,7 +442,8 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 						wattrset(*win, COLOR_PAIR(8));
 						wprintw(*win, metermark);
 					} else {
-						wprintw(*win, "S");
+						// wprintw(*win, "S");
+						waddch(*win, ACS_BLOCK);
 					}
 					--systquant;
 				} else {
@@ -420,7 +452,8 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 							wattrset(*win, COLOR_PAIR(9));
 							wprintw(*win, metermark);
 						} else {
-							wprintw(*win, "N");
+							// wprintw(*win, "N");
+							waddch(*win, ACS_DIAMOND);
 						}
 						--nicequant;
 					} else {
@@ -473,7 +506,7 @@ static void uidiskdetail(WINDOW *win, int currow, int usecolor, unsigned long di
 		wattrset(win, COLOR_PAIR(0));
 	}
 
-	char *metermark = "#";
+	chtype metermark;
 	int readquant;
 	int writequant;
 
@@ -496,41 +529,41 @@ static void uidiskdetail(WINDOW *win, int currow, int usecolor, unsigned long di
 		mvwprintw(win, currow, 24, "%2.2s", units);
 	}
 
-	mvwprintw(win, currow, 27, "|");
+	mvwaddch(win, currow, 27, ACS_VLINE);
 	wmove(win, currow, 28);
 	
 	for(int i = 28; i < 77; ++i){
 		if(((i + 3) % 5) == 0) {
-			metermark = "|";
+			metermark = ACS_VLINE;
 		} else {
-			metermark = " ";
+			metermark = ' ';
 		}
 
 		if(readquant) {
 			if(usecolor) {
 				wattrset(win, COLOR_PAIR(10));
-				wprintw(win, metermark);
+				waddch(win, metermark);
 			} else {
-				wprintw(win, "#");
+				waddch(win, ACS_CKBOARD);
 			}
 			--readquant;
 		} else {
 			if(writequant) {
 				if(usecolor) {
 					wattrset(win, COLOR_PAIR(8));
-					wprintw(win, metermark);
+					waddch(win, metermark);
 				} else {
-					wprintw(win, "#");
+					waddch(win, ACS_CKBOARD);
 				}
 				--writequant;
 			} else {
 				wattrset(win, COLOR_PAIR(0));
-				wprintw(win, metermark);
+				waddch(win, metermark);
 			}
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, currow, 77, "|");
+	mvwaddch(win, currow, 77, ACS_VLINE);
 }
 
 extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, unsigned int diskr, unsigned int diskw)
@@ -548,48 +581,67 @@ extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int line
 	unsigned int disktotal = diskr + diskw;
 
 	if(DISK_METER_MODE == DISK_METER_LOG) {
-		mvwprintw(*win, *currow+1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
- 		mvwprintw(*win, *currow+2, 77, "|");
+		mvwaddch(*win, *currow+1, 27, ACS_VLINE);
+ 		wprintw(*win, " 10B");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, "100B");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, "  1K");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, " 10K");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, "100K");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, "  1M");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, " 10M");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, "100M");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, "  1G");
+ 		waddch(*win, ACS_VLINE);
+ 		wprintw(*win, " 10B");
+ 		waddch(*win, ACS_VLINE);
  		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, 0, "", 0);
 
 	} else if(DISK_METER_MODE == DISK_METER_SCALE) {
 	 	if(disktotal <= (BYTES_IN_KB * 100)) {
 	 		mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-	 		mvwprintw(*win, *currow+2, 77, "|");
+	 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 	 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 1);
 	 	
 	 	} else if(disktotal <= (BYTES_IN_KB * 1000)) {
 	 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-	 		mvwprintw(*win, *currow+2, 77, "|");
+	 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 	 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 10);
 	 	
 	 	} else {
 	 		if(disktotal <= (BYTES_IN_MB * 100)) {
 	 			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-		 		mvwprintw(*win, *currow+2, 77, "|");
+		 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 		 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
 	 		
 	 		} else if(disktotal <= (BYTES_IN_MB * 1000)) {
 		 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-		 		mvwprintw(*win, *currow+2, 77, "|");
+		 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 		 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 10);
 		 	
 		 	} else {
 		 		if(disktotal <= (BYTES_IN_GB * 100)) {
 		 			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-			 		mvwprintw(*win, *currow+2, 77, "|");
+			 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 			 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 1);
 
 			 	} else {
 			 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-			 		mvwprintw(*win, *currow+2, 77, "|");
+			 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 			 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_GB, "GB", 10);
 			 	}
 			}
 	 	}
 	} else {
 		mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
- 		mvwprintw(*win, *currow+2, 77, "|");
+ 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
  		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
 	}
 
@@ -777,34 +829,34 @@ static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long lon
 		mvwprintw(win, currow, 20, "%5.2f%%", percent);
 		wattrset(win, COLOR_PAIR(0));
 	}
-	mvwprintw(win, currow, 27, "|");
+	mvwaddch(win, currow, 27, ACS_VLINE);
 	wmove(win, currow, 28);
 
-	char *metermark = "#";
+	chtype metermark;
 	int usedquant = (int)(floor(percent) / 2) - 1;
 	
 	for(int i=28; i<77; ++i){
 		if(((i + 3) % 5) == 0) {
-			metermark = "|";
+			metermark = ACS_VLINE;
 		} else {
-			metermark = " ";
+			metermark = ' ';
 		}
 
 		if(usedquant >= 0) {
 			if(usecolor) {
 				wattrset(win, COLOR_PAIR(10));
-				wprintw(win, metermark);
+				waddch(win, metermark);
 			} else {
-				wprintw(win, "#");
+				waddch(win, ACS_CKBOARD);
 			}
 			--usedquant;
 		} else {
 			wattrset(win, COLOR_PAIR(0));
-			wprintw(win, metermark);
+			waddch(win, metermark);
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, currow, 77, "|");
+	mvwaddch(win, currow, 77, ACS_VLINE);
 }
 
 extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, unsigned long long memused, unsigned long long memtotal)
@@ -821,8 +873,27 @@ extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lin
 
 	double percent = (double)((memused / 100.0) / (memtotal / 100.0) * 100);
 
-	mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
- 	mvwprintw(*win, *currow+2, 77, "|");
+	mvwaddch(*win, *currow+1, 27, ACS_VLINE);
+	wprintw(*win, " 10B");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "100B");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  1K");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 10K");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "100K");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  1M");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 10M");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "100M");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  1G");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 10B");
+	waddch(*win, ACS_VLINE);
 	uimemdetail(*win, *currow+2, usecolor, memused, memtotal, percent);
 
 	uibanner(*win, cols, "Memory Usage");
@@ -877,7 +948,7 @@ static void uinetdetail(WINDOW *win, int currow, int usecolor, unsigned long net
 		wattrset(win, COLOR_PAIR(0));
 	}
 
-	char *metermark = "#";
+	chtype metermark;
 	int readquant;
 	int writequant;
 
@@ -900,41 +971,41 @@ static void uinetdetail(WINDOW *win, int currow, int usecolor, unsigned long net
 		mvwprintw(win, currow, 24, "%2.2s", units);
 	}
 
-	mvwprintw(win, currow, 27, "|");
+	mvwaddch(win, currow, 27, ACS_VLINE);
 	wmove(win, currow, 28);
 	
 	for(int i = 28; i < 77; ++i){
 		if(((i + 3) % 5) == 0) {
-			metermark = "|";
+			metermark = ACS_VLINE;
 		} else {
-			metermark = " ";
+			metermark = ' ';
 		}
 
 		if(readquant) {
 			if(usecolor) {
 				wattrset(win, COLOR_PAIR(10));
-				wprintw(win, metermark);
+				waddch(win, metermark);
 			} else {
-				wprintw(win, "#");
+				waddch(win, ACS_CKBOARD);
 			}
 			--readquant;
 		} else {
 			if(writequant) {
 				if(usecolor) {
 					wattrset(win, COLOR_PAIR(8));
-					wprintw(win, metermark);
+					waddch(win, metermark);
 				} else {
-					wprintw(win, "#");
+					waddch(win, ACS_CKBOARD);
 				}
 				--writequant;
 			} else {
 				wattrset(win, COLOR_PAIR(0));
-				wprintw(win, metermark);
+				waddch(win, metermark);
 			}
 		}
 	}
 	wattrset(win, COLOR_PAIR(0));
-	mvwprintw(win, currow, 77, "|");
+	mvwaddch(win, currow, 77, ACS_VLINE);
 }
 
 extern void uinetwork(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, struct sysnet thisnet)
@@ -949,14 +1020,31 @@ extern void uinetwork(WINDOW **win, int winheight, int *currow, int cols, int li
 		*currow = 0;
 	}
 
-	if(DISK_METER_MODE == DISK_METER_LOG) {
-		mvwprintw(*win, *currow+1, 27, "| 10B|100B|  1K| 10K|100K|  1M| 10M|100M|  1G| 10G|");
- 		mvwprintw(*win, *currow+2, 77, "|");
- 		uinetdetail(*win, *currow+2, usecolor, \
- 			(thisnet.ibytes - thisnet.oldibytes), \
- 			(thisnet.obytes - thisnet.oldobytes), \
- 			0, "", 0);
-	}
+	mvwaddch(*win, *currow+1, 27, ACS_VLINE);
+	wprintw(*win, " 10B");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "100B");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  1K");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 10K");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "100K");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  1M");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 10M");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "100M");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  1G");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 10B");
+	waddch(*win, ACS_VLINE);
+	uinetdetail(*win, *currow+2, usecolor, \
+		(thisnet.ibytes - thisnet.oldibytes), \
+		(thisnet.obytes - thisnet.oldobytes), \
+		0, "", 0);
 
 	uibanner(*win, cols, "Network Usage");
 	*currow = currowsave;

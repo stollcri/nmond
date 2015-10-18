@@ -44,15 +44,15 @@
 #include <sys/time.h>
 
 #define APPNAME "nmond"
-#define VERSION "0.1.10"
-#define VERDATE "2015-10-12"
+#define VERSION "0.1.11"
+#define VERDATE "2015-10-18"
 #define APPURL "https://github.com/stollcri/nmond"
 
 #define MAXROWS 256
 #define MAXCOLS 150
 #define BORDER_WIDTH 2
 #define EXTRATALL 0
- 
+
 #define DISK_METER_MODE 1  // change me
 #define DISK_METER_MB 0    // do NOT change
 #define DISK_METER_LOG 1   // do NOT change

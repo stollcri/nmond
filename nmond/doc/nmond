@@ -1,5 +1,5 @@
 .\" Manpage for nmond.
-.\" Contact stollcri@gmail.com to correct errors or typos.
+.\" Contact https://github.com/stollcri/ to correct errors or typos.
 .TH man 1 "17 October 2015" "0.1" "nmond man page"
 .SH NAME
 nmond \- Ncurses based System Performance Monitor
