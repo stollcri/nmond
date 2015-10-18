@@ -63,5 +63,8 @@ install:
 	cp bin/nmond /usr/local/bin/nmond
 	chown root:wheel /usr/local/bin/nmond
 	chmod 4555 /usr/local/bin/nmond
+	mkdir -p /usr/local/man/
+	cp doc/nmond /usr/local/man/nmond.1
+	chown root:wheel /usr/local/man/nmond.1
 
 .PHONY: default, test, debug, analysis, run, clean, nmond, install

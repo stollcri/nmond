@@ -94,7 +94,7 @@
 	- ☐
 	- ☐
 	- ☐
-- ☐ APP: Create a manpage
+- ✓ APP: Create a manpage
 - ✓ APP: Clean out dead (reference) code
 - ☐ APP: Create dedicated branch for dev
 

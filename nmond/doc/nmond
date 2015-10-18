@@ -1,0 +1,17 @@
+.\" Manpage for nmond.
+.\" Contact stollcri@gmail.com to correct errors or typos.
+.TH man 1 "17 October 2015" "0.1" "nmond man page"
+.SH NAME
+nmond \- Ncurses based System Performance Monitor
+.SH SYNOPSIS
+nmond
+.SH DESCRIPTION
+Ncurses based System Performance Monitor for Darwin (Mac OS X)instead.
+.SH OPTIONS
+The nmond command does not take any options.
+.SH SEE ALSO
+useradd(8), passwd(5), nuseradd.debian(8)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Christopher Stoll (@stollcri)
