@@ -365,7 +365,7 @@ int main(int argc, char **argv)
 		init_pair((short)9,  COLOR_WHITE,   COLOR_GREEN);
 		init_pair((short)10, COLOR_WHITE,   COLOR_BLUE);
 		init_pair((short)11, COLOR_BLACK,   COLOR_YELLOW);
-		init_pair((short)12, COLOR_BLACK,   COLOR_CYAN);
+		init_pair((short)12, COLOR_BLACK,   COLOR_WHITE);
 	}
 	// read input character by character
 	cbreak();
