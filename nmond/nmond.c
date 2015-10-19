@@ -591,7 +591,6 @@ int main(int argc, char **argv)
 				mvwhline(stdscr, currentrow+1, 1, ACS_HLINE, COLS-2);
 			}
 			wmove(stdscr, 0, 0);
-			wrefresh(stdscr);
 			doupdate();
 
 			// clear pressed key
