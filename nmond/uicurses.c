@@ -43,7 +43,6 @@
 
 static inline void uibanner(WINDOW *win, int cols, char *string)
 {
-	
 	wattrset(win, COLOR_PAIR(12));
 	wattron(win, A_STANDOUT);
 	// mvwhline(win, 0, 0, ACS_HLINE, (cols - 2));
@@ -53,24 +52,11 @@ static inline void uibanner(WINDOW *win, int cols, char *string)
 
 	wmove(win, 0, 0);
 
-	// wattrset(win, COLOR_PAIR(12));
-	// wattron(win, A_STANDOUT);
-	// waddch(win, ACS_RTEE);
-	// wattroff(win, A_STANDOUT);
-	// wattrset(win, COLOR_PAIR(0));
-
 	wattron(win, A_STANDOUT);
 	wprintw(win, " ");
 	wprintw(win, string);
 	wprintw(win, " ");
 	wattroff(win, A_STANDOUT);
-
-	// wattrset(win, COLOR_PAIR(12));
-	// wattron(win, A_STANDOUT);
-	// waddch(win, ACS_RTEE);
-	// wattroff(win, A_STANDOUT);
-	// wattrset(win, COLOR_PAIR(0));
-	
 }
 
 
