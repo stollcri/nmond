@@ -526,8 +526,6 @@ int main(int argc, char **argv)
 					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
 					(unsigned int)(thisres.diskusew - thisres.diskusewlast));
 			}
-
-
 			if (wins.diskgroup.visible) {
 				uidiskgroup(&wins.diskgroup.win, wins.diskgroup.height, &currentrow, COLS, LINES);
 			}
@@ -549,8 +547,6 @@ int main(int argc, char **argv)
 			if (wins.netfilesys.visible) {
 				uinetfilesys(&wins.netfilesys.win, wins.netfilesys.height, &currentrow, COLS, LINES);
 			}
-
-
 			if (wins.network.visible) {
 				uinetwork(&wins.disks.win, wins.disks.height, &currentrow, COLS, LINES, currentstate.color, thisnet);
 				/*
@@ -574,14 +570,10 @@ int main(int argc, char **argv)
 				uitop(&wins.top.win, wins.top.height, &currentrow, COLS, LINES, currentstate.color, thisproc, \
 					(int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 			}
-
-
 			if (wins.warn.visible) {
 				uiwarn(&wins.warn.win, wins.warn.height, &currentrow, COLS, LINES);
 			}
-
-			// all data changes posted by here
-			pendingdata = false;
+			
 			
 			// underline the end of the stats area border
 			if((currentrow > 0) && (currentrow < LINES-2)) {
@@ -590,6 +582,8 @@ int main(int argc, char **argv)
 			wmove(stdscr, 0, 0);
 			doupdate();
 
+			// all data changes posted by here
+			pendingdata = false;
 			// clear pressed key
 			pressedkey = 0;
 		}
