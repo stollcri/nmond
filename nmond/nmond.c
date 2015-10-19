@@ -477,9 +477,9 @@ int main(int argc, char **argv)
 		currentstate.timenow = time(NULL);
 		currentstate.elapsed = currentstate.timenow - currentstate.timelast;
 		if (pressedkey || (currentstate.elapsed >= currentstate.refresh) || (currentstate.timelast <= 0)) {
-			currentstate.timelast = time(NULL);
-
 			if((currentstate.elapsed >= currentstate.refresh) || (currentstate.timelast <= 0)) {
+				currentstate.timelast = time(NULL);
+
 				// TODO: only check statistics which are used
 				// update system information data structures
 				getsyshwinfo(&thishw);
