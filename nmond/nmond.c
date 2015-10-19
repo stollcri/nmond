@@ -371,6 +371,8 @@ int main(int argc, char **argv)
 	cbreak();
 	// do not echo out read cahracters
 	noecho();
+	// hide the crusor
+	curs_set(0);
 	// capture keypad input
 	keypad(stdscr, TRUE);
 	// move the cursor to the top left
