@@ -9,12 +9,12 @@
 	- ✓ Get data from sysctl and other system calls
 	- ✓ Pull out UI elements (refactor)
 	- ✓ Streamline main()
-- ☐ APP: Create long output for:
+- ✓ APP: Create long output for:
 	- ✓ cpu
 	- ✗ mem (this is not, or should not be, very interesting)
 	- ✓ disk
 	- ✓ net
-- ☐ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
+- ✓ GUI: Update layout, text, and color (see: http://elmon.sourceforge.net)
 	- ✓ Improve spacing
 		- ✓ CPU Load
 		- ✓ CPU Long-Term
