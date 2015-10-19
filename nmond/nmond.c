@@ -491,9 +491,6 @@ int main(int argc, char **argv)
 
 				// data changes are pending gui update
 				pendingdata = true;
-
-				// flash on/off once per itteration
-				flash_on = flash_on ? false : true;
 			}
 
 			// update the in-use panes
