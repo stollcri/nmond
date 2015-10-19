@@ -689,7 +689,8 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 					wattrset(*win, COLOR_PAIR(10));
 					wprintw(*win, metermark);
 				} else {
-					wprintw(*win, "R");
+					// wprintw(*win, "R");
+					waddch(*win, ACS_CKBOARD);
 				}
 				--readquant;
 			} else {
@@ -698,7 +699,8 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 						wattrset(*win, COLOR_PAIR(8));
 						wprintw(*win, metermark);
 					} else {
-						wprintw(*win, "W");
+						// wprintw(*win, "W");
+						waddch(*win, ACS_BLOCK);
 					}
 					--writequant;
 				} else {
@@ -1062,7 +1064,8 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 					wattrset(*win, COLOR_PAIR(10));
 					wprintw(*win, metermark);
 				} else {
-					wprintw(*win, "R");
+					// wprintw(*win, "R");
+					waddch(*win, ACS_CKBOARD);
 				}
 				--readquant;
 			} else {
@@ -1071,7 +1074,8 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 						wattrset(*win, COLOR_PAIR(8));
 						wprintw(*win, metermark);
 					} else {
-						wprintw(*win, "W");
+						// wprintw(*win, "W");
+						waddch(*win, ACS_BLOCK);
 					}
 					--writequant;
 				} else {
