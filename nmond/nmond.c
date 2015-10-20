@@ -417,6 +417,8 @@ int main(int argc, char **argv)
 	int tempvalue = 0;
 	int graphcols = 70;
 	int *cpulongvals = malloc(graphcols * 3 * sizeof(int));
+	unsigned int *disklongvals = malloc(graphcols * 2 * sizeof(unsigned int));
+	unsigned long *netlongvals = malloc(graphcols * 2 * sizeof(unsigned long));
 
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
@@ -523,13 +525,30 @@ int main(int argc, char **argv)
 				uicpulong(&wins.cpulong.win, wins.cpulong.height, &currentrow, COLS, LINES, cpulongitter, currentstate.color, cpulongvals, graphcols);
 			}
 			if (wins.disklong.visible) {
-				uidisklong(&wins.disklong.win, wins.disklong.height, &currentrow, COLS, LINES, &disklongitter, currentstate.color, \
-					(unsigned int)(thisres.diskuser - thisres.diskuserlast), \
-					(unsigned int)(thisres.diskusew - thisres.diskusewlast), \
-					pendingdata);
+				if(pendingdata) {
+					tempvalue = disklongitter * 2;
+					disklongvals[tempvalue]   = (unsigned int)(thisres.diskuser - thisres.diskuserlast);
+					disklongvals[tempvalue+1] = (unsigned int)(thisres.diskusew - thisres.diskusewlast);
+				
+					disklongitter += 1;
+					if(disklongitter > graphcols) {
+						disklongitter = 0;
+					}
+				}
+				uidisklong(&wins.disklong.win, wins.disklong.height, &currentrow, COLS, LINES, disklongitter, currentstate.color, disklongvals, graphcols);
 			}
 			if (wins.netlong.visible) {
-				uinetlong(&wins.netlong.win, wins.netlong.height, &currentrow, COLS, LINES, &netlongitter, currentstate.color, thisnet, pendingdata);
+				if(pendingdata) {
+					tempvalue = netlongitter * 2;
+					netlongvals[tempvalue]   = (thisnet.ibytes - thisnet.oldibytes);
+					netlongvals[tempvalue+1] = (thisnet.obytes - thisnet.oldobytes);
+				
+					netlongitter += 1;
+					if(netlongitter > graphcols) {
+						netlongitter = 0;
+					}
+				}
+				uinetlong(&wins.netlong.win, wins.netlong.height, &currentrow, COLS, LINES, netlongitter, currentstate.color, netlongvals, graphcols);
 			}
 			if (wins.cpu.visible) {
 				uicpu(&wins.cpu.win, wins.cpu.height, &currentrow, COLS, LINES, currentstate.color, thisres, show_raw);

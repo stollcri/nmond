@@ -113,7 +113,7 @@ extern void uicpu(WINDOW**, int, int*, int, int, int, struct sysres, int);
 extern void uicpulong(WINDOW**, int, int*, int, int, int, int, int*, int);
 
 extern void uidisks(WINDOW**, int, int*, int, int, int, unsigned int, unsigned int);
-extern void uidisklong(WINDOW**, int, int*, int, int, int*, int, unsigned int, unsigned int, bool);
+extern void uidisklong(WINDOW**, int, int*, int, int, int, int, unsigned int*, int);
 extern void uidiskgroup(WINDOW**, int, int*, int, int);
 extern void uidiskmap(WINDOW**, int, int*, int, int);
 extern void uifilesys(WINDOW**, int, int*, int, int);
@@ -124,7 +124,7 @@ extern void uimemvirtual(WINDOW**, int, int*, int, int);
 extern void uineterrors(WINDOW**, int, int*, int, int);
 extern void uinetfilesys(WINDOW**, int, int*, int, int);
 extern void uinetwork(WINDOW**, int, int*, int, int, int, struct sysnet);
-extern void uinetlong(WINDOW**, int, int*, int, int, int*, int, struct sysnet, bool);
+extern void uinetlong(WINDOW**, int, int*, int, int, int, int, unsigned long*, int);
 extern void uitop(WINDOW**, int, int*, int, int, int, struct sysproc**, int, int, bool, char*);
 extern void uisys(WINDOW**, int, int*, int, int, struct syshw, struct syskern);
 extern void uiwarn(WINDOW**, int, int*, int, int);

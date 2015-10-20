@@ -362,6 +362,10 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	int graphlines = 10 + *currow;
 	int offset = 6;
 
+	int userquant = 0;
+	int systquant = 0;
+	int nicequant = 0;
+
 	mvwprintw(*win, *currow+1,  0, "100%%-|");
 	mvwprintw(*win, *currow+2,  0, " 90%%-|");
 	mvwprintw(*win, *currow+3,  0, " 80%%-|");
@@ -376,9 +380,9 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 
 	for (int j = 0; j < valcount; ++j) {
 		tempvalue = j * 3;
-		int userquant = longvals[tempvalue];
-		int systquant = longvals[tempvalue+1];
-		int nicequant = longvals[tempvalue+2];
+		userquant = longvals[tempvalue];
+		systquant = longvals[tempvalue+1];
+		nicequant = longvals[tempvalue+2];
 
 		if(j != itterin) {
 			for (int i = graphlines; i > 0; --i) {
@@ -600,7 +604,7 @@ extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int line
 	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, int *itterin, int usecolor, unsigned int diskr, unsigned int diskw, bool updategraph)
+void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, int itterin, int usecolor, unsigned int *longvals, int valcount)
 {
 	if (*win == NULL) {
 		return;
@@ -612,6 +616,17 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 		*currow = 0;
 	}
 
+	int tempvalue = 0;
+	int graphlines = 10 + *currow;
+	int offset = 6;
+
+	unsigned int diskr = 0;
+	unsigned int diskw = 0;
+	double disktotal = 0;
+	int tmpquant = 0;
+	int readquant = 0;
+	int writequant = 0;
+
 	mvwprintw(*win, *currow+1,  0, " 10G-|");
 	mvwprintw(*win, *currow+2,  0, "  1G-|");
 	mvwprintw(*win, *currow+3,  0, "100M-|");
@@ -622,25 +637,16 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 	mvwprintw(*win, *currow+8,  0, "  1K-|");
 	mvwprintw(*win, *currow+9,  0, "100B-|");
 	mvwprintw(*win, *currow+10, 0, " 10B-|");
+	mvwvline(*win, 1, offset-1, ACS_VLINE, graphlines);
 	
-	if(updategraph) {
-		int graphlines = 0;
-		graphlines = 10;
-		
-		int graphcols = 70;
-		int offset = 6;
+	for (int j = 0; j < valcount; ++j) {
+		tempvalue = j * 2;
+		diskr = longvals[tempvalue];
+		diskw = longvals[tempvalue+1];
+		readquant = 0;
+		writequant = 0;
 
-		char *metermark = NULL;
-		char *blankmark = NULL;
-		char *leadermark = NULL;
-
-		int readquant = 0;
-		int writequant = 0;
-		int zzzzquant = 0;
-
-		double disktotal = (double)(diskr + diskw);
-
-		int tmpquant = 0;
+		disktotal = (double)(diskr + diskw);
 		if(disktotal) {
 			tmpquant = (int)floor(log10(disktotal));
 			// TODO: this ratio cannot be right for logrithmic output
@@ -648,63 +654,37 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 			writequant = (int)(tmpquant * (diskw / (disktotal))) - 0;
 		}
 
-		for (int i = graphlines; i > 0; --i) {
-			wmove(*win, i, *itterin+offset);
-			
-			// if((i > 1) && (((i - 1) % 4) == 0)) {
-			// 	metermark = "+";
-			// 	blankmark = "-";
-			// 	leadermark = "+";
-			// } else {
-				// metermark = "|";
-				metermark = " ";
-				blankmark = " ";
-				leadermark = "|";
-			// }
+		if(j != itterin) {
+			for (int i = graphlines; i > 0; --i) {
+				wmove(*win, i, j+offset);
 
-			if(readquant) {
-				if(usecolor) {
-					wattrset(*win, COLOR_PAIR(10));
-					wprintw(*win, metermark);
-				} else {
-					// wprintw(*win, "R");
-					waddch(*win, ACS_CKBOARD);
-				}
-				--readquant;
-			} else {
-				if(writequant) {
+				if(readquant) {
 					if(usecolor) {
-						wattrset(*win, COLOR_PAIR(8));
-						wprintw(*win, metermark);
+						wattrset(*win, COLOR_PAIR(10));
+						waddch(*win, ACS_VLINE);
 					} else {
-						// wprintw(*win, "W");
-						waddch(*win, ACS_BLOCK);
+						waddch(*win, ACS_CKBOARD);
 					}
-					--writequant;
+					--readquant;
 				} else {
-					if(zzzzquant) {
+					if(writequant) {
 						if(usecolor) {
-							wattrset(*win, COLOR_PAIR(9));
-							wprintw(*win, metermark);
+							wattrset(*win, COLOR_PAIR(8));
+							waddch(*win, ' ');
 						} else {
-							wprintw(*win, "#");
+							waddch(*win, ACS_BLOCK);
 						}
-						--zzzzquant;
+						--writequant;
 					} else {
 						wattrset(*win, COLOR_PAIR(0));
-						wprintw(*win, blankmark);
+						waddch(*win, ' ');
 					}
 				}
+				wattrset(*win, COLOR_PAIR(0));
+				wmove(*win, i, itterin+offset+1);
 			}
-			wattrset(*win, COLOR_PAIR(0));
-			wmove(*win, i, *itterin+offset+1);
-			// wprintw(*win, leadermark);
-		}
-		mvwvline(*win, *currow+1, *itterin+offset+1, ACS_VLINE, 10);
-
-		*itterin += 1;
-		if(*itterin > graphcols) {
-			*itterin = 0;
+		} else {
+			mvwvline(*win, 1, j+offset, ACS_VLINE, graphlines);
 		}
 	}
 
@@ -973,7 +953,7 @@ extern void uinetwork(WINDOW **win, int winheight, int *currow, int cols, int li
 	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, int *itterin, int usecolor, struct sysnet thisnet, bool updategraph)
+void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, int itterin, int usecolor, unsigned long *longvals, int valcount)
 {
 	if (*win == NULL) {
 		return;
@@ -985,6 +965,17 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 		*currow = 0;
 	}
 
+	int tempvalue = 0;
+	int graphlines = 10 + *currow;
+	int offset = 6;
+
+	unsigned long netin = 0;
+	unsigned long netout = 0;
+	double nettotal = 0;
+	int tmpquant = 0;
+	int readquant = 0;
+	int writequant = 0;
+
 	mvwprintw(*win, *currow+1,  0, " 10G-|");
 	mvwprintw(*win, *currow+2,  0, "  1G-|");
 	mvwprintw(*win, *currow+3,  0, "100M-|");
@@ -995,27 +986,16 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	mvwprintw(*win, *currow+8,  0, "  1K-|");
 	mvwprintw(*win, *currow+9,  0, "100B-|");
 	mvwprintw(*win, *currow+10, 0, " 10B-|");
+	mvwvline(*win, 1, offset-1, ACS_VLINE, graphlines);
 	
-	if(updategraph) {
-		int graphlines = 0;
-		graphlines = 10;
-		
-		int graphcols = 70;
-		int offset = 6;
+	for (int j = 0; j < valcount; ++j) {
+		tempvalue = j * 2;
+		netin = longvals[tempvalue];
+		netout = longvals[tempvalue+1];
+		readquant = 0;
+		writequant = 0;
 
-		char *metermark = NULL;
-		char *blankmark = NULL;
-		char *leadermark = NULL;
-
-		int readquant = 0;
-		int writequant = 0;
-		int zzzzquant = 0;
-
-		unsigned long netin = (thisnet.ibytes - thisnet.oldibytes);
-		unsigned long netout = (thisnet.obytes - thisnet.oldobytes);
-		double nettotal = (double)(netin + netout);
-
-		int tmpquant = 0;
+		nettotal = (double)(netin + netout);
 		if(nettotal) {
 			tmpquant = (int)floor(log10(nettotal));
 			// TODO: this ratio cannot be right for logrithmic output
@@ -1023,63 +1003,37 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 			writequant = (int)(tmpquant * (netout / (nettotal))) - 0;
 		}
 
-		for (int i = graphlines; i > 0; --i) {
-			wmove(*win, i, *itterin+offset);
-			
-			// if((i > 1) && (((i - 1) % 4) == 0)) {
-			// 	metermark = "+";
-			// 	blankmark = "-";
-			// 	leadermark = "+";
-			// } else {
-				// metermark = "|";
-			metermark = " ";
-				blankmark = " ";
-				leadermark = "|";
-			// }
+		if(j != itterin) {
+			for (int i = graphlines; i > 0; --i) {
+				wmove(*win, i, j+offset);
 
-			if(readquant) {
-				if(usecolor) {
-					wattrset(*win, COLOR_PAIR(10));
-					wprintw(*win, metermark);
-				} else {
-					// wprintw(*win, "R");
-					waddch(*win, ACS_CKBOARD);
-				}
-				--readquant;
-			} else {
-				if(writequant) {
+				if(readquant) {
 					if(usecolor) {
-						wattrset(*win, COLOR_PAIR(8));
-						wprintw(*win, metermark);
+						wattrset(*win, COLOR_PAIR(10));
+						waddch(*win, ACS_VLINE);
 					} else {
-						// wprintw(*win, "W");
-						waddch(*win, ACS_BLOCK);
+						waddch(*win, ACS_CKBOARD);
 					}
-					--writequant;
+					--readquant;
 				} else {
-					if(zzzzquant) {
+					if(writequant) {
 						if(usecolor) {
-							wattrset(*win, COLOR_PAIR(9));
-							wprintw(*win, metermark);
+							wattrset(*win, COLOR_PAIR(8));
+							waddch(*win, ' ');
 						} else {
-							wprintw(*win, "#");
+							waddch(*win, ACS_BLOCK);
 						}
-						--zzzzquant;
+						--writequant;
 					} else {
 						wattrset(*win, COLOR_PAIR(0));
-						wprintw(*win, blankmark);
+						waddch(*win, ' ');
 					}
 				}
+				wattrset(*win, COLOR_PAIR(0));
+				wmove(*win, i, itterin+offset+1);
 			}
-			wattrset(*win, COLOR_PAIR(0));
-			wmove(*win, i, *itterin+offset+1);
-			// wprintw(*win, leadermark);
-		}
-		mvwvline(*win, *currow+1, *itterin+offset+1, ACS_VLINE, 10);
-
-		*itterin += 1;
-		if(*itterin > graphcols) {
-			*itterin = 0;
+		} else {
+			mvwvline(*win, 1, j+offset, ACS_VLINE, graphlines);
 		}
 	}
 
