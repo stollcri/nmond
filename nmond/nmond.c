@@ -454,11 +454,11 @@ int main(int argc, char **argv)
 	// wins.neterrors.win = newpad(wins.neterrors.height, MAXCOLS);
 	// wins.netfilesys.height = 25;
 	// wins.netfilesys.win = newpad(wins.netfilesys.height, MAXCOLS);
-	wins.network.height = MAXROWS;
+	wins.network.height = 3;
 	wins.network.win = newpad(wins.network.height, MAXCOLS);
 	wins.netlong.height = 11;
 	wins.netlong.win = newpad(wins.netlong.height, MAXCOLS);
-	wins.top.height = MAXROWS;
+	wins.top.height = LINES;
 	wins.top.win = newpad(wins.top.height, MAXCOLS);
 	wins.sys.height = 10;
 	wins.sys.win = newpad(wins.sys.height, MAXCOLS);
