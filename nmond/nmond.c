@@ -416,9 +416,9 @@ int main(int argc, char **argv)
 
 	int tempvalue = 0;
 	int graphcols = 70;
-	int *cpulongvals = malloc(graphcols * 3 * sizeof(int));
-	unsigned int *disklongvals = malloc(graphcols * 2 * sizeof(unsigned int));
-	unsigned long *netlongvals = malloc(graphcols * 2 * sizeof(unsigned long));
+	int *cpulongvals = calloc(graphcols * 3, sizeof(int));
+	unsigned int *disklongvals = calloc(graphcols * 2, sizeof(unsigned int));
+	unsigned long *netlongvals = calloc(graphcols * 2, sizeof(unsigned long));
 
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
