@@ -41,6 +41,7 @@
  */
 
 #include "nmond.h"
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -413,6 +414,10 @@ int main(int argc, char **argv)
 	int	show_raw = 0;
 	int currentrow = 0;
 
+	int tempvalue = 0;
+	int graphcols = 70;
+	int *cpulongvals = malloc(graphcols * 3 * sizeof(int));
+
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
 	struct uiwins wins = UIWINS_INIT;
@@ -504,7 +509,18 @@ int main(int argc, char **argv)
 				uisys(&wins.sys.win, wins.sys.height, &currentrow, COLS, LINES, thishw, thiskern);
 			}
 			if (wins.cpulong.visible) {
-				uicpulong(&wins.cpulong.win, wins.cpulong.height, &currentrow, COLS, LINES, &cpulongitter, currentstate.color, thisres, pendingdata);
+				if(pendingdata) {
+					tempvalue = cpulongitter * 3;
+					cpulongvals[tempvalue]   = (int)(round(thisres.avgpercentuser) / 10);
+					cpulongvals[tempvalue+1] = (int)(round(thisres.avgpercentsys) / 10);
+					cpulongvals[tempvalue+2] = (int)(round(thisres.avgpercentnice) / 10);
+				
+					cpulongitter += 1;
+					if(cpulongitter > graphcols) {
+						cpulongitter = 0;
+					}
+				}
+				uicpulong(&wins.cpulong.win, wins.cpulong.height, &currentrow, COLS, LINES, cpulongitter, currentstate.color, cpulongvals, graphcols);
 			}
 			if (wins.disklong.visible) {
 				uidisklong(&wins.disklong.win, wins.disklong.height, &currentrow, COLS, LINES, &disklongitter, currentstate.color, \

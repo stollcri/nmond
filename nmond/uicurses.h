@@ -110,7 +110,7 @@ extern void uiheader(WINDOW**, int, int, int, char*, char*, double, time_t);
 extern void uiwelcome(WINDOW**, int, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int, int*, int, int);
 extern void uicpu(WINDOW**, int, int*, int, int, int, struct sysres, int);
-extern void uicpulong(WINDOW**, int, int*, int, int, int*, int, struct sysres, bool);
+extern void uicpulong(WINDOW**, int, int*, int, int, int, int, int*, int);
 
 extern void uidisks(WINDOW**, int, int*, int, int, int, unsigned int, unsigned int);
 extern void uidisklong(WINDOW**, int, int*, int, int, int*, int, unsigned int, unsigned int, bool);

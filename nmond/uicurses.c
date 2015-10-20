@@ -346,17 +346,21 @@ void uicpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 	uidisplay(*win, currow, cols, lines, winheight);
 }
 
-void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, int *itterin, int usecolor, struct sysres thisres, bool updategraph)
+void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, int itterin, int usecolor, int *longvals, int valcount)
 {
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
+	wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
 		*currow = 0;
 	}
+
+	int tempvalue = 0;
+	int graphlines = 10 + *currow;
+	int offset = 6;
 
 	mvwprintw(*win, *currow+1,  0, "100%%-|");
 	mvwprintw(*win, *currow+2,  0, " 90%%-|");
@@ -368,81 +372,55 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	mvwprintw(*win, *currow+8,  0, " 30%%-|");
 	mvwprintw(*win, *currow+9,  0, " 20%%-|");
 	mvwprintw(*win, *currow+10, 0, " 10%%-|");
-	mvwvline(*win, *currow+1, 5, ACS_VLINE, 10);
-	
-	if(updategraph) {
-		int graphlines = 0;
-		graphlines = 10;
-		
-		int graphcols = 70;
-		int offset = 6;
+	mvwvline(*win, 1, offset-1, ACS_VLINE, graphlines);
 
-		char *metermark = NULL;
-		char *blankmark = NULL;
-		char *leadermark = NULL;
+	for (int j = 0; j < valcount; ++j) {
+		tempvalue = j * 3;
+		int userquant = longvals[tempvalue];
+		int systquant = longvals[tempvalue+1];
+		int nicequant = longvals[tempvalue+2];
 
-		int userquant = (int)(round(thisres.avgpercentuser) / 10);
-		int systquant = (int)(round(thisres.avgpercentsys) / 10);
-		int nicequant = (int)(round(thisres.avgpercentnice) / 10);
+		if(j != itterin) {
+			for (int i = graphlines; i > 0; --i) {
+				wmove(*win, i, j+offset);
 
-		for (int i = graphlines; i > 0; --i) {
-			wmove(*win, i, *itterin+offset);
-			
-			// if((i > 1) && (((i - 1) % 4) == 0)) {
-			// 	metermark = "|";
-			// 	blankmark = "-";
-			// 	leadermark = "|";
-			// } else {
-				// metermark = "|";
-				metermark = " ";
-				blankmark = " ";
-				leadermark = "|";
-			// }
-
-			if(userquant) {
-				if(usecolor) {
-					wattrset(*win, COLOR_PAIR(10));
-					wprintw(*win, metermark);
-				} else {
-					// wprintw(*win, "U");
-					waddch(*win, ACS_CKBOARD);
-				}
-				--userquant;
-			} else {
-				if(systquant) {
+				if(userquant) {
 					if(usecolor) {
-						wattrset(*win, COLOR_PAIR(8));
-						wprintw(*win, metermark);
+						wattrset(*win, COLOR_PAIR(10));
+						waddch(*win, ACS_VLINE);
 					} else {
-						// wprintw(*win, "S");
-						waddch(*win, ACS_BLOCK);
+						waddch(*win, ACS_CKBOARD);
 					}
-					--systquant;
+					--userquant;
 				} else {
-					if(nicequant) {
+					if(systquant) {
 						if(usecolor) {
-							wattrset(*win, COLOR_PAIR(9));
-							wprintw(*win, metermark);
+							wattrset(*win, COLOR_PAIR(8));
+							waddch(*win, ' ');
 						} else {
-							// wprintw(*win, "N");
-							waddch(*win, ACS_DIAMOND);
+							waddch(*win, ACS_BLOCK);
 						}
-						--nicequant;
+						--systquant;
 					} else {
-						wattrset(*win, COLOR_PAIR(0));
-						wprintw(*win, blankmark);
+						if(nicequant) {
+							if(usecolor) {
+								wattrset(*win, COLOR_PAIR(9));
+								waddch(*win, ' ');
+							} else {
+								waddch(*win, ACS_DIAMOND);
+							}
+							--nicequant;
+						} else {
+							wattrset(*win, COLOR_PAIR(0));
+							waddch(*win, ' ');
+						}
 					}
 				}
+				wattrset(*win, COLOR_PAIR(0));
+				wmove(*win, i, itterin+offset+1);
 			}
-			wattrset(*win, COLOR_PAIR(0));
-			wmove(*win, i, *itterin+offset+1);
-			// wprintw(*win, leadermark);
-		}
-		mvwvline(*win, *currow+1, *itterin+offset+1, ACS_VLINE, 10);
-
-		*itterin += 1;
-		if(*itterin > graphcols) {
-			*itterin = 0;
+		} else {
+			mvwvline(*win, 1, j+offset, ACS_VLINE, graphlines);
 		}
 	}
 
