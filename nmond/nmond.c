@@ -95,7 +95,11 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 
 	switch (input) {
 		case KEY_DOWN:
-			state->rowoffset += 1;
+			if((state->height - state->rowoffset) > LINES) {
+				state->rowoffset += 1;
+			} else {
+				result = 0;
+			}
 			break;
 		case KEY_UP:
 			if(state->rowoffset > 0) {
@@ -115,36 +119,44 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 			if(wins->cpu.visible) {
 				wins->cpu.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->cpu.height;
 			} else {
 				wins->cpu.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->cpu.height;
 			}
 			break;
 		case 'C':
 			if(wins->cpulong.visible) {
 				wins->cpulong.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->cpulong.height;
 			} else {
 				wins->cpulong.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->cpulong.height;
 			}
 			break;
 		case 'd':
 			if(wins->disks.visible) {
 				wins->disks.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->disks.height;
 			} else {
 				wins->disks.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->disks.height;
 			}
 			break;
 		case 'D':
 			if(wins->disklong.visible) {
 				wins->disklong.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->disklong.height;
 			} else {
 				wins->disklong.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->disklong.height;
 			}
 			break;
 		case 'f':
@@ -157,18 +169,22 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 			if(wins->help.visible) {
 				wins->help.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->help.height;
 			} else {
 				wins->help.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->help.height;
 			}
 			break;
 		case 'i':
 			if(wins->sys.visible) {
 				wins->sys.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->sys.height;
 			} else {
 				wins->sys.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->sys.height;
 			}
 			break;
 		case 'I':
@@ -179,9 +195,11 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 			if(wins->memory.visible) {
 				wins->memory.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->memory.height;
 			} else {
 				wins->memory.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->memory.height;
 			}
 			break;
 		case 'M':
@@ -190,18 +208,22 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 			if(wins->network.visible) {
 				wins->network.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->network.height;
 			} else {
 				wins->network.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->network.height;
 			}
 			break;
 		case 'N':
 			if(wins->netlong.visible) {
 				wins->netlong.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->netlong.height;
 			} else {
 				wins->netlong.visible = true;
 				wins->visiblecount += 1;
+				state->height += wins->netlong.height;
 			}
 			break;
 		case 'o':
@@ -214,10 +236,12 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 				state->topmode = TOP_MODE_NONE;
 				wins->top.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->top.height;
 			} else {
 				if(!wins->top.visible) {
 					wins->top.visible = true;
 					wins->visiblecount += 1;
+					state->height += wins->top.height;
 				}
 				state->topmode = TOP_MODE_C;
 			}
@@ -227,10 +251,12 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 				state->topmode = TOP_MODE_NONE;
 				wins->top.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->top.height;
 			} else {
 				if(!wins->top.visible) {
 					wins->top.visible = true;
 					wins->visiblecount += 1;
+					state->height += wins->top.height;
 				}
 				state->topmode = TOP_MODE_D;
 			}
@@ -240,10 +266,12 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 				state->topmode = TOP_MODE_NONE;
 				wins->top.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->top.height;
 			} else {
 				if(!wins->top.visible) {
 					wins->top.visible = true;
 					wins->visiblecount += 1;
+					state->height += wins->top.height;
 				}
 				state->topmode = TOP_MODE_A;
 			}
@@ -253,10 +281,12 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 				state->topmode = TOP_MODE_NONE;
 				wins->top.visible = false;
 				wins->visiblecount -= 1;
+				state->height -= wins->top.height;
 			} else {
 				if(!wins->top.visible) {
 					wins->top.visible = true;
 					wins->visiblecount += 1;
+					state->height += wins->top.height;
 				}
 				state->topmode = TOP_MODE_B;
 			}

@@ -49,8 +49,11 @@
 
 struct nmondstate {
 	int color;
+	int height;
+
 	int refresh;
 	int refreshms;
+	
 	int neterrors;
 
 	double timenow;
@@ -65,6 +68,6 @@ struct nmondstate {
 
 	char *user;
 };
-#define NMONDSTATE_INIT { 0, 2, 2000, 0, 0.0, 0.0, 0.0, 0, 0, false, false, NULL }
+#define NMONDSTATE_INIT { 0, 0, 2, 2000, 0, 0.0, 0.0, 0.0, 0, 0, false, false, NULL }
 
 #endif
