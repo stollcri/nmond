@@ -41,8 +41,8 @@ debug:
 	$(CC) $(CFLAGS_DBG) $(LFLAGS_DBG) -o $(AOFILE_DBG) $(CFILES_DBG)
 
 analysis:
-	echo "Variables should be checked for null after malloc ... check the following ..."
-	grep -inlR -e malloc\( . | xargs grep -inR -A1 -e malloc\(
+	echo "Variables should be checked for null after *alloc ... check the following ..."
+	grep -inlR -e alloc\( . | xargs grep -inR -A1 -e alloc\(
 	echo
 	echo "Variables should be nulled after free ... check the following output ..."
 	grep -inlR -e free\( . | xargs grep -inR -A1 -e free\(
@@ -51,7 +51,7 @@ analysis:
 	scan-build -o tst/out -v -V make debug
 
 findtrouble:
-	grep -inR -e malloc\( .
+	grep -inR -e alloc\( .
 	grep -inR -e strcpy\( -e strcat\( -e scanf\( -e gets\( .
 
 run:
