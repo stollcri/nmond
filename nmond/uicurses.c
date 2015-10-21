@@ -233,8 +233,9 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 				wattrset(win, COLOR_PAIR(10));
 				waddch(win, metermark);
 			} else {
-				// wprintw(win, "U");
+				wattron(win, A_STANDOUT);
 				waddch(win, ACS_CKBOARD);
+				wattroff(win, A_STANDOUT);
 			}
 			--userquant;
 		} else {
@@ -243,7 +244,7 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 					wattrset(win, COLOR_PAIR(8));
 					waddch(win, metermark);
 				} else {
-					waddch(win, ACS_BLOCK);
+					waddch(win, ACS_CKBOARD);
 				}
 				--systquant;
 			} else {
@@ -385,23 +386,25 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 						wattrset(*win, COLOR_PAIR(10));
 						waddch(*win, ACS_VLINE);
 					} else {
+						wattron(*win, A_STANDOUT);
 						waddch(*win, ACS_CKBOARD);
+						wattroff(*win, A_STANDOUT);
 					}
 					--userquant;
 				} else {
 					if(systquant) {
 						if(usecolor) {
 							wattrset(*win, COLOR_PAIR(8));
-							waddch(*win, ' ');
+							waddch(*win, ACS_VLINE);
 						} else {
-							waddch(*win, ACS_BLOCK);
+							waddch(*win, ACS_CKBOARD);
 						}
 						--systquant;
 					} else {
 						if(nicequant) {
 							if(usecolor) {
 								wattrset(*win, COLOR_PAIR(9));
-								waddch(*win, ' ');
+								waddch(*win, ACS_VLINE);
 							} else {
 								waddch(*win, ACS_DIAMOND);
 							}
@@ -490,7 +493,9 @@ static void uidiskdetail(WINDOW *win, int currow, int usecolor, unsigned long di
 				wattrset(win, COLOR_PAIR(10));
 				waddch(win, metermark);
 			} else {
+				wattron(win, A_STANDOUT);
 				waddch(win, ACS_CKBOARD);
+				wattron(win, A_STANDOUT);
 			}
 			--readquant;
 		} else {
@@ -655,16 +660,18 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 						wattrset(*win, COLOR_PAIR(10));
 						waddch(*win, ACS_VLINE);
 					} else {
+						wattron(*win, A_STANDOUT);
 						waddch(*win, ACS_CKBOARD);
+						wattroff(*win, A_STANDOUT);
 					}
 					--readquant;
 				} else {
 					if(writequant) {
 						if(usecolor) {
 							wattrset(*win, COLOR_PAIR(8));
-							waddch(*win, ' ');
+							waddch(*win, ACS_VLINE);
 						} else {
-							waddch(*win, ACS_BLOCK);
+							waddch(*win, ACS_CKBOARD);
 						}
 						--writequant;
 					} else {
@@ -880,7 +887,9 @@ static void uinetdetail(WINDOW *win, int currow, int usecolor, unsigned long net
 				wattrset(win, COLOR_PAIR(10));
 				waddch(win, metermark);
 			} else {
+				wattron(win, A_STANDOUT);
 				waddch(win, ACS_CKBOARD);
+				wattroff(win, A_STANDOUT);
 			}
 			--readquant;
 		} else {
@@ -1004,16 +1013,18 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 						wattrset(*win, COLOR_PAIR(10));
 						waddch(*win, ACS_VLINE);
 					} else {
+						wattron(*win, A_STANDOUT);
 						waddch(*win, ACS_CKBOARD);
+						wattroff(*win, A_STANDOUT);
 					}
 					--readquant;
 				} else {
 					if(writequant) {
 						if(usecolor) {
 							wattrset(*win, COLOR_PAIR(8));
-							waddch(*win, ' ');
+							waddch(*win, ACS_VLINE);
 						} else {
-							waddch(*win, ACS_BLOCK);
+							waddch(*win, ACS_CKBOARD);
 						}
 						--writequant;
 					} else {
