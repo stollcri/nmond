@@ -1,7 +1,7 @@
 /**
  * nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *
- * 
+ *
  * nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  https://github.com/stollcri/nmond
  *  forked from (near complete rewrite of):
@@ -9,25 +9,25 @@
  *   Developer: Nigel Griffiths.
  *   (lmon15g.c dated 2015-07-13)
  *
- * 
+ *
  * Copyright (c) 2009-2015, Nigel Griffiths
  * Copyright (c) 2015, Christopher Stoll
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of nmond nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -391,7 +391,7 @@ int main(int argc, char **argv)
 		init_pair((short)4,  COLOR_BLUE,    -1);
 		init_pair((short)5,  COLOR_MAGENTA, -1);
 		init_pair((short)6,  COLOR_CYAN,    -1);
-		init_pair((short)7,  COLOR_WHITE,   -1); 
+		init_pair((short)7,  COLOR_WHITE,   -1);
 		init_pair((short)8,  COLOR_WHITE,   COLOR_RED);
 		init_pair((short)9,  COLOR_WHITE,   COLOR_GREEN);
 		init_pair((short)10, COLOR_WHITE,   COLOR_BLUE);
@@ -546,7 +546,7 @@ int main(int argc, char **argv)
 					cpulongvals[tempvalue]   = (int)(round(thisres.avgpercentuser) / 10);
 					cpulongvals[tempvalue+1] = (int)(round(thisres.avgpercentsys) / 10);
 					cpulongvals[tempvalue+2] = (int)(round(thisres.avgpercentnice) / 10);
-				
+
 					cpulongitter += 1;
 					if(cpulongitter > graphcols) {
 						cpulongitter = 0;
@@ -559,7 +559,7 @@ int main(int argc, char **argv)
 					tempvalue = disklongitter * 2;
 					disklongvals[tempvalue]   = (unsigned int)(thisres.diskuser - thisres.diskuserlast);
 					disklongvals[tempvalue+1] = (unsigned int)(thisres.diskusew - thisres.diskusewlast);
-				
+
 					disklongitter += 1;
 					if(disklongitter > graphcols) {
 						disklongitter = 0;
@@ -572,7 +572,7 @@ int main(int argc, char **argv)
 					tempvalue = netlongitter * 2;
 					netlongvals[tempvalue]   = (thisnet.ibytes - thisnet.oldibytes);
 					netlongvals[tempvalue+1] = (thisnet.obytes - thisnet.oldobytes);
-				
+
 					netlongitter += 1;
 					if(netlongitter > graphcols) {
 						netlongitter = 0;
@@ -638,8 +638,8 @@ int main(int argc, char **argv)
 			if (wins.warn.visible) {
 				uiwarn(&wins.warn.win, wins.warn.height, &currentrow, COLS, LINES);
 			}
-			
-			
+
+
 			// underline the end of the stats area border
 			if((currentrow > 0) && (currentrow < LINES-2)) {
 				mvwhline(stdscr, currentrow+1, 1, ACS_HLINE, COLS-2);

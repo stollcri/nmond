@@ -8,24 +8,24 @@
  * nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  https://github.com/stollcri/nmond
  *
- * 
+ *
  * Copyright (c) 2015, Christopher Stoll
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of nmond nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -49,7 +49,7 @@
 
 //
 // Hardware based information
-// 
+//
 
 struct syshw { // CTL_HW
 	unsigned int cpufrequency; // hw.cpufrequency
@@ -62,7 +62,7 @@ struct syshw { // CTL_HW
 	unsigned int logicalcpucount; // hw.logicalcpu
 	unsigned int logicalcpumax; // hw.logicalcpu_max
 	unsigned int hyperthreads;
-	
+
 	unsigned int byteorder; // HW_BYTEORDER
 	unsigned int usermemory; // HW_USERMEM (non-kernel memory)
 	unsigned int pagesize; // HW_PAGESIZE
@@ -93,7 +93,7 @@ extern void getsyshwinfo(struct syshw*);
 
 //
 // Kernel based information
-// 
+//
 
 struct syskern { // CTL_KERN
 	unsigned int hostid; // KERN_HOSTID
@@ -144,7 +144,7 @@ extern void getsyskerninfo(struct syskern*);
 
 //
 // System resource utilization information
-// 
+//
 
 struct sysrescpu {
 	int user;
@@ -224,7 +224,7 @@ struct sysproc {
 	char *setloginname;
 
 	char *path;
-	
+
 	unsigned long long utime;
 	unsigned long long stime;
 	unsigned long long totaltime;
@@ -292,7 +292,7 @@ extern void getsysnetinfo(struct sysnet *net);
 
 //
 // Mem
-// 
+//
 // vm.swapusage: total = 2048.00M  used = 988.00M  free = 1060.00M  (encrypted)
 // vmmeter.h
 

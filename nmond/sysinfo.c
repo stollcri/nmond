@@ -1,28 +1,28 @@
 /**
  * sysinfo.c -- Gather system information from *BSD* based systems
  *
- * 
+ *
  * nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  https://github.com/stollcri/nmond
  *
- * 
+ *
  * Copyright (c) 2015, Christopher Stoll
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of nmond nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -71,7 +71,7 @@ void getsyshwinfo(struct syshw *hw)
 	hw->physicalcpumax = intFromSysctlByName("hw.physicalcpu_max");
 	hw->logicalcpucount = intFromSysctlByName("hw.logicalcpu");
 	hw->logicalcpumax = intFromSysctlByName("hw.logicalcpu_max");
-	
+
 	hw->byteorder = intFromSysctl(CTL_HW, HW_BYTEORDER);
 	hw->memorysize = int64FromSysctlByName("hw.memsize");
 	hw->usermemory = intFromSysctl(CTL_HW, HW_USERMEM);
@@ -84,7 +84,7 @@ void getsyshwinfo(struct syshw *hw)
 
 	free(hw->architecture);
 	hw->architecture = stringFromSysctl(CTL_HW, HW_MACHINE_ARCH);
-	
+
 	free(hw->cpuvendor);
 	hw->cpuvendor = stringFromSysctlByName("machdep.cpu.vendor");
 
@@ -121,7 +121,7 @@ void getsyskerninfo(struct syskern *kern)
 	kern->maxprocessespercpu = intFromSysctl(CTL_KERN, KERN_MAXPROCPERUID);
 	kern->maxvnodes = intFromSysctl(CTL_KERN, KERN_MAXVNODES);
 	kern->maxgroups = intFromSysctl(CTL_KERN, KERN_NGROUPS);
-	
+
 	kern->osdate = intFromSysctl(CTL_KERN, KERN_OSRELDATE);
 	kern->osrevision = intFromSysctl(CTL_KERN, KERN_OSREV);
 	kern->posixversion = intFromSysctl(CTL_KERN, KERN_POSIX1);
@@ -132,22 +132,22 @@ void getsyskerninfo(struct syskern *kern)
 
     free(kern->ostype);
 	kern->ostype = stringFromSysctl(CTL_KERN, KERN_OSTYPE);
-    
+
     free(kern->osrelease);
     kern->osrelease = stringFromSysctl(CTL_KERN, KERN_OSRELEASE);
-    
+
     free(kern->osversion);
     kern->osversion = stringFromSysctl(CTL_KERN, KERN_OSVERSION);
-    
+
     free(kern->version);
     kern->version = stringFromSysctl(CTL_KERN, KERN_VERSION);
-    
+
     free(kern->bootfile);
     kern->bootfile = stringFromSysctl(CTL_KERN, KERN_BOOTFILE);
-    
+
     free(kern->hostname);
     kern->hostname = stringFromSysctl(CTL_KERN, KERN_HOSTNAME);
-    
+
     free(kern->domainname);
     kern->domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
 
@@ -171,7 +171,7 @@ void getsyskerninfo(struct syskern *kern)
 
 //
 // System Resource (CPU Utlization) information
-// 
+//
 
 void getsysresinfo(struct sysres *inres)
 {
@@ -219,7 +219,7 @@ void getsysresinfo(struct sysres *inres)
 	// TODO: consider using host_statistics() instead?
 	//  -- http://stackoverflow.com/questions/20471920/how-to-get-total-cpu-idle-time-in-objective-c-c-on-os-x
 	error = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &hostinfo, &count);
-    
+
 	if (!error) {
 		processor_cpu_load_info_data_t *r_load = (processor_cpu_load_info_data_t*)hostinfo;
 
@@ -239,20 +239,20 @@ void getsysresinfo(struct sysres *inres)
 			inres->cpus[cpuno].sys = (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM];
 			inres->cpus[cpuno].idle = (int)r_load[cpuno].cpu_ticks[CPU_STATE_IDLE];
 			inres->cpus[cpuno].nice = (int)r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
-			inres->cpus[cpuno].total = 
-				(int)r_load[cpuno].cpu_ticks[CPU_STATE_USER] + (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] + 
+			inres->cpus[cpuno].total =
+				(int)r_load[cpuno].cpu_ticks[CPU_STATE_USER] + (int)r_load[cpuno].cpu_ticks[CPU_STATE_SYSTEM] +
 				(int)r_load[cpuno].cpu_ticks[CPU_STATE_IDLE] + (int)r_load[cpuno].cpu_ticks[CPU_STATE_NICE];
 
 			total = (double)(inres->cpus[cpuno].total - inres->cpus[cpuno].oldtotal);
 
 			if(total > 0){
-				inres->cpus[cpuno].percentuser = 
+				inres->cpus[cpuno].percentuser =
 					(double)(inres->cpus[cpuno].user - inres->cpus[cpuno].olduser) / total * 100;
-				inres->cpus[cpuno].percentsys = 
+				inres->cpus[cpuno].percentsys =
 					(double)(inres->cpus[cpuno].sys - inres->cpus[cpuno].oldsys) / total * 100;
-				inres->cpus[cpuno].percentidle = 
+				inres->cpus[cpuno].percentidle =
 					(double)(inres->cpus[cpuno].idle - inres->cpus[cpuno].oldidle) / total * 100;
-				inres->cpus[cpuno].percentnice = 
+				inres->cpus[cpuno].percentnice =
 					(double)(inres->cpus[cpuno].nice - inres->cpus[cpuno].oldnice) / total * 100;
 			} else {
 				inres->cpus[cpuno].percentuser = 0;
@@ -324,7 +324,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 
 	unsigned long long total = 0;
 	unsigned long long oldtotal = 0;
-	
+
 	struct sysproc *procinfo = NULL;
 	for (int i = 0; i < count; ++i) {
 		procinfo = (struct sysproc *)hashtget(*hashtable, processes[i].kp_proc.p_pid);
@@ -336,7 +336,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 
 		//
 		// sysctl.h > proc.h
-		// 
+		//
 		// S* process status
 		procinfo->status = processes[i].kp_proc.p_stat;
 		// Process identifier.
@@ -360,7 +360,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 
 		//
 		// sysctl.h
-		// 
+		//
 		// process credentials, real user id
 		procinfo->realuid = processes[i].kp_eproc.e_pcred.p_ruid;
 		// real username
@@ -392,7 +392,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 		if(!error) {
 			//
 			// resource.h
-			// 
+			//
 			procinfo->utime = rusage.ri_user_time;
 			procinfo->stime = rusage.ri_system_time;
 			procinfo->totaltime = rusage.ri_user_time + rusage.ri_system_time;
@@ -404,7 +404,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 			procinfo->diskior = rusage.ri_diskio_bytesread;
 			procinfo->diskiow = rusage.ri_diskio_byteswritten;
 			procinfo->billedtime = rusage.ri_billed_system_time;
-			
+
 			totaldiskr += procinfo->diskior;
 			totaldiskw += procinfo->diskiow;
 			totalmem += procinfo->residentmem;
@@ -421,7 +421,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 			procinfo->diskiow = 0;
 			procinfo->billedtime = 0;
 		}
-		
+
 		if(procinfo->totaltime && !procinfo->lasttotaltime) {
 			procinfo->lasttotaltime = procinfo->totaltime;
 		}
@@ -438,7 +438,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 	for (int i = 0; i < count; ++i) {
 		procsin[i]->percentage = (((double)(procsin[i]->totaltime - procsin[i]->lasttotaltime) / total) * 100) * cpupercent;
 	}
-	
+
 	if(totaldiskr > res->diskuser) {
 		res->diskuserlast = res->diskuser;
 		res->diskuser = totaldiskr;
@@ -552,7 +552,7 @@ void getsysnetinfo(struct sysnet *net)
 				struct if_data *ifdat = (struct if_data *)if_info->ifa_data;
 				if(ifdat) {
 					++numberofifs;
-					
+
 					net->ipackets += ifdat->ifi_ipackets;
 					net->ierrors += ifdat->ifi_ierrors;
 					net->ibytes += ifdat->ifi_ibytes;

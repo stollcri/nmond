@@ -1,7 +1,7 @@
 #
 # nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
 #  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
-#  
+#
 
 # cheap i18n (not localized)
 LANG = en

@@ -90,7 +90,7 @@
 	- ✓ Read new NMOND environment variable (process as if it contained key presses)
 	- ✓ Read old NMON environment variable and translate it
 - ☐ APP: Read command line arguments
-	- ☐ 
+	- ☐
 	- ☐
 	- ☐
 	- ☐

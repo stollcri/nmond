@@ -4,25 +4,25 @@
  *
  * nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
  *  https://github.com/stollcri/nmond
- * 
- * 
+ *
+ *
  * Copyright (c) 2015, Christopher Stoll
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of nmond nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -147,9 +147,9 @@ void uiwelcome(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	mvwprintw(*win, *currow+18, 0, "    i = About this Mac    t = Top-processes                                 ");
 	mvwprintw(*win, *currow+19, 0, "    m = Memory Usage      T = Top-procs/command   q = Quit                  ");
 	mvwprintw(*win, *currow+21, 0, " To start the same way every time set an NMOND variable: 'export NMOND=cdnT'");
-	
+
 	// pnoutrefresh(*win, 0, 0, 1, 1, lines-2, cols-2);
-	// wnoutrefresh(stdscr);	
+	// wnoutrefresh(stdscr);
 	// *currow = *currow + 22;
 	uidisplay(*win, currow, cols, lines, winheight);
 }
@@ -209,9 +209,9 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 	}
 
 	wmove(win, row, 28);
-	
+
 	chtype metermark;
-	
+
 	int userquant = (int)(round(user) / 2);
 	int systquant = (int)(round(sys) / 2);
 	int nicequant = (int)(round(nice) / 2);
@@ -327,7 +327,7 @@ void uicpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 	for (cpuno = 0; cpuno < thisres.cpucount; ++cpuno) {
 	 	mvwaddch(*win, (*currow+2 + cpuno), 77, ACS_VLINE);
 		uicpudetail(*win, cpuno, (*currow+2 + cpuno), usecolor,
-			thisres.cpus[cpuno].percentuser, 
+			thisres.cpus[cpuno].percentuser,
 			thisres.cpus[cpuno].percentsys,
 			thisres.cpus[cpuno].percentidle,
 			thisres.cpus[cpuno].percentnice);
@@ -335,9 +335,9 @@ void uicpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 
 	if (thisres.cpucount > 1) {
 		uicpudetail(*win, -1, (*currow+2 + cpuno), usecolor,
-			thisres.avgpercentuser, 
-			thisres.avgpercentsys, 
-			thisres.avgpercentidle, 
+			thisres.avgpercentuser,
+			thisres.avgpercentsys,
+			thisres.avgpercentidle,
 			thisres.avgpercentnice);
 	}
 
@@ -485,7 +485,7 @@ static void uidiskdetail(WINDOW *win, int currow, int usecolor, unsigned long di
 
 	mvwaddch(win, currow, 27, ACS_VLINE);
 	wmove(win, currow, 28);
-	
+
 	for(int i = 28; i < 77; ++i){
 		if(((i + 3) % 5) == 0) {
 			metermark = ACS_VLINE;
@@ -563,23 +563,23 @@ extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int line
 	 		mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
 	 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 	 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 1);
-	 	
+
 	 	} else if(disktotal <= (BYTES_IN_KB * 1000)) {
 	 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
 	 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 	 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_KB, "KB", 10);
-	 	
+
 	 	} else {
 	 		if(disktotal <= (BYTES_IN_MB * 100)) {
 	 			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
 		 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 		 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 1);
-	 		
+
 	 		} else if(disktotal <= (BYTES_IN_MB * 1000)) {
 		 		mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
 		 		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
 		 		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, BYTES_IN_MB, "MB", 10);
-		 	
+
 		 	} else {
 		 		if(disktotal <= (BYTES_IN_GB * 100)) {
 		 			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
@@ -638,7 +638,7 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 	mvwprintw(*win, *currow+9,  0, "100B-|");
 	mvwprintw(*win, *currow+10, 0, " 10B-|");
 	mvwvline(*win, 1, offset-1, ACS_VLINE, graphlines);
-	
+
 	for (int j = 0; j < valcount; ++j) {
 		tempvalue = j * 2;
 		diskr = longvals[tempvalue];
@@ -736,7 +736,7 @@ static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long lon
 
 	chtype metermark;
 	int usedquant = (int)(floor(percent) / 2) - 1;
-	
+
 	for(int i=28; i<77; ++i){
 		if(((i + 3) % 5) == 0) {
 			metermark = ACS_VLINE;
@@ -875,7 +875,7 @@ static void uinetdetail(WINDOW *win, int currow, int usecolor, unsigned long net
 
 	mvwaddch(win, currow, 27, ACS_VLINE);
 	wmove(win, currow, 28);
-	
+
 	for(int i = 28; i < 77; ++i){
 		if(((i + 3) % 5) == 0) {
 			metermark = ACS_VLINE;
@@ -987,7 +987,7 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	mvwprintw(*win, *currow+9,  0, "100B-|");
 	mvwprintw(*win, *currow+10, 0, " 10B-|");
 	mvwvline(*win, 1, offset-1, ACS_VLINE, graphlines);
-	
+
 	for (int j = 0; j < valcount; ++j) {
 		tempvalue = j * 2;
 		netin = longvals[tempvalue];
@@ -1065,7 +1065,7 @@ void uisys(WINDOW **win, int winheight, int *currow, int cols, int lines, struct
 	mvwprintw(*win, *currow+6, 0, " Memory: %9.9s, %9.9s non-kernel in use", bytestringa, bytestringb);
 	free(bytestringa);
 	free(bytestringb);
-	
+
 	mvwprintw(*win, *currow+8, 0, " Domain   : %s", kern.domainname);
 	mvwprintw(*win, *currow+9, 0, " Booted   : %s", kern.boottimestring);
 
@@ -1190,7 +1190,7 @@ void uitop(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 			case TOP_MODE_C:
 				rmem = uireadablebyteslonglong(procs[i]->residentmem);
 				pmem = uireadablebyteslonglong(procs[i]->physicalmem);
-				mvwprintw(*win, (*currow + 2 + i), 1, "%-6d %-16.16s%5.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s", 
+				mvwprintw(*win, (*currow + 2 + i), 1, "%-6d %-16.16s%5.1f %9.9s %9.9s %9.9s %-6d %-6d%-5.5s",
 					procs[i]->pid,
 					procs[i]->name,
 					procs[i]->percentage,
@@ -1213,7 +1213,7 @@ void uitop(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 			case TOP_MODE_B:
 			case TOP_MODE_D:
 				rmem = uireadablebyteslonglong(procs[i]->residentmem);
-				mvwprintw(*win, (*currow + 2 + i), 1, "%-6d%5.1f %9.9s %9.9s %-45.45s", 
+				mvwprintw(*win, (*currow + 2 + i), 1, "%-6d%5.1f %9.9s %9.9s %-45.45s",
 					procs[i]->pid,
 					procs[i]->percentage,
 					rmem,
@@ -1226,7 +1226,7 @@ void uitop(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 					wattroff(*win, A_BOLD);
 				}
 				free(rmem);
-				
+
 				if(usecolor) {
 					tmppath = procs[i]->path;
 					tmppathlen = (int)strlen(tmppath);
@@ -1253,7 +1253,7 @@ void uitop(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 					wattrset(*win, COLOR_PAIR(6));
 					for(int j = appnameend; j < tmppathlen; ++j) {
 						mvwprintw(*win, (*currow + 2 + i), (33 + j), "%c", tmppath[j]);
-					} 
+					}
 					wattrset(*win, COLOR_PAIR(0));
 				}
 				break;
