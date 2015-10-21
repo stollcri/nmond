@@ -95,7 +95,7 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 
 	switch (input) {
 		case KEY_DOWN:
-			if((state->height - state->rowoffset) > LINES) {
+			if((state->height - state->rowoffset + 2) > LINES) {
 				state->rowoffset += 1;
 			} else {
 				result = 0;
@@ -327,6 +327,9 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 	}
 	if(wins->visiblecount) {
 		wins->welcome.visible = false;
+		if(state->height < LINES) {
+			state->rowoffset = 0;
+		}
 	} else {
 		wins->welcome.visible = true;
 		state->rowoffset = 0;
