@@ -512,13 +512,13 @@ int main(int argc, char **argv)
 		// Reset the cursor position to top left
 		currentrow = 0 - currentstate.rowoffset;
 
-		// update the header
-		uiheader(&stdscr, 0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
-
 		// don't update too much (not every keypress)
 		currentstate.timenow = time(NULL);
 		currentstate.elapsed = currentstate.timenow - currentstate.timelast;
 		if (pressedkey || (currentstate.elapsed >= currentstate.refresh) || (currentstate.timelast <= 0)) {
+			// update the header
+			uiheader(&stdscr, 0, currentstate.color, flash_on, hostname, "", currentstate.refresh, time(0));
+
 			if((currentstate.elapsed >= currentstate.refresh) || (currentstate.timelast <= 0)) {
 				currentstate.timelast = time(NULL);
 
