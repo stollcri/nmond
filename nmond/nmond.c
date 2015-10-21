@@ -319,6 +319,8 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 				state->refresh = state->refresh / 2;
 				state->refreshms = state->refresh * 1000;
 				state->pendingchanges = true;
+			} else {
+				result = 0;
 			}
 			break;
 		default:
@@ -493,7 +495,7 @@ int main(int argc, char **argv)
 	wins.network.win = newpad(wins.network.height, MAXCOLS);
 	wins.netlong.height = 11;
 	wins.netlong.win = newpad(wins.netlong.height, MAXCOLS);
-	wins.top.height = LINES;
+	wins.top.height = LINES - 2;
 	wins.top.win = newpad(wins.top.height, MAXCOLS);
 	wins.sys.height = 10;
 	wins.sys.win = newpad(wins.sys.height, MAXCOLS);
@@ -636,7 +638,6 @@ int main(int argc, char **argv)
 				*/
 			}
 			if (wins.top.visible) {
-				// wclear(wins.top.win);
 				uitop(&wins.top.win, wins.top.height, &currentrow, COLS, LINES, currentstate.color, thisproc, \
 					(int)processcount, currentstate.topmode, pendingdata, currentstate.user);
 			}
@@ -649,7 +650,7 @@ int main(int argc, char **argv)
 			if((currentrow > 0) && (currentrow < LINES-2)) {
 				mvwhline(stdscr, currentrow+1, 1, ACS_HLINE, COLS-2);
 			}
-			// wmove(stdscr, 0, 0);
+			// commit screen updates
 			doupdate();
 
 			// all data changes posted by here
