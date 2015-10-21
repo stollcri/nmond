@@ -126,9 +126,6 @@ void uiwelcome(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(0));
 	}
-	// mvwprintw(*win, *currow+2, 45, "For help type H or ...");
-	// mvwprintw(*win, *currow+3, 45, " nmond -?  - hint");
-	// mvwprintw(*win, *currow+4, 45, " nmond -h  - full");
 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(1));
@@ -148,9 +145,6 @@ void uiwelcome(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	mvwprintw(*win, *currow+19, 0, "    m = Memory Usage      T = Top-procs/command   q = Quit                  ");
 	mvwprintw(*win, *currow+21, 0, " To start the same way every time set an NMOND variable: 'export NMOND=cdnT'");
 
-	// pnoutrefresh(*win, 0, 0, 1, 1, lines-2, cols-2);
-	// wnoutrefresh(stdscr);
-	// *currow = *currow + 22;
 	uidisplay(*win, currow, cols, lines, winheight);
 }
 
@@ -249,7 +243,6 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 					wattrset(win, COLOR_PAIR(8));
 					waddch(win, metermark);
 				} else {
-					// wprintw(win, "S");
 					waddch(win, ACS_BLOCK);
 				}
 				--systquant;
@@ -259,7 +252,6 @@ static void uicpudetail(WINDOW *win, int cpuno, int row, int usecolor, double us
 						wattrset(win, COLOR_PAIR(9));
 						waddch(win, metermark);
 					} else {
-						// wprintw(win, "N");
 						waddch(win, ACS_DIAMOND);
 					}
 					--nicequant;
