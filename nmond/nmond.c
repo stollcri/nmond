@@ -66,13 +66,8 @@ static inline void handleinterupt(int signum)
 	// window size change
 	// TODO: clean up
 	if (signum == SIGWINCH) {
-		endwin(); // stop + start curses so it works out the # of row and cols
-		initscr();
-		cbreak();
-		signal(SIGWINCH, handleinterupt);
-		// COLOUR color = has_colors();
-		// COLOUR start_color();
-		// COLOUR init_pairs();
+		endwin();
+		refresh();
 		clear();
 		return;
 	// all other interupts
