@@ -407,6 +407,8 @@ int main(int argc, char **argv)
 	noecho();
 	// hide the crusor
 	curs_set(0);
+	// cursor is hidden, so leave it wherever
+	leaveok(stdscr, TRUE);
 	// capture keypad input
 	keypad(stdscr, TRUE);
 	// move the cursor to the top left
@@ -647,7 +649,7 @@ int main(int argc, char **argv)
 			if((currentrow > 0) && (currentrow < LINES-2)) {
 				mvwhline(stdscr, currentrow+1, 1, ACS_HLINE, COLS-2);
 			}
-			wmove(stdscr, 0, 0);
+			// wmove(stdscr, 0, 0);
 			doupdate();
 
 			// all data changes posted by here
