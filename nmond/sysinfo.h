@@ -201,6 +201,7 @@ extern void getsysresinfo(struct sysres *);
 //
 
 #define SYSPROC_PATH_LENGTH 45
+#define SYSPROC_REAL_USER_NAME_LENGTH 16
 
 struct sysproc {
 	char status;

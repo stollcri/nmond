@@ -1,5 +1,5 @@
 #
-# nmond.h -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
+# nmond -- Ncurses based System Performance Monitor for Darwin (Mac OS X)
 #  Copyright (c) 2015 Christopher Stoll (https://github.com/stollcri)
 #
 
@@ -41,12 +41,12 @@ debug:
 	$(CC) $(CFLAGS_DBG) $(LFLAGS_DBG) -o $(AOFILE_DBG) $(CFILES_DBG)
 
 analysis:
-	echo "Variables should be checked for null after *alloc ... check the following ..."
+	@echo "Variables should be checked for null after *alloc ... check the following ..."
 	grep -inlR -e alloc\( . | xargs grep -inR -A1 -e alloc\(
-	echo
-	echo "Variables should be nulled after free ... check the following output ..."
+	@echo
+	@echo "Variables should be nulled after free ... check the following output ..."
 	grep -inlR -e free\( . | xargs grep -inR -A1 -e free\(
-	echo
+	@echo
 	$(SCAN_BUILD_EXISTS)
 	scan-build -o tst/out -v -V make debug
 

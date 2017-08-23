@@ -331,6 +331,7 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 		if(!procinfo) {
 			procinfo = (struct sysproc *)calloc(sizeof(struct sysproc), 1);
 			procinfo->path = malloc(SYSPROC_PATH_LENGTH + 1);
+			procinfo->realusername = malloc(SYSPROC_REAL_USER_NAME_LENGTH + 1);
 			hashtadd(*hashtable, processes[i].kp_proc.p_pid, procinfo);
 		}
 
@@ -365,7 +366,8 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 		procinfo->realuid = processes[i].kp_eproc.e_pcred.p_ruid;
 		// real username
 		struct passwd *realuser = getpwuid(procinfo->realuid);
-		procinfo->realusername = realuser->pw_name;
+		// procinfo->realusername = realuser->pw_name;
+		strlcpy(procinfo->realusername, realuser->pw_name, sizeof(procinfo->realusername)+1);
 		// current credentials, effective user id
 		procinfo->effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
 		// effectiver user, name
