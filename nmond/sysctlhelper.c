@@ -196,6 +196,24 @@ struct timeval timevalFromSysctl(int mib0, int mib1)
 }
 
 /*
+ * Get a time string from timestamp
+ */
+char *timeStringFromTimestamp(time_t timet, char *format)
+{
+	int STRING_SIZE = 22;
+
+	char *result = malloc(STRING_SIZE);
+	if(result == NULL) {
+		// TODO: handle memory allocation failure
+	}
+
+	struct tm *ptm = localtime(&timet);
+	strftime(result, STRING_SIZE, format, ptm);
+
+	return result;
+}
+
+/*
  * Get process name and arguments given a PID
  */
 void processArguments(int pid, int sizelimit, char *resultLoc)

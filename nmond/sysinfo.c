@@ -151,13 +151,11 @@ void getsyskerninfo(struct syskern *kern)
     free(kern->domainname);
     kern->domainname = stringFromSysctl(CTL_KERN, KERN_NISDOMAINNAME);
 
+	// free(kern->boottime);
 	kern->boottime = timevalFromSysctl(CTL_KERN, KERN_BOOTTIME);
-	// now store it as a string for quick printing
-	time_t timet = kern->boottime.tv_sec;
-	struct tm *ptm = localtime(&timet);
-	char boottimestring[64];
-	strftime(boottimestring, sizeof(boottimestring), DATE_TIME_FORMAT, ptm);
-	kern->boottimestring = boottimestring;
+
+	free(kern->boottimestring);
+	kern->boottimestring = timeStringFromTimestamp(kern->boottime.tv_sec, DATE_TIME_FORMAT);
 
 	// struct timeval tv;
 	// gettimeofday(&tv, NULL);

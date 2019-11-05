@@ -39,6 +39,7 @@
  */
 
 #include <stdint.h>
+#include <time.h>
 
 #define TRUNC_STRING_LENGTH 3
 #define TRUNC_CHAR '.'
@@ -49,6 +50,7 @@ extern unsigned int intFromSysctl(int, int);
 extern unsigned int intFromSysctlByName(char*);
 extern unsigned long long int64FromSysctlByName(char*);
 extern struct timeval timevalFromSysctl(int, int);
+extern char *timeStringFromTimestamp(time_t, char*);
 extern void processArguments(int, int, char*);
 
 #endif
