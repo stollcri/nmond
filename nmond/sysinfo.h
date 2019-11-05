@@ -45,7 +45,7 @@
 #define TIME_FORMAT "%H:%M:%S"
 #define DATE_TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 //#define CPU_TIME_DENOMINATOR 1000000
-#define COUNT_HYPERTHREADS_IN_CPU_AVG 1
+#define COUNT_HYPERTHREADS_IN_CPU_AVG 0
 
 //
 // Hardware based information
