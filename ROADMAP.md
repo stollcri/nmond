@@ -30,6 +30,7 @@
 	- ✓ CPU Load: increase number of divisions on scale
 	- ✓ CPU L-T: remove top/bottom graph bars, move legend to top line (begins with "CPU")
 	- ✗ Move titles to the left side
+	- ☐ Cross refference: [https://github.com/NanXiao/lscpu](https://github.com/NanXiao/lscpu)
 - ☐ GUI: Allow for window scrolling (up/down arrows and mouse)
 	- ✓ Scroll window
 	- ☐ update scroll position when above screen pane is hidden

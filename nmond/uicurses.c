@@ -551,7 +551,7 @@ extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int line
  		waddch(*win, ACS_VLINE);
  		wprintw(*win, "  1G");
  		waddch(*win, ACS_VLINE);
- 		wprintw(*win, " 10B");
+ 		wprintw(*win, " 10G");
  		waddch(*win, ACS_VLINE);
  		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, 0, "", 0);
 
@@ -725,6 +725,7 @@ static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long lon
 	free(bytestring);
 	bytestring = NULL;
 
+	mvwprintw(win, currow-1, 22, "  LOG");
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
 		mvwprintw(win, currow, 20, "%5.2f%%", percent);
@@ -734,7 +735,7 @@ static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long lon
 	wmove(win, currow, 28);
 
 	chtype metermark;
-	int usedquant = (int)(floor(percent) / 2) - 1;
+	int usedquant = (int)(((log2(used) - 27.0) * 5) + 5) - 1;
 
 	for(int i=28; i<77; ++i){
 		if(((i + 3) % 5) == 0) {
@@ -775,25 +776,25 @@ extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lin
 	double percent = (double)((memused / 100.0) / (memtotal / 100.0) * 100);
 
 	mvwaddch(*win, *currow+1, 27, ACS_VLINE);
-	wprintw(*win, " 10B");
+	wprintw(*win, "128M");
 	waddch(*win, ACS_VLINE);
-	wprintw(*win, "100B");
+	wprintw(*win, "250M");
 	waddch(*win, ACS_VLINE);
-	wprintw(*win, "  1K");
-	waddch(*win, ACS_VLINE);
-	wprintw(*win, " 10K");
-	waddch(*win, ACS_VLINE);
-	wprintw(*win, "100K");
-	waddch(*win, ACS_VLINE);
-	wprintw(*win, "  1M");
-	waddch(*win, ACS_VLINE);
-	wprintw(*win, " 10M");
-	waddch(*win, ACS_VLINE);
-	wprintw(*win, "100M");
+	wprintw(*win, "500M");
 	waddch(*win, ACS_VLINE);
 	wprintw(*win, "  1G");
 	waddch(*win, ACS_VLINE);
-	wprintw(*win, " 10B");
+	wprintw(*win, "  2G");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  4G");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, "  8G");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 16G");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 32G");
+	waddch(*win, ACS_VLINE);
+	wprintw(*win, " 64G");
 	waddch(*win, ACS_VLINE);
 	uimemdetail(*win, *currow+2, usecolor, memused, memtotal, percent);
 
@@ -942,7 +943,7 @@ extern void uinetwork(WINDOW **win, int winheight, int *currow, int cols, int li
 	waddch(*win, ACS_VLINE);
 	wprintw(*win, "  1G");
 	waddch(*win, ACS_VLINE);
-	wprintw(*win, " 10B");
+	wprintw(*win, " 10G");
 	waddch(*win, ACS_VLINE);
 	uinetdetail(*win, *currow+2, usecolor, \
 		(thisnet.ibytes - thisnet.oldibytes), \
