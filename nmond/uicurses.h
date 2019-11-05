@@ -118,7 +118,7 @@ extern void uidiskgroup(WINDOW**, int, int*, int, int);
 extern void uidiskmap(WINDOW**, int, int*, int, int);
 extern void uifilesys(WINDOW**, int, int*, int, int);
 extern void uikernel(WINDOW**, int, int*, int, int);
-extern void uimemory(WINDOW**, int, int*, int, int, int, unsigned long long, unsigned long long);
+extern void uimemory(WINDOW**, int, int*, int, int, int, unsigned long long, unsigned long long, unsigned long long);
 extern void uimemlarge(WINDOW**, int, int*, int, int);
 extern void uimemvirtual(WINDOW**, int, int*, int, int);
 extern void uineterrors(WINDOW**, int, int*, int, int);

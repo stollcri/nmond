@@ -290,6 +290,24 @@ void getsysresinfo(struct sysres *inres)
 	vm_deallocate(mach_task_self(), (vm_address_t)hostinfo, count);
 }
 
+/*
+ * Get Mach Virtual Memory Statistics
+ *
+ * see also:
+ *   https://opensource.apple.com/source/system_cmds/system_cmds-496/vm_stat.tproj/vm_stat.c.auto.html
+ */
+unsigned long long getsysvminfo()
+{
+	mach_port_t host = mach_host_self();
+	struct vm_statistics64 vm_stat;
+	natural_t count = HOST_VM_INFO64_COUNT;
+	// vm_size_t pageSize = 4096;
+	if (host_statistics64(host, HOST_VM_INFO64, (host_info64_t)&vm_stat, &count) == KERN_SUCCESS) {
+		return (unsigned long long)vm_stat.pageouts * (unsigned long long)4096;
+	}
+	return 0;
+}
+
 //
 // Processes information
 //

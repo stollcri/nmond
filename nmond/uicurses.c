@@ -712,25 +712,28 @@ extern void uikernel(WINDOW **winin, int winheight, int *currow, int cols, int l
 	return;
 }
 
-static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long long used, unsigned long long total, double percent)
+static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long long used, unsigned long long total, double percent, unsigned long long swap)
 {
-	char *bytestring = NULL;
+	char *bytestring_swap = uireadablebyteslonglong(swap);
+	mvwprintw(win, currow-1, 2, "%8s swap", bytestring_swap);
+	free(bytestring_swap);
+	bytestring_swap = NULL;
+	mvwprintw(win, currow-1, 24, "LOG");
 
-	bytestring = uireadablebyteslonglong(total);
-	mvwprintw(win, currow-1, 2, "Total: %9.9s", bytestring);
-	free(bytestring);
-	bytestring = NULL;
-	bytestring = uireadablebyteslonglong(used);
-	mvwprintw(win, currow, 2, "Used:  %9.9s  %5.2f%%", bytestring, percent);
-	free(bytestring);
-	bytestring = NULL;
+	char *bytestring_used = uireadablebyteslonglong(used);
+	char *bytestring_total = uireadablebyteslonglong(total);
+	mvwprintw(win, currow, 2, "%8s/%-8s %5.2f%%", bytestring_used, bytestring_total, percent);
+	free(bytestring_used);
+	bytestring_used = NULL;
+	free(bytestring_total);
+	bytestring_total = NULL;
 
-	mvwprintw(win, currow-1, 22, "  LOG");
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
 		mvwprintw(win, currow, 20, "%5.2f%%", percent);
 		wattrset(win, COLOR_PAIR(0));
 	}
+
 	mvwaddch(win, currow, 27, ACS_VLINE);
 	wmove(win, currow, 28);
 
@@ -761,7 +764,7 @@ static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long lon
 	mvwaddch(win, currow, 77, ACS_VLINE);
 }
 
-extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, unsigned long long memused, unsigned long long memtotal)
+extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, unsigned long long memused, unsigned long long memtotal, unsigned long long swap)
 {
 	if (*win == NULL) {
 		return;
@@ -796,7 +799,7 @@ extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lin
 	waddch(*win, ACS_VLINE);
 	wprintw(*win, " 64G");
 	waddch(*win, ACS_VLINE);
-	uimemdetail(*win, *currow+2, usecolor, memused, memtotal, percent);
+	uimemdetail(*win, *currow+2, usecolor, memused, memtotal, percent, swap);
 
 	uibanner(*win, cols, "Memory Usage");
 	*currow = currowsave;

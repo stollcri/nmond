@@ -433,6 +433,7 @@ int main(int argc, char **argv)
 	struct sysproc **thisproc = NULL;
 	struct hashitem *thishash = hashtnew();
 	thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
+	unsigned long long sysvms = getsysvminfo();
 
 	// initialize main() variables
 	char hostname[22];
@@ -527,6 +528,7 @@ int main(int argc, char **argv)
 				getsysnetinfo(&thisnet);
 				processcount = 0;
 				thisproc = getsysprocinfoall(&processcount, thisproc, &thishash, thisres.percentallcpu, &thisres);
+				sysvms = getsysvminfo();
 
 				// data changes are pending gui update
 				pendingdata = true;
@@ -586,7 +588,7 @@ int main(int argc, char **argv)
 				uicpu(&wins.cpu.win, wins.cpu.height, &currentrow, COLS, LINES, currentstate.color, thisres, show_raw);
 			}
 			if (wins.memory.visible) {
-				uimemory(&wins.memory.win, wins.memory.height, &currentrow, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize);
+				uimemory(&wins.memory.win, wins.memory.height, &currentrow, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize, sysvms);
 			}
 			if (wins.disks.visible) {
 				uidisks(&wins.disks.win, wins.disks.height, &currentrow, COLS, LINES, currentstate.color, \

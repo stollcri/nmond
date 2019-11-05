@@ -197,6 +197,12 @@ struct sysres {
 extern void getsysresinfo(struct sysres *);
 
 //
+// Virtual memory statistics
+//
+
+extern unsigned long long getsysvminfo();
+
+//
 // Processes information
 //
 
