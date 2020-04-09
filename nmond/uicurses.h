@@ -57,10 +57,9 @@
 #define DISK_METER_LOG 1   // do NOT change
 #define DISK_METER_SCALE 2 // do NOT change
 
-#define ENERGY_METER_MODE 2  // change me
+#define ENERGY_METER_MODE 1  // change me
 #define ENERGY_METER_MB 0    // do NOT change
-#define ENERGY_METER_LOG 1   // do NOT change
-#define ENERGY_METER_SCALE 2 // do NOT change
+#define ENERGY_METER_SCALE 1 // do NOT change
 
 #define GPU_METER_MODE 1  // change me
 #define GPU_METER_MB 0    // do NOT change

@@ -703,14 +703,13 @@ extern void uidiskmap(WINDOW **winin, int winheight, int *currow, int cols, int 
 
 static void uienergydetail(WINDOW *win, int currow, int usecolor, unsigned long energyu, unsigned long energys, double unitdivisor, char *units, int scale)
 {
-	mvwprintw(win, currow-1, 2, "User:   %11llu", energyu);
-	mvwprintw(win, currow, 2, "System: %11llu", energys);
+	mvwprintw(win, currow, 2, "U:%9llu S:%9llu", energyu, energys);
 
 	if(usecolor) {
 		wattrset(win, COLOR_PAIR(4));
-		mvwprintw(win, currow-1, 10, "%11llu", energyu);
+		mvwprintw(win, currow, 4, "%9llu", energyu);
 		wattrset(win, COLOR_PAIR(1));
-		mvwprintw(win, currow, 10, "%11llu", energys);
+		mvwprintw(win, currow, 16, "%9llu", energys);
 		wattrset(win, COLOR_PAIR(0));
 	}
 
@@ -718,24 +717,9 @@ static void uienergydetail(WINDOW *win, int currow, int usecolor, unsigned long 
 	int userquant;
 	int systemquant;
 
-	if(!scale) {
-		if((energyu > 0) || (energys > 0)) {
-			double energytotal = (double)(energyu + energys);
-			int tmpquant = (int)floor(log10(energytotal) * 4.9);
-			// TODO: this ratio cannot be right for logrithmic output
-			userquant = (int)(tmpquant * (energyu / (energytotal)));
-			systemquant = (int)(tmpquant * (energys / (energytotal)));
-		} else {
-			userquant = 0;
-			systemquant = 0;
-		}
-		mvwprintw(win, currow-1, 22, "  LOG");
-		mvwprintw(win, currow, 22, "SCALE");
-	} else {
-		userquant = (int)(floor(energyu) / (unitdivisor * 2 * scale));
-		systemquant = (int)(floor(energys) / (unitdivisor * 2 * scale));
-		mvwprintw(win, currow, 25, "%2.2s", units);
-	}
+	userquant = (int)(floor(energyu) / (unitdivisor * 2 * scale));
+	systemquant = (int)(floor(energys) / (unitdivisor * 2 * scale));
+	mvwprintw(win, currow, 25, "%2.2s", units);
 
 	mvwaddch(win, currow, 27, ACS_VLINE);
 	wmove(win, currow, 28);
@@ -790,72 +774,146 @@ extern void uienergy(WINDOW **win, int winheight, int *currow, int cols, int lin
 
 	unsigned int energytotal = energys + energyu;
 
-	if(ENERGY_METER_MODE == ENERGY_METER_LOG) {
-		mvwaddch(*win, *currow+1, 27, ACS_VLINE);
-		wprintw(*win, " 10B");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "100B");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "  1K");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, " 10K");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "100K");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "  1M");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, " 10M");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "100M");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "  1G");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, " 10G");
-		waddch(*win, ACS_VLINE);
-		uienergydetail(*win, *currow+2, usecolor, energyu, energys, 0, "", 0);
-
-	} else if(ENERGY_METER_MODE == ENERGY_METER_SCALE) {
+	uibanner(*win, cols, "Energy (CPU)");
+	if(ENERGY_METER_MODE == ENERGY_METER_SCALE) {
 		if(energytotal <= (BYTES_IN_KB * 100)) {
-			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-			mvwaddch(*win, *currow+2, 77, ACS_VLINE);
-			uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_KB, "K", 1);
+			mvwhline(*win, *currow+1, 27, ACS_HLINE, 50);
+			mvwaddch(*win, *currow+1, 27, ACS_ULCORNER);
+			mvwaddch(*win, *currow+1, 32, ACS_TTEE);
+			mvwprintw(*win, *currow+1, 35, "20");
+			mvwaddch(*win, *currow+1, 37, ACS_PLUS);
+			mvwaddch(*win, *currow+1, 42, ACS_TTEE);
+			mvwprintw(*win, *currow+1, 45, "40");
+			mvwaddch(*win, *currow+1, 47, ACS_PLUS);
+			mvwaddch(*win, *currow+1, 52, ACS_TTEE);
+			mvwprintw(*win, *currow+1, 55, "60");
+			mvwaddch(*win, *currow+1, 57, ACS_PLUS);
+			mvwaddch(*win, *currow+1, 62, ACS_TTEE);
+			mvwprintw(*win, *currow+1, 65, "80");
+			mvwaddch(*win, *currow+1, 67, ACS_PLUS);
+			mvwaddch(*win, *currow+1, 72, ACS_TTEE);
+			mvwaddch(*win, *currow+1, 77, ACS_URCORNER);
+			uienergydetail(*win, *currow+1, usecolor, energyu, energys, BYTES_IN_KB, "K", 1);
 
 		} else if(energytotal <= (BYTES_IN_KB * 1000)) {
-			mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-			mvwaddch(*win, *currow+2, 77, ACS_VLINE);
-			uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_KB, "K", 10);
+			mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+			mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+			mvwaddch(*win, *currow, 32, ACS_TTEE);
+			mvwprintw(*win, *currow, 34, "200");
+			mvwaddch(*win, *currow, 37, ACS_PLUS);
+			mvwaddch(*win, *currow, 42, ACS_TTEE);
+			mvwprintw(*win, *currow, 44, "400");
+			mvwaddch(*win, *currow, 47, ACS_PLUS);
+			mvwaddch(*win, *currow, 52, ACS_TTEE);
+			mvwprintw(*win, *currow, 54, "600");
+			mvwaddch(*win, *currow, 57, ACS_PLUS);
+			mvwaddch(*win, *currow, 62, ACS_TTEE);
+			mvwprintw(*win, *currow, 64, "800");
+			mvwaddch(*win, *currow, 67, ACS_PLUS);
+			mvwaddch(*win, *currow, 72, ACS_TTEE);
+			mvwaddch(*win, *currow, 77, ACS_URCORNER);
+			uienergydetail(*win, *currow+1, usecolor, energyu, energys, BYTES_IN_KB, "K", 10);
 
 		} else {
 			if(energytotal <= (BYTES_IN_MB * 100)) {
-				mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-				mvwaddch(*win, *currow+2, 77, ACS_VLINE);
-				uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_MB, "M", 1);
+				mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+				mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+				mvwaddch(*win, *currow, 32, ACS_TTEE);
+				mvwprintw(*win, *currow, 35, "20");
+				mvwaddch(*win, *currow, 37, ACS_PLUS);
+				mvwaddch(*win, *currow, 42, ACS_TTEE);
+				mvwprintw(*win, *currow, 45, "40");
+				mvwaddch(*win, *currow, 47, ACS_PLUS);
+				mvwaddch(*win, *currow, 52, ACS_TTEE);
+				mvwprintw(*win, *currow, 55, "60");
+				mvwaddch(*win, *currow, 57, ACS_PLUS);
+				mvwaddch(*win, *currow, 62, ACS_TTEE);
+				mvwprintw(*win, *currow, 65, "80");
+				mvwaddch(*win, *currow, 67, ACS_PLUS);
+				mvwaddch(*win, *currow, 72, ACS_TTEE);
+				mvwaddch(*win, *currow, 77, ACS_URCORNER);
+				uienergydetail(*win, *currow+1, usecolor, energyu, energys, BYTES_IN_MB, "M", 1);
 
 			} else if(energytotal <= (BYTES_IN_MB * 1000)) {
-				mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-				mvwaddch(*win, *currow+2, 77, ACS_VLINE);
-				uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_MB, "M", 10);
+				mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+				mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+				mvwaddch(*win, *currow, 32, ACS_TTEE);
+				mvwprintw(*win, *currow, 34, "200");
+				mvwaddch(*win, *currow, 37, ACS_PLUS);
+				mvwaddch(*win, *currow, 42, ACS_TTEE);
+				mvwprintw(*win, *currow, 44, "400");
+				mvwaddch(*win, *currow, 47, ACS_PLUS);
+				mvwaddch(*win, *currow, 52, ACS_TTEE);
+				mvwprintw(*win, *currow, 54, "600");
+				mvwaddch(*win, *currow, 57, ACS_PLUS);
+				mvwaddch(*win, *currow, 62, ACS_TTEE);
+				mvwprintw(*win, *currow, 64, "800");
+				mvwaddch(*win, *currow, 67, ACS_PLUS);
+				mvwaddch(*win, *currow, 72, ACS_TTEE);
+				mvwaddch(*win, *currow, 77, ACS_URCORNER);
+				uienergydetail(*win, *currow+1, usecolor, energyu, energys, BYTES_IN_MB, "M", 10);
 
 			} else {
 				if(energytotal <= (BYTES_IN_GB * 100)) {
-					mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-					mvwaddch(*win, *currow+2, 77, ACS_VLINE);
-					uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_GB, "G", 1);
+					mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+					mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+					mvwaddch(*win, *currow, 32, ACS_TTEE);
+					mvwprintw(*win, *currow, 35, "20");
+					mvwaddch(*win, *currow, 37, ACS_PLUS);
+					mvwaddch(*win, *currow, 42, ACS_TTEE);
+					mvwprintw(*win, *currow, 45, "40");
+					mvwaddch(*win, *currow, 47, ACS_PLUS);
+					mvwaddch(*win, *currow, 52, ACS_TTEE);
+					mvwprintw(*win, *currow, 55, "60");
+					mvwaddch(*win, *currow, 57, ACS_PLUS);
+					mvwaddch(*win, *currow, 62, ACS_TTEE);
+					mvwprintw(*win, *currow, 65, "80");
+					mvwaddch(*win, *currow, 67, ACS_PLUS);
+					mvwaddch(*win, *currow, 72, ACS_TTEE);
+					mvwaddch(*win, *currow, 77, ACS_URCORNER);
+					uienergydetail(*win, *currow+1, usecolor, energyu, energys, BYTES_IN_GB, "G", 1);
 
 				} else {
-					mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
-					mvwaddch(*win, *currow+2, 77, ACS_VLINE);
-					uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_GB, "G", 10);
+					mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+					mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+					mvwaddch(*win, *currow, 32, ACS_TTEE);
+					mvwprintw(*win, *currow, 34, "200");
+					mvwaddch(*win, *currow, 37, ACS_PLUS);
+					mvwaddch(*win, *currow, 42, ACS_TTEE);
+					mvwprintw(*win, *currow, 44, "400");
+					mvwaddch(*win, *currow, 47, ACS_PLUS);
+					mvwaddch(*win, *currow, 52, ACS_TTEE);
+					mvwprintw(*win, *currow, 54, "600");
+					mvwaddch(*win, *currow, 57, ACS_PLUS);
+					mvwaddch(*win, *currow, 62, ACS_TTEE);
+					mvwprintw(*win, *currow, 64, "800");
+					mvwaddch(*win, *currow, 67, ACS_PLUS);
+					mvwaddch(*win, *currow, 72, ACS_TTEE);
+					mvwaddch(*win, *currow, 77, ACS_URCORNER);
+					uienergydetail(*win, *currow+1, usecolor, energyu, energys, BYTES_IN_GB, "G", 10);
 				}
 			}
 		}
 	} else {
-		mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
-		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
-		uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_MB, "M", 1);
+		mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+		mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+		mvwaddch(*win, *currow, 32, ACS_TTEE);
+		mvwprintw(*win, *currow, 35, "20");
+		mvwaddch(*win, *currow, 37, ACS_PLUS);
+		mvwaddch(*win, *currow, 42, ACS_TTEE);
+		mvwprintw(*win, *currow, 45, "40");
+		mvwaddch(*win, *currow, 47, ACS_PLUS);
+		mvwaddch(*win, *currow, 52, ACS_TTEE);
+		mvwprintw(*win, *currow, 55, "60");
+		mvwaddch(*win, *currow, 57, ACS_PLUS);
+		mvwaddch(*win, *currow, 62, ACS_TTEE);
+		mvwprintw(*win, *currow, 65, "80");
+		mvwaddch(*win, *currow, 67, ACS_PLUS);
+		mvwaddch(*win, *currow, 72, ACS_TTEE);
+		mvwaddch(*win, *currow, 77, ACS_URCORNER);
+		uienergydetail(*win, *currow+1, usecolor, energyu, energys, BYTES_IN_MB, "M", 1);
 	}
 
-	uibanner(*win, cols, "Energy (CPU)");
 	*currow = currowsave;
 	uidisplay(*win, currow, cols, lines, winheight);
 }
@@ -925,182 +983,140 @@ void uigpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 	uibanner(*win, cols, "GPU Load");
 	if(GPU_METER_MODE == GPU_METER_SCALE) {
 		if(gpuuse <= (BYTES_IN_KB * 100)) {
-			mvwaddch(*win, *currow+0, 27, ACS_VLINE);
-			wprintw(*win, "0   ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "  20");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "  40");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "  60");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "  80");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, " 100");
-			waddch(*win, ACS_VLINE);
-			mvwaddch(*win, *currow+1, 77, ACS_VLINE);
+			mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+			mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+			mvwaddch(*win, *currow, 32, ACS_TTEE);
+			mvwprintw(*win, *currow, 35, "20");
+			mvwaddch(*win, *currow, 37, ACS_PLUS);
+			mvwaddch(*win, *currow, 42, ACS_TTEE);
+			mvwprintw(*win, *currow, 45, "40");
+			mvwaddch(*win, *currow, 47, ACS_PLUS);
+			mvwaddch(*win, *currow, 52, ACS_TTEE);
+			mvwprintw(*win, *currow, 55, "60");
+			mvwaddch(*win, *currow, 57, ACS_PLUS);
+			mvwaddch(*win, *currow, 62, ACS_TTEE);
+			mvwprintw(*win, *currow, 65, "80");
+			mvwaddch(*win, *currow, 67, ACS_PLUS);
+			mvwaddch(*win, *currow, 72, ACS_TTEE);
+			mvwaddch(*win, *currow, 77, ACS_URCORNER);
 			uigpudetail(*win, *currow+1, usecolor, gpuuse, BYTES_IN_KB, "K", 1);
 
 		} else if(gpuuse <= (BYTES_IN_KB * 1000)) {
-			mvwaddch(*win, *currow+0, 27, ACS_VLINE);
-			wprintw(*win, "0   ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, " 200");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, " 400");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, " 600");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, " 800");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "    ");
-			waddch(*win, ACS_VLINE);
-			wprintw(*win, "1000");
-			waddch(*win, ACS_VLINE);
-			mvwaddch(*win, *currow+1, 77, ACS_VLINE);
+			mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+			mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+			mvwaddch(*win, *currow, 32, ACS_TTEE);
+			mvwprintw(*win, *currow, 34, "200");
+			mvwaddch(*win, *currow, 37, ACS_PLUS);
+			mvwaddch(*win, *currow, 42, ACS_TTEE);
+			mvwprintw(*win, *currow, 44, "400");
+			mvwaddch(*win, *currow, 47, ACS_PLUS);
+			mvwaddch(*win, *currow, 52, ACS_TTEE);
+			mvwprintw(*win, *currow, 54, "600");
+			mvwaddch(*win, *currow, 57, ACS_PLUS);
+			mvwaddch(*win, *currow, 62, ACS_TTEE);
+			mvwprintw(*win, *currow, 64, "800");
+			mvwaddch(*win, *currow, 67, ACS_PLUS);
+			mvwaddch(*win, *currow, 72, ACS_TTEE);
+			mvwaddch(*win, *currow, 77, ACS_URCORNER);
 			uigpudetail(*win, *currow+1, usecolor, gpuuse, BYTES_IN_KB, "K", 10);
 
 		} else {
 			if(gpuuse <= (BYTES_IN_MB * 100)) {
-				mvwaddch(*win, *currow+0, 27, ACS_VLINE);
-				wprintw(*win, "0   ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "  20");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "  40");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "  60");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "  80");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, " 100");
-				waddch(*win, ACS_VLINE);
-				mvwaddch(*win, *currow+1, 77, ACS_VLINE);
+				mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+				mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+				mvwaddch(*win, *currow, 32, ACS_TTEE);
+				mvwprintw(*win, *currow, 35, "20");
+				mvwaddch(*win, *currow, 37, ACS_PLUS);
+				mvwaddch(*win, *currow, 42, ACS_TTEE);
+				mvwprintw(*win, *currow, 45, "40");
+				mvwaddch(*win, *currow, 47, ACS_PLUS);
+				mvwaddch(*win, *currow, 52, ACS_TTEE);
+				mvwprintw(*win, *currow, 55, "60");
+				mvwaddch(*win, *currow, 57, ACS_PLUS);
+				mvwaddch(*win, *currow, 62, ACS_TTEE);
+				mvwprintw(*win, *currow, 65, "80");
+				mvwaddch(*win, *currow, 67, ACS_PLUS);
+				mvwaddch(*win, *currow, 72, ACS_TTEE);
+				mvwaddch(*win, *currow, 77, ACS_URCORNER);
 				uigpudetail(*win, *currow+1, usecolor, gpuuse, BYTES_IN_MB, "M", 1);
 
 			} else if(gpuuse <= (BYTES_IN_MB * 1000)) {
-				mvwaddch(*win, *currow+0, 27, ACS_VLINE);
-				wprintw(*win, "0   ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, " 200");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, " 400");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, " 600");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, " 800");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "    ");
-				waddch(*win, ACS_VLINE);
-				wprintw(*win, "1000");
-				waddch(*win, ACS_VLINE);
-				mvwaddch(*win, *currow+1, 77, ACS_VLINE);
+				mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+				mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+				mvwaddch(*win, *currow, 32, ACS_TTEE);
+				mvwprintw(*win, *currow, 34, "200");
+				mvwaddch(*win, *currow, 37, ACS_PLUS);
+				mvwaddch(*win, *currow, 42, ACS_TTEE);
+				mvwprintw(*win, *currow, 44, "400");
+				mvwaddch(*win, *currow, 47, ACS_PLUS);
+				mvwaddch(*win, *currow, 52, ACS_TTEE);
+				mvwprintw(*win, *currow, 54, "600");
+				mvwaddch(*win, *currow, 57, ACS_PLUS);
+				mvwaddch(*win, *currow, 62, ACS_TTEE);
+				mvwprintw(*win, *currow, 64, "800");
+				mvwaddch(*win, *currow, 67, ACS_PLUS);
+				mvwaddch(*win, *currow, 72, ACS_TTEE);
+				mvwaddch(*win, *currow, 77, ACS_URCORNER);
 				uigpudetail(*win, *currow+1, usecolor, gpuuse, BYTES_IN_MB, "M", 10);
 
 			} else {
 				if(gpuuse <= (BYTES_IN_GB * 100)) {
-					mvwaddch(*win, *currow+0, 27, ACS_VLINE);
-					wprintw(*win, "0   ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "  20");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "  40");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "  60");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "  80");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, " 100");
-					waddch(*win, ACS_VLINE);
-					mvwaddch(*win, *currow+1, 77, ACS_VLINE);
+					mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+					mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+					mvwaddch(*win, *currow, 32, ACS_TTEE);
+					mvwprintw(*win, *currow, 35, "20");
+					mvwaddch(*win, *currow, 37, ACS_PLUS);
+					mvwaddch(*win, *currow, 42, ACS_TTEE);
+					mvwprintw(*win, *currow, 45, "40");
+					mvwaddch(*win, *currow, 47, ACS_PLUS);
+					mvwaddch(*win, *currow, 52, ACS_TTEE);
+					mvwprintw(*win, *currow, 55, "60");
+					mvwaddch(*win, *currow, 57, ACS_PLUS);
+					mvwaddch(*win, *currow, 62, ACS_TTEE);
+					mvwprintw(*win, *currow, 65, "80");
+					mvwaddch(*win, *currow, 67, ACS_PLUS);
+					mvwaddch(*win, *currow, 72, ACS_TTEE);
+					mvwaddch(*win, *currow, 77, ACS_URCORNER);
 					uigpudetail(*win, *currow+1, usecolor, gpuuse, BYTES_IN_GB, "G", 1);
 
 				} else {
-					mvwaddch(*win, *currow+0, 27, ACS_VLINE);
-					wprintw(*win, "0   ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, " 200");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, " 400");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, " 600");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, " 800");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "    ");
-					waddch(*win, ACS_VLINE);
-					wprintw(*win, "1000");
-					waddch(*win, ACS_VLINE);
-					mvwaddch(*win, *currow+1, 77, ACS_VLINE);
+					mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+					mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+					mvwaddch(*win, *currow, 32, ACS_TTEE);
+					mvwprintw(*win, *currow, 34, "200");
+					mvwaddch(*win, *currow, 37, ACS_PLUS);
+					mvwaddch(*win, *currow, 42, ACS_TTEE);
+					mvwprintw(*win, *currow, 44, "400");
+					mvwaddch(*win, *currow, 47, ACS_PLUS);
+					mvwaddch(*win, *currow, 52, ACS_TTEE);
+					mvwprintw(*win, *currow, 54, "600");
+					mvwaddch(*win, *currow, 57, ACS_PLUS);
+					mvwaddch(*win, *currow, 62, ACS_TTEE);
+					mvwprintw(*win, *currow, 64, "800");
+					mvwaddch(*win, *currow, 67, ACS_PLUS);
+					mvwaddch(*win, *currow, 72, ACS_TTEE);
+					mvwaddch(*win, *currow, 77, ACS_URCORNER);
 					uigpudetail(*win, *currow+1, usecolor, gpuuse, BYTES_IN_GB, "G", 10);
 				}
 			}
 		}
 	} else {
-		mvwaddch(*win, *currow+0, 27, ACS_VLINE);
-		wprintw(*win, "0   ");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "  20");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "    ");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "  40");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "    ");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "  60");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "    ");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "  80");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, "    ");
-		waddch(*win, ACS_VLINE);
-		wprintw(*win, " 100");
-		waddch(*win, ACS_VLINE);
-		mvwaddch(*win, *currow+1, 77, ACS_VLINE);
+		mvwhline(*win, *currow, 27, ACS_HLINE, 50);
+		mvwaddch(*win, *currow, 27, ACS_ULCORNER);
+		mvwaddch(*win, *currow, 32, ACS_TTEE);
+		mvwprintw(*win, *currow, 35, "20");
+		mvwaddch(*win, *currow, 37, ACS_PLUS);
+		mvwaddch(*win, *currow, 42, ACS_TTEE);
+		mvwprintw(*win, *currow, 45, "40");
+		mvwaddch(*win, *currow, 47, ACS_PLUS);
+		mvwaddch(*win, *currow, 52, ACS_TTEE);
+		mvwprintw(*win, *currow, 55, "60");
+		mvwaddch(*win, *currow, 57, ACS_PLUS);
+		mvwaddch(*win, *currow, 62, ACS_TTEE);
+		mvwprintw(*win, *currow, 65, "80");
+		mvwaddch(*win, *currow, 67, ACS_PLUS);
+		mvwaddch(*win, *currow, 72, ACS_TTEE);
+		mvwaddch(*win, *currow, 77, ACS_URCORNER);
 		uigpudetail(*win, *currow+2, usecolor, gpuuse, BYTES_IN_MB, "M", 1);
 	}
 

@@ -495,7 +495,7 @@ int main(int argc, char **argv)
 	// wins.diskgroup.win = newpad(wins.diskgroup.height, MAXCOLS);
 	// wins.diskmap.height = 24;
 	// wins.diskmap.win = newpad(wins.diskmap.height, MAXCOLS);
-	wins.energy.height = 3;
+	wins.energy.height = 2;
 	wins.energy.win = newpad(wins.energy.height, MAXCOLS);
 	// wins.filesys.height = MAXROWS;
 	// wins.filesys.win = newpad(wins.filesys.height, MAXCOLS);
