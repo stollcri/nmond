@@ -167,8 +167,8 @@ void uihelp(WINDOW **win, int winheight, int *currow, int cols, int lines)
 	mvwprintw(*win, *currow+5,  0, "  [ d = Disk Usage                    ][ t = Top Processes, order by proc  ]");
 	mvwprintw(*win, *currow+6,  0, "  [ D = Disk Usage, long-term         ][ T = Top Processes, command by prc ]");
 	mvwprintw(*win, *currow+7,  0, "  [ e = Energy Usage (CPU)            ][ v =                               ]");
-	mvwprintw(*win, *currow+8,  0, "  [ f =                               ][ w =                               ]");
-	mvwprintw(*win, *currow+9,  0, "  [ F =                               ][                                   ]");
+	mvwprintw(*win, *currow+8,  0, "  [ g = GPU Load                      ][ w =                               ]");
+	mvwprintw(*win, *currow+9,  0, "  [ f =                               ][                                   ]");
 	mvwprintw(*win, *currow+10, 0, "  [ h = Help                          ][                                   ]");
 	mvwprintw(*win, *currow+11, 0, "  [ i = About This Mac                ][ - = Reduce refresh delay (half)   ]");
 	mvwprintw(*win, *currow+12, 0, "  [ I =                               ][ + = Increase refresh delay (2x)   ]");
