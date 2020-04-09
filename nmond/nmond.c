@@ -169,6 +169,17 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 			break;
 		case 'F':
 			break;
+		case 'g':
+			if(wins->gpu.visible) {
+				wins->gpu.visible = false;
+				wins->visiblecount -= 1;
+				state->height -= wins->gpu.height;
+			} else {
+				wins->gpu.visible = true;
+				wins->visiblecount += 1;
+				state->height += wins->gpu.height;
+			}
+			break;
 		case 'h':
 		case 'H':
 		case '?':
@@ -488,6 +499,8 @@ int main(int argc, char **argv)
 	wins.energy.win = newpad(wins.energy.height, MAXCOLS);
 	// wins.filesys.height = MAXROWS;
 	// wins.filesys.win = newpad(wins.filesys.height, MAXCOLS);
+	wins.gpu.height = 2;
+	wins.gpu.win = newpad(wins.gpu.height, MAXCOLS);
 	// wins.kernel.height = 5;
 	// wins.kernel.win = newpad(wins.kernel.height, MAXCOLS);
 	wins.memory.height = 3;
@@ -599,6 +612,9 @@ int main(int argc, char **argv)
 			}
 			if (wins.cpu.visible) {
 				uicpu(&wins.cpu.win, wins.cpu.height, &currentrow, COLS, LINES, currentstate.color, thisres, show_raw);
+			}
+			if (wins.gpu.visible) {
+				uigpu(&wins.gpu.win, wins.gpu.height, &currentrow, COLS, LINES, currentstate.color, (thisres.gpuuse - thisres.gpuuselast));
 			}
 			if (wins.energy.visible) {
 				uienergy(&wins.energy.win, wins.energy.height, &currentrow, COLS, LINES, currentstate.color, \

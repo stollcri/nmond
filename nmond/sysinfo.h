@@ -191,6 +191,9 @@ struct sysres {
 	unsigned long diskuserlast;
 	unsigned long diskusewlast;
 
+	unsigned long long gpuuse;
+	unsigned long long gpuuselast;
+
 	unsigned long long memused;
 
 	unsigned long long energysystem;
@@ -198,7 +201,7 @@ struct sysres {
 	unsigned long long energysystemlast;
 	unsigned long long energyuserlast;
 };
-#define SYSRES_INIT { 0, 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0 }
+#define SYSRES_INIT { 0, 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 
 extern void getsysresinfo(struct sysres *);
 

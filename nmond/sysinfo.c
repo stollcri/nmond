@@ -358,24 +358,27 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 	unsigned int totaldiskr = 0;
 	unsigned int totaldiskw = 0;
 	unsigned long long totalmem = 0;
+	unsigned long long totalgpu = 0;
 
 	unsigned long long total = 0;
 	unsigned long long oldtotal = 0;
 
 	struct sysproc *procinfo = NULL;
 	for (int i = 0; i < count; ++i) {
-		// TODO: get per process gpu usage information
-		//   see also: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/mach/task_info.h
-		//   example below:
-		// kern_return_t task_info_error;
-		// task_power_info_v2_data_t power_info_data_v2;
-		// mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
-		// task_info_error = task_info(i, TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
-		// char *result = malloc(16);
-		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_utilisation);
-		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_stat_reserved0);
-		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_stat_reserved1);
-		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_stat_reserved2);
+		kern_return_t task_name_eror;
+		task_name_t task;
+		task_name_eror = task_name_for_pid(mach_task_self(), processes[i].kp_proc.p_pid, &task);
+
+		if (task_name_eror == KERN_SUCCESS) {
+			kern_return_t task_info_error;
+			task_power_info_v2_data_t power_info_data_v2;
+			mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
+			task_info_error = task_info(task, TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
+
+			if (task_info_error == KERN_SUCCESS) {
+				totalgpu += power_info_data_v2.gpu_energy.task_gpu_utilisation;
+			}
+		}
 
 		procinfo = (struct sysproc *)hashtget(*hashtable, processes[i].kp_proc.p_pid);
 		if(!procinfo) {
@@ -489,6 +492,14 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 
 	for (int i = 0; i < count; ++i) {
 		procsin[i]->percentage = (((double)(procsin[i]->totaltime - procsin[i]->lasttotaltime) / total) * 100) * cpupercent;
+	}
+
+	if(totalgpu > res->gpuuse) {
+		res->gpuuselast = res->gpuuse;
+		res->gpuuse = totalgpu;
+	} else {
+		res->gpuuselast = totalgpu;
+		res->gpuuse = totalgpu;
 	}
 
 	if(totaldiskr > res->diskuser) {

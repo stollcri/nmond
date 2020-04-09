@@ -62,6 +62,10 @@
 #define ENERGY_METER_LOG 1   // do NOT change
 #define ENERGY_METER_SCALE 2 // do NOT change
 
+#define GPU_METER_MODE 1  // change me
+#define GPU_METER_MB 0    // do NOT change
+#define GPU_METER_SCALE 1 // do NOT change
+
 #define TOP_MODE_NONE 0
 #define TOP_MODE_A 1
 #define TOP_MODE_B 2
@@ -80,8 +84,11 @@ struct uiwins {
 
 	struct uiwin welcome;
 	struct uiwin help;
+
 	struct uiwin cpu;
 	struct uiwin cpulong;
+
+	struct uiwin gpu;
 
 	struct uiwin disks;
 	struct uiwin disklong;
@@ -115,8 +122,11 @@ extern void uiheader(WINDOW**, int, int, int, char*, char*, double, time_t);
 
 extern void uiwelcome(WINDOW**, int, int*, int, int, int, struct syshw);
 extern void uihelp(WINDOW**, int, int*, int, int);
+
 extern void uicpu(WINDOW**, int, int*, int, int, int, struct sysres, int);
 extern void uicpulong(WINDOW**, int, int*, int, int, int, int, int*, int);
+
+extern void uigpu(WINDOW**, int, int*, int, int, int, unsigned long long);
 
 extern void uidisks(WINDOW**, int, int*, int, int, int, unsigned int, unsigned int);
 extern void uidisklong(WINDOW**, int, int*, int, int, int, int, unsigned int*, int);

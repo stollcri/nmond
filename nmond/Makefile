@@ -56,7 +56,7 @@ findtrouble:
 
 run:
 	# bin/nmond noarg1 noarg2 2> errors.txt
-	NMOND="cdeimn" bin/nmond noarg1 noarg2
+	NMOND="cdegimn" bin/nmond noarg1 noarg2
 
 clean:
 	rm -r bin/*
