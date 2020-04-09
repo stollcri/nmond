@@ -132,6 +132,17 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 				state->height += wins->cpulong.height;
 			}
 			break;
+		case 'e':
+			if(wins->energy.visible) {
+				wins->energy.visible = false;
+				wins->visiblecount -= 1;
+				state->height -= wins->energy.height;
+			} else {
+				wins->energy.visible = true;
+				wins->visiblecount += 1;
+				state->height += wins->energy.height;
+			}
+			break;
 		case 'd':
 			if(wins->disks.visible) {
 				wins->disks.visible = false;
@@ -473,6 +484,8 @@ int main(int argc, char **argv)
 	// wins.diskgroup.win = newpad(wins.diskgroup.height, MAXCOLS);
 	// wins.diskmap.height = 24;
 	// wins.diskmap.win = newpad(wins.diskmap.height, MAXCOLS);
+	wins.energy.height = 3;
+	wins.energy.win = newpad(wins.energy.height, MAXCOLS);
 	// wins.filesys.height = MAXROWS;
 	// wins.filesys.win = newpad(wins.filesys.height, MAXCOLS);
 	// wins.kernel.height = 5;
@@ -587,6 +600,11 @@ int main(int argc, char **argv)
 			if (wins.cpu.visible) {
 				uicpu(&wins.cpu.win, wins.cpu.height, &currentrow, COLS, LINES, currentstate.color, thisres, show_raw);
 			}
+			if (wins.energy.visible) {
+				uienergy(&wins.energy.win, wins.energy.height, &currentrow, COLS, LINES, currentstate.color, \
+					(unsigned int)(thisres.energyuser - thisres.energyuserlast), \
+					(unsigned int)(thisres.energysystem - thisres.energysystemlast));
+			}
 			if (wins.memory.visible) {
 				uimemory(&wins.memory.win, wins.memory.height, &currentrow, COLS, LINES, currentstate.color, thisres.memused, thishw.memorysize, sysvms);
 			}
@@ -617,7 +635,7 @@ int main(int argc, char **argv)
 				uinetfilesys(&wins.netfilesys.win, wins.netfilesys.height, &currentrow, COLS, LINES);
 			}
 			if (wins.network.visible) {
-				uinetwork(&wins.disks.win, wins.disks.height, &currentrow, COLS, LINES, currentstate.color, thisnet);
+				uinetwork(&wins.network.win, wins.network.height, &currentrow, COLS, LINES, currentstate.color, thisnet);
 				/*
 				int errors = 0;
 				for (int i = 0; i < networks; i++) {

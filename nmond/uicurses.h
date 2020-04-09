@@ -57,6 +57,11 @@
 #define DISK_METER_LOG 1   // do NOT change
 #define DISK_METER_SCALE 2 // do NOT change
 
+#define ENERGY_METER_MODE 2  // change me
+#define ENERGY_METER_MB 0    // do NOT change
+#define ENERGY_METER_LOG 1   // do NOT change
+#define ENERGY_METER_SCALE 2 // do NOT change
+
 #define TOP_MODE_NONE 0
 #define TOP_MODE_A 1
 #define TOP_MODE_B 2
@@ -82,6 +87,7 @@ struct uiwins {
 	struct uiwin disklong;
 	struct uiwin diskgroup;
 	struct uiwin diskmap;
+	struct uiwin energy;
 	struct uiwin filesys;
 
 	struct uiwin kernel;
@@ -100,7 +106,7 @@ struct uiwins {
 };
 #define UIWINS_INIT { 0, \
 {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
-{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
+{NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
 {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
 {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, {NULL, false}, \
 {NULL, false}, {NULL, false} }
@@ -116,6 +122,7 @@ extern void uidisks(WINDOW**, int, int*, int, int, int, unsigned int, unsigned i
 extern void uidisklong(WINDOW**, int, int*, int, int, int, int, unsigned int*, int);
 extern void uidiskgroup(WINDOW**, int, int*, int, int);
 extern void uidiskmap(WINDOW**, int, int*, int, int);
+extern void uienergy(WINDOW**, int, int*, int, int, int, unsigned int, unsigned int);
 extern void uifilesys(WINDOW**, int, int*, int, int);
 extern void uikernel(WINDOW**, int, int*, int, int);
 extern void uimemory(WINDOW**, int, int*, int, int, int, unsigned long long, unsigned long long, unsigned long long);

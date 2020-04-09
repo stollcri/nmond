@@ -190,7 +190,13 @@ struct sysres {
 	unsigned long diskusew;
 	unsigned long diskuserlast;
 	unsigned long diskusewlast;
+
 	unsigned long long memused;
+
+	unsigned long long energysystem;
+	unsigned long long energyuser;
+	unsigned long long energysystemlast;
+	unsigned long long energyuserlast;
 };
 #define SYSRES_INIT { 0, 0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0, 0 }
 

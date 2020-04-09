@@ -287,6 +287,27 @@ void getsysresinfo(struct sysres *inres)
 			inres->avgpercentnice /= (inres->cpucount / inres->cpuhyperthreadmod);
 		}
 	}
+
+	kern_return_t task_info_error;
+	task_power_info_v2_data_t power_info_data_v2;
+	mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
+	task_info_error = task_info(mach_task_self(), TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
+
+	if(power_info_data_v2.cpu_energy.total_system > inres->energysystem) {
+		inres->energysystemlast = inres->energysystem;
+		inres->energysystem = power_info_data_v2.cpu_energy.total_system;
+	} else {
+		inres->energysystemlast = power_info_data_v2.cpu_energy.total_system;
+		inres->energysystem = power_info_data_v2.cpu_energy.total_system;
+	}
+	if(power_info_data_v2.cpu_energy.total_user > inres->energyuser) {
+		inres->energyuserlast = inres->energyuser;
+		inres->energyuser = power_info_data_v2.cpu_energy.total_user;
+	} else {
+		inres->energyuserlast = power_info_data_v2.cpu_energy.total_user;
+		inres->energyuser = power_info_data_v2.cpu_energy.total_user;
+	}
+
 	vm_deallocate(mach_task_self(), (vm_address_t)hostinfo, count);
 }
 
@@ -343,6 +364,19 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 
 	struct sysproc *procinfo = NULL;
 	for (int i = 0; i < count; ++i) {
+		// TODO: get per process gpu usage information
+		//   see also: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/mach/task_info.h
+		//   example below:
+		// kern_return_t task_info_error;
+		// task_power_info_v2_data_t power_info_data_v2;
+		// mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
+		// task_info_error = task_info(i, TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
+		// char *result = malloc(16);
+		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_utilisation);
+		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_stat_reserved0);
+		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_stat_reserved1);
+		// snprintf(result, 16, "%16llu\n", power_info_data_v2.gpu_energy.task_gpu_stat_reserved2);
+
 		procinfo = (struct sysproc *)hashtget(*hashtable, processes[i].kp_proc.p_pid);
 		if(!procinfo) {
 			procinfo = (struct sysproc *)calloc(sizeof(struct sysproc), 1);

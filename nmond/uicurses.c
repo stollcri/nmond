@@ -164,12 +164,12 @@ void uihelp(WINDOW **win, int winheight, int *currow, int cols, int lines)
 	mvwprintw(*win, *currow+2,  0, "  [ b = Black & White mode            ][ o =                               ]");
 	mvwprintw(*win, *currow+3,  0, "  [ c = CPU Load                      ][ r = Top Processes, order by mem   ]");
 	mvwprintw(*win, *currow+4,  0, "  [ C = CPU Load, long-term           ][ R = Top Processes, command by mem ]");
-	mvwprintw(*win, *currow+5,  0, "  [ d =                               ][ t = Top Processes, order by proc  ]");
-	mvwprintw(*win, *currow+6,  0, "  [ D =                               ][ T = Top Processes, command by prc ]");
-	mvwprintw(*win, *currow+7,  0, "  [ f =                               ][ v =                               ]");
-	mvwprintw(*win, *currow+8,  0, "  [ F =                               ][ w =                               ]");
-	mvwprintw(*win, *currow+9,  0, "  [ h = Help                          ][                                   ]");
-	mvwprintw(*win, *currow+10, 0, "  [ H = Help                          ][                                   ]");
+	mvwprintw(*win, *currow+5,  0, "  [ d = Disk Usage                    ][ t = Top Processes, order by proc  ]");
+	mvwprintw(*win, *currow+6,  0, "  [ D = Disk Usage, long-term         ][ T = Top Processes, command by prc ]");
+	mvwprintw(*win, *currow+7,  0, "  [ e = Energy Usage (CPU)            ][ v =                               ]");
+	mvwprintw(*win, *currow+8,  0, "  [ f =                               ][ w =                               ]");
+	mvwprintw(*win, *currow+9,  0, "  [ F =                               ][                                   ]");
+	mvwprintw(*win, *currow+10, 0, "  [ h = Help                          ][                                   ]");
 	mvwprintw(*win, *currow+11, 0, "  [ i = About This Mac                ][ - = Reduce refresh delay (half)   ]");
 	mvwprintw(*win, *currow+12, 0, "  [ I =                               ][ + = Increase refresh delay (2x)   ]");
 	mvwprintw(*win, *currow+13, 0, "  [ k =                               ][                                   ]");
@@ -494,7 +494,7 @@ static void uidiskdetail(WINDOW *win, int currow, int usecolor, unsigned long di
 			} else {
 				wattron(win, A_STANDOUT);
 				waddch(win, ACS_CKBOARD);
-				wattron(win, A_STANDOUT);
+				wattroff(win, A_STANDOUT);
 			}
 			--readquant;
 		} else {
@@ -701,6 +701,165 @@ extern void uidiskmap(WINDOW **winin, int winheight, int *currow, int cols, int 
 	return;
 }
 
+static void uienergydetail(WINDOW *win, int currow, int usecolor, unsigned long energyu, unsigned long energys, double unitdivisor, char *units, int scale)
+{
+	mvwprintw(win, currow-1, 2, "User:   %11llu", energyu);
+	mvwprintw(win, currow, 2, "System: %11llu", energys);
+
+	if(usecolor) {
+		wattrset(win, COLOR_PAIR(4));
+		mvwprintw(win, currow-1, 10, "%11llu", energyu);
+		wattrset(win, COLOR_PAIR(1));
+		mvwprintw(win, currow, 10, "%11llu", energys);
+		wattrset(win, COLOR_PAIR(0));
+	}
+
+	chtype metermark;
+	int userquant;
+	int systemquant;
+
+	if(!scale) {
+		if((energyu > 0) || (energys > 0)) {
+			double energytotal = (double)(energyu + energys);
+			int tmpquant = (int)floor(log10(energytotal) * 4.9);
+			// TODO: this ratio cannot be right for logrithmic output
+			userquant = (int)(tmpquant * (energyu / (energytotal)));
+			systemquant = (int)(tmpquant * (energys / (energytotal)));
+		} else {
+			userquant = 0;
+			systemquant = 0;
+		}
+		mvwprintw(win, currow-1, 22, "  LOG");
+		mvwprintw(win, currow, 22, "SCALE");
+	} else {
+		userquant = (int)(floor(energyu) / (unitdivisor * 2 * scale));
+		systemquant = (int)(floor(energys) / (unitdivisor * 2 * scale));
+		mvwprintw(win, currow, 25, "%2.2s", units);
+	}
+
+	mvwaddch(win, currow, 27, ACS_VLINE);
+	wmove(win, currow, 28);
+
+	for(int i = 28; i < 77; ++i){
+		if(((i + 3) % 5) == 0) {
+			metermark = ACS_VLINE;
+		} else {
+			metermark = ' ';
+		}
+
+		if(userquant) {
+			if(usecolor) {
+				wattrset(win, COLOR_PAIR(10));
+				waddch(win, metermark);
+			} else {
+				wattron(win, A_STANDOUT);
+				waddch(win, ACS_CKBOARD);
+				wattroff(win, A_STANDOUT);
+			}
+			--userquant;
+		} else {
+			if(systemquant) {
+				if(usecolor) {
+					wattrset(win, COLOR_PAIR(8));
+					waddch(win, metermark);
+				} else {
+					waddch(win, ACS_CKBOARD);
+				}
+				--systemquant;
+			} else {
+				wattrset(win, COLOR_PAIR(0));
+				waddch(win, metermark);
+			}
+		}
+	}
+	wattrset(win, COLOR_PAIR(0));
+	mvwaddch(win, currow, 77, ACS_VLINE);
+}
+
+extern void uienergy(WINDOW **win, int winheight, int *currow, int cols, int lines, int usecolor, unsigned int energyu, unsigned int energys)
+{
+	if (*win == NULL) {
+		return;
+	}
+	wclear(*win);
+
+	int currowsave = *currow;
+	if(*currow > 0) {
+		*currow = 0;
+	}
+
+	unsigned int energytotal = energys + energyu;
+
+	if(ENERGY_METER_MODE == ENERGY_METER_LOG) {
+		mvwaddch(*win, *currow+1, 27, ACS_VLINE);
+		wprintw(*win, " 10B");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, "100B");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, "  1K");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, " 10K");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, "100K");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, "  1M");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, " 10M");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, "100M");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, "  1G");
+		waddch(*win, ACS_VLINE);
+		wprintw(*win, " 10G");
+		waddch(*win, ACS_VLINE);
+		uienergydetail(*win, *currow+2, usecolor, energyu, energys, 0, "", 0);
+
+	} else if(ENERGY_METER_MODE == ENERGY_METER_SCALE) {
+		if(energytotal <= (BYTES_IN_KB * 100)) {
+			mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+			mvwaddch(*win, *currow+2, 77, ACS_VLINE);
+			uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_KB, "K", 1);
+
+		} else if(energytotal <= (BYTES_IN_KB * 1000)) {
+			mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+			mvwaddch(*win, *currow+2, 77, ACS_VLINE);
+			uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_KB, "K", 10);
+
+		} else {
+			if(energytotal <= (BYTES_IN_MB * 100)) {
+				mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+				mvwaddch(*win, *currow+2, 77, ACS_VLINE);
+				uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_MB, "M", 1);
+
+			} else if(energytotal <= (BYTES_IN_MB * 1000)) {
+				mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+				mvwaddch(*win, *currow+2, 77, ACS_VLINE);
+				uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_MB, "M", 10);
+
+			} else {
+				if(energytotal <= (BYTES_IN_GB * 100)) {
+					mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+					mvwaddch(*win, *currow+2, 77, ACS_VLINE);
+					uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_GB, "G", 1);
+
+				} else {
+					mvwprintw(*win, *currow+1, 27, "|0   | 200|    | 400|    | 600|    | 800|    |1000|");
+					mvwaddch(*win, *currow+2, 77, ACS_VLINE);
+					uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_GB, "G", 10);
+				}
+			}
+		}
+	} else {
+		mvwprintw(*win, *currow+1, 27, "|0   |  20|    |  40|    |  60|    |  80|    | 100|");
+		mvwaddch(*win, *currow+2, 77, ACS_VLINE);
+		uienergydetail(*win, *currow+2, usecolor, energyu, energys, BYTES_IN_MB, "M", 1);
+	}
+
+	uibanner(*win, cols, "Energy (CPU)");
+	*currow = currowsave;
+	uidisplay(*win, currow, cols, lines, winheight);
+}
+
 extern void uifilesys(WINDOW **winin, int winheight, int *currow, int cols, int lines)
 {
 	return;
@@ -751,7 +910,9 @@ static void uimemdetail(WINDOW *win, int currow, int usecolor, unsigned long lon
 				wattrset(win, COLOR_PAIR(10));
 				waddch(win, metermark);
 			} else {
+				wattron(win, A_STANDOUT);
 				waddch(win, ACS_CKBOARD);
+				wattroff(win, A_STANDOUT);
 			}
 			--usedquant;
 		} else {

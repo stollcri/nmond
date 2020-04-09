@@ -33,7 +33,7 @@ ifeq ($(strip $(SCAN_BUILD_WHICH)),)
 endif
 
 
-default: findtrouble nmond
+default: nmond run
 test: debug run
 
 debug:
@@ -56,7 +56,7 @@ findtrouble:
 
 run:
 	# bin/nmond noarg1 noarg2 2> errors.txt
-	bin/nmond noarg1 noarg2
+	NMOND="cdeimn" bin/nmond noarg1 noarg2
 
 clean:
 	rm -r bin/*

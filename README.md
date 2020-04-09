@@ -8,7 +8,7 @@ Since there is already a working version for Linux (and some UNIX distributions)
 
 ## Building
 
-Just type `make` in the nmond directory to build nmond. It can be installed by issuing the `sudo make install` command.
+Just type `make` in the nmond directory to build nmond. It can be installed by issuing the `sudo make install` command (this assumes that you have [command line tools](https://developer.apple.com/xcode/features/) installed).
 
 ## Issues
 
