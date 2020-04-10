@@ -52,7 +52,13 @@
 #define MAXCOLS 150
 #define BORDER_WIDTH 2
 
-#define DISK_METER_MODE 1  // change me
+#define UI_SCALE_LOG_BYTES 1
+#define UI_SCALE_LOG_BYTES_BIG 2
+#define UI_SCALE_PERCENT 3
+#define UI_SCALE_HUNDRED 4
+#define UI_SCALE_THOUSAND 5
+
+#define DISK_METER_MODE 2  // change me
 #define DISK_METER_MB 0    // do NOT change
 #define DISK_METER_LOG 1   // do NOT change
 #define DISK_METER_SCALE 2 // do NOT change
