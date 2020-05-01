@@ -45,7 +45,7 @@
 
 #define APPNAME "nmond"
 #define VERSION "0.1.18"
-#define VERDATE "2020-04-30"
+#define VERDATE "2020-05-01"
 #define APPURL "https://github.com/stollcri/nmond"
 
 #define MAXROWS 256
