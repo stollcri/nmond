@@ -118,17 +118,13 @@ static inline void uiscaleleft(WINDOW *win, int currow, int scaletype) {
 
 static inline void uiscaletop(WINDOW *win, int currow, int scaletype) {
 	if(scaletype == UI_SCALE_LOG_BYTES) {
-		mvwhline(win, currow, 27, ACS_HLINE, 50);
+		// mvwhline(win, currow, 27, ' ', 50);
+		mvwhline(win, currow+1, 27, ' ', 50);
+
 		mvwaddch(win, currow, 27, ACS_ULCORNER);
-		mvwaddch(win, currow, 32, ACS_TTEE);
-		mvwaddch(win, currow, 37, ACS_TTEE);
-		mvwaddch(win, currow, 42, ACS_TTEE);
-		mvwaddch(win, currow, 47, ACS_TTEE);
-		mvwaddch(win, currow, 52, ACS_TTEE);
-		mvwaddch(win, currow, 57, ACS_TTEE);
-		mvwaddch(win, currow, 62, ACS_TTEE);
-		mvwaddch(win, currow, 67, ACS_TTEE);
-		mvwaddch(win, currow, 72, ACS_TTEE);
+		for (int i = 28; i < 77; ++i) {
+			waddch(win, ACS_TTEE);
+		}
 		mvwaddch(win, currow, 77, ACS_URCORNER);
 
 		mvwaddch(win, currow+1, 27, ACS_VLINE);
@@ -154,17 +150,13 @@ static inline void uiscaletop(WINDOW *win, int currow, int scaletype) {
 		mvwaddch(win, currow+1, 77, ACS_VLINE);
 
 	} else if(scaletype == UI_SCALE_LOG_BYTES_BIG) {
-		mvwhline(win, currow, 27, ACS_HLINE, 50);
+		mvwhline(win, currow, 27, ' ', 50);
+		mvwhline(win, currow+1, 27, ' ', 50);
+
 		mvwaddch(win, currow, 27, ACS_ULCORNER);
-		mvwaddch(win, currow, 32, ACS_TTEE);
-		mvwaddch(win, currow, 37, ACS_TTEE);
-		mvwaddch(win, currow, 42, ACS_TTEE);
-		mvwaddch(win, currow, 47, ACS_TTEE);
-		mvwaddch(win, currow, 52, ACS_TTEE);
-		mvwaddch(win, currow, 57, ACS_TTEE);
-		mvwaddch(win, currow, 62, ACS_TTEE);
-		mvwaddch(win, currow, 67, ACS_TTEE);
-		mvwaddch(win, currow, 72, ACS_TTEE);
+		for (int i = 28; i < 77; ++i) {
+			waddch(win, ACS_TTEE);
+		}
 		mvwaddch(win, currow, 77, ACS_URCORNER);
 
 		mvwaddch(win, currow+1, 27, ACS_VLINE);
@@ -190,17 +182,13 @@ static inline void uiscaletop(WINDOW *win, int currow, int scaletype) {
 		mvwaddch(win, currow+1, 77, ACS_VLINE);
 
 	} else if(scaletype == UI_SCALE_HUNDRED) {
-		mvwhline(win, currow, 27, ACS_HLINE, 50);
+		mvwhline(win, currow, 27, ' ', 50);
+		mvwhline(win, currow+1, 27, ' ', 50);
+
 		mvwaddch(win, currow, 27, ACS_ULCORNER);
-		mvwaddch(win, currow, 32, ACS_TTEE);
-		mvwaddch(win, currow, 37, ACS_TTEE);
-		mvwaddch(win, currow, 42, ACS_TTEE);
-		mvwaddch(win, currow, 47, ACS_TTEE);
-		mvwaddch(win, currow, 52, ACS_TTEE);
-		mvwaddch(win, currow, 57, ACS_TTEE);
-		mvwaddch(win, currow, 62, ACS_TTEE);
-		mvwaddch(win, currow, 67, ACS_TTEE);
-		mvwaddch(win, currow, 72, ACS_TTEE);
+		for (int i = 28; i < 77; ++i) {
+			waddch(win, ACS_TTEE);
+		}
 		mvwaddch(win, currow, 77, ACS_URCORNER);
 
 		mvwaddch(win, currow+1, 27, ACS_VLINE);
@@ -222,17 +210,13 @@ static inline void uiscaletop(WINDOW *win, int currow, int scaletype) {
 		mvwaddch(win, currow+1, 77, ACS_VLINE);
 
 	} else if(scaletype == UI_SCALE_THOUSAND) {
-		mvwhline(win, currow, 27, ACS_HLINE, 50);
+		mvwhline(win, currow, 27, ' ', 50);
+		mvwhline(win, currow+1, 27, ' ', 50);
+
 		mvwaddch(win, currow, 27, ACS_ULCORNER);
-		mvwaddch(win, currow, 32, ACS_TTEE);
-		mvwaddch(win, currow, 37, ACS_TTEE);
-		mvwaddch(win, currow, 42, ACS_TTEE);
-		mvwaddch(win, currow, 47, ACS_TTEE);
-		mvwaddch(win, currow, 52, ACS_TTEE);
-		mvwaddch(win, currow, 57, ACS_TTEE);
-		mvwaddch(win, currow, 62, ACS_TTEE);
-		mvwaddch(win, currow, 67, ACS_TTEE);
-		mvwaddch(win, currow, 72, ACS_TTEE);
+		for (int i = 28; i < 77; ++i) {
+			waddch(win, ACS_TTEE);
+		}
 		mvwaddch(win, currow, 77, ACS_URCORNER);
 
 		mvwaddch(win, currow+1, 27, ACS_VLINE);
@@ -735,6 +719,7 @@ extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int line
 	unsigned int disktotal = diskr + diskw;
 
 	uibanner(*win, cols, "Disk Usage");
+
 	if(DISK_METER_MODE == DISK_METER_LOG) {
 		uiscaletop(*win, *currow, UI_SCALE_LOG_BYTES);
  		uidiskdetail(*win, *currow+2, usecolor, diskr, diskw, 0, "", 0);
@@ -950,6 +935,7 @@ extern void uienergy(WINDOW **win, int winheight, int *currow, int cols, int lin
 	unsigned int energytotal = energys + energyu;
 
 	uibanner(*win, cols, "Energy (CPU)");
+
 	if(ENERGY_METER_MODE == ENERGY_METER_SCALE) {
 		if(energytotal <= (BYTES_IN_KB * 100)) {
 			uiscaletop_short(*win, *currow, UI_SCALE_HUNDRED);
@@ -1052,6 +1038,7 @@ void uigpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 	}
 
 	uibanner(*win, cols, "GPU Load");
+
 	if(GPU_METER_MODE == GPU_METER_SCALE) {
 		if(gpuuse <= (BYTES_IN_KB * 100)) {
 			uiscaletop_short(*win, *currow, UI_SCALE_HUNDRED);
