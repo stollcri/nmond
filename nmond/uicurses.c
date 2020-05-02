@@ -76,7 +76,6 @@ static inline void uibanner(WINDOW *win, int cols, char *string)
 {
 	wattrset(win, COLOR_PAIR(12));
 	wattron(win, A_STANDOUT);
-	// mvwhline(win, 0, 0, ACS_HLINE, (cols - 2));
 	mvwhline(win, 0, 0, ' ', (cols - 2));
 	wattroff(win, A_STANDOUT);
 	wattrset(win, COLOR_PAIR(0));
@@ -118,7 +117,6 @@ static inline void uiscaleleft(WINDOW *win, int currow, int scaletype) {
 
 static inline void uiscaletop(WINDOW *win, int currow, int scaletype) {
 	if(scaletype == UI_SCALE_LOG_BYTES) {
-		// mvwhline(win, currow, 27, ' ', 50);
 		mvwhline(win, currow+1, 27, ' ', 50);
 
 		mvwaddch(win, currow, 27, ACS_ULCORNER);
@@ -306,7 +304,6 @@ void uiwelcome(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(2));
@@ -317,8 +314,6 @@ void uiwelcome(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	mvwprintw(*win, *currow+4, 18, "  / / / // / / / / // /_/ // / / // /_/ /  ");
 	mvwprintw(*win, *currow+5, 18, " /_/ /_//_/ /_/ /_/ \\____//_/ /_/ \\____/   ");
 	mvwprintw(*win, *currow+6, 18, "=======================================    ");
-	// mvwprintw(*win, *currow+6, 18, "================================/nmond/    ");
-	// mvwprintw(*win, *currow+6, 18, "-------------------------------[nmond]-    ");
 
 	if(usecolor) {
 		wattrset(*win, COLOR_PAIR(0));
@@ -350,7 +345,6 @@ void uihelp(WINDOW **win, int winheight, int *currow, int cols, int lines)
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -472,7 +466,6 @@ void uicpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -540,7 +533,6 @@ void uicpulong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -709,7 +701,6 @@ extern void uidisks(WINDOW **win, int winheight, int *currow, int cols, int line
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -774,7 +765,6 @@ void uidisklong(WINDOW **win, int winheight, int *currow, int cols, int lines, i
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -925,7 +915,6 @@ extern void uienergy(WINDOW **win, int winheight, int *currow, int cols, int lin
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -1030,7 +1019,6 @@ void uigpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -1073,7 +1061,6 @@ void uigpu(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 		uigpudetail(*win, *currow+2, usecolor, gpuuse, BYTES_IN_MB, "M", 1);
 	}
 
-	// uibanner(*win, cols, "GPU Load");
 	*currow = currowsave;
 	uidisplay(*win, currow, cols, lines, winheight);
 }
@@ -1142,7 +1129,6 @@ extern void uimemory(WINDOW **win, int winheight, int *currow, int cols, int lin
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -1273,7 +1259,6 @@ extern void uinetwork(WINDOW **win, int winheight, int *currow, int cols, int li
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -1296,7 +1281,6 @@ void uinetlong(WINDOW **win, int winheight, int *currow, int cols, int lines, in
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -1378,7 +1362,6 @@ void uisys(WINDOW **win, int winheight, int *currow, int cols, int lines, struct
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
@@ -1438,7 +1421,6 @@ void uitop(WINDOW **win, int winheight, int *currow, int cols, int lines, int us
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	if(!procs){
 		return;
@@ -1601,7 +1583,6 @@ void uiwarn(WINDOW **win, int winheight, int *currow, int cols, int lines)
 	if (*win == NULL) {
 		return;
 	}
-	// wclear(*win);
 
 	int currowsave = *currow;
 	if(*currow > 0) {
