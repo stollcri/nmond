@@ -44,8 +44,8 @@
 #include <sys/time.h>
 
 #define APPNAME "nmond"
-#define VERSION "0.1.18"
-#define VERDATE "2020-05-01"
+#define VERSION "0.1.19"
+#define VERDATE "2021-01-01"
 #define APPURL "https://github.com/stollcri/nmond"
 
 #define MAXROWS 256
