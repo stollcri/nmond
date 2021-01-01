@@ -74,6 +74,7 @@ install:
 	mkdir -p /usr/local/man/
 	cp doc/nmond /usr/local/man/nmond.1
 	chown root:wheel /usr/local/man/nmond.1
+	xattr -d com.apple.quarantine /usr/local/bin/nmond
 
 yes2:
 	yes > /dev/null & yes > /dev/null &
