@@ -6,4 +6,6 @@ notes.md
 nmond/dbg
 nmond/inc/Apple/xnu
 nmond/bin/nmond.dSYM
+nmond/bin/arm/nmond.dSYM
+nmond/bin/x86/nmond.dSYM
 nmond/tst/out/20*

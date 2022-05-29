@@ -369,7 +369,7 @@ void uihelp(WINDOW **win, int winheight, int *currow, int cols, int lines)
 	mvwprintw(*win, *currow+16, 0, "  [ n = Network Usage                 ][ q = Quit/Exit                     ]");
 	mvwprintw(*win, *currow+17, 0, "                                                                            ");
 	mvwprintw(*win, *currow+18, 0, "          %s version %s build %s", APPNAME, VERSION, VERDATE);
-	mvwprintw(*win, *currow+19, 0, "             Christopher Stoll, 2015-2021 (%s)", APPURL);
+	mvwprintw(*win, *currow+19, 0, "             Christopher Stoll, 2015-2022 (%s)", APPURL);
 	uibanner(*win, cols, "HELP");
 	*currow = currowsave;
 	uidisplay(*win, currow, cols, lines, winheight);

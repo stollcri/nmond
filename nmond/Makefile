@@ -14,15 +14,20 @@ endif
 
 CC = cc
 
+ARM = -target arm64-apple-macos11
+X86 = -target x86_64-apple-macos10.12
+
 CFLAGS = -O3 -Wall -D NDEBUG -Wall
 LFLAGS = -l ncurses
-AOFILE = ./bin/nmond
 CFILES = nmond.c sysctlhelper.c sysinfo.c pidhash.c $(LANGFILES)
+AOFILE_ARM = ./bin/arm/nmond
+AOFILE_X86 = ./bin/x86/nmond
 
 CFLAGS_DBG = -O0 -g -Wall
 LFLAGS_DBG = -l ncurses
-AOFILE_DBG = ./bin/nmond
 CFILES_DBG = $(CFILES)
+AOFILE_DBG_ARM = ./bin/arm/nmond
+AOFILE_DBG_X86 = ./bin/x86/nmond
 
 
 # make sure scan-build is available
@@ -37,8 +42,9 @@ default: nmond run
 test: debug run
 
 debug:
-	@mkdir -p ./bin/
-	$(CC) $(CFLAGS_DBG) $(LFLAGS_DBG) -o $(AOFILE_DBG) $(CFILES_DBG)
+	@mkdir -p ./bin/arm/ ./bin/x86/
+	$(CC) $(CFLAGS_DBG) $(LFLAGS_DBG) -o $(AOFILE_DBG_ARM) $(ARM) $(CFILES_DBG)
+	$(CC) $(CFLAGS_DBG) $(LFLAGS_DBG) -o $(AOFILE_DBG_X86) $(X86) $(CFILES_DBG)
 
 analysis:
 	@echo "Variables should be checked for null after *alloc ... check the following ..."
@@ -54,21 +60,39 @@ findtrouble:
 	grep -inR -e alloc\( .
 	grep -inR -e strcpy\( -e strcat\( -e scanf\( -e gets\( .
 
-run:
-	# bin/nmond noarg1 noarg2 2> errors.txt
-	NMOND="cdegimn" bin/nmond noarg1 noarg2
+run: run-arm
+
+run-arm:
+	NMOND="cdegimn" bin/arm/nmond noarg1 noarg2
+
+run-x86:
+	# bin/x86/nmond noarg1 noarg2 2> errors.txt
+	NMOND="cdegimn" bin/x86/nmond noarg1 noarg2
 
 clean:
-	rm -r bin/*
-	rm -r dbg
-	rm -r tst/out/20*
+	rm -rf bin/arm/*
+	rm -rf bin/x86/*
+	rm -rf dbg
+	rm -rf tst/out/20*
 
 nmond:
-	@mkdir -p ./bin/
-	$(CC) $(CFLAGS) $(LFLAGS) -o $(AOFILE) $(CFILES)
+	@mkdir -p ./bin/arm/ ./bin/x86/
+	$(CC) $(CFLAGS) $(LFLAGS) -o $(AOFILE_ARM) $(ARM) $(CFILES)
+	$(CC) $(CFLAGS) $(LFLAGS) -o $(AOFILE_X86) $(X86) $(CFILES)
 
-install:
-	cp bin/nmond /usr/local/bin/nmond
+install: install-arm
+
+install-arm:
+	cp bin/arm/nmond /usr/local/bin/nmond
+	chown root:wheel /usr/local/bin/nmond
+	chmod 4555 /usr/local/bin/nmond
+	mkdir -p /usr/local/man/
+	cp doc/nmond /usr/local/man/nmond.1
+	chown root:wheel /usr/local/man/nmond.1
+	xattr -d com.apple.quarantine /usr/local/bin/nmond
+
+install-x86:
+	cp bin/x86/nmond /usr/local/bin/nmond
 	chown root:wheel /usr/local/bin/nmond
 	chmod 4555 /usr/local/bin/nmond
 	mkdir -p /usr/local/man/

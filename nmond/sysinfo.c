@@ -288,10 +288,10 @@ void getsysresinfo(struct sysres *inres)
 		}
 	}
 
-	kern_return_t task_info_error;
+	//kern_return_t task_info_error;
 	task_power_info_v2_data_t power_info_data_v2;
-	mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
-	task_info_error = task_info(mach_task_self(), TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
+	//mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
+	//task_info_error = task_info(mach_task_self(), TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
 
 	if(power_info_data_v2.cpu_energy.total_system > inres->energysystem) {
 		inres->energysystemlast = inres->energysystem;
