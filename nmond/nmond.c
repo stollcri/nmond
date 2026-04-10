@@ -50,6 +50,7 @@
 #include <sys/ioctl.h>
 #include "pidhash.h"
 #include "sysinfo.h"
+#include <getopt.h>
 #include "uicli.h"
 #include "uicurses.h"
 
@@ -311,6 +312,15 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 		case 'v':
 			break;
 		case 'w':
+			if(wins->warn.visible) {
+				wins->warn.visible = false;
+				wins->visiblecount -= 1;
+				state->height -= wins->warn.height;
+			} else {
+				wins->warn.visible = true;
+				wins->visiblecount += 1;
+				state->height += wins->warn.height;
+			}
 			break;
 		case 'z':
 			break;
@@ -346,8 +356,12 @@ static int setwinstate(struct uiwins *wins, struct nmondstate *state, int input)
 	}
 	if(wins->visiblecount) {
 		wins->welcome.visible = false;
-		if(state->height < LINES) {
-			state->rowoffset = 0;
+		int maxoffset = state->height - LINES + 2;
+		if(maxoffset < 0) {
+			maxoffset = 0;
+		}
+		if(state->rowoffset > maxoffset) {
+			state->rowoffset = maxoffset;
 		}
 	} else {
 		wins->welcome.visible = true;
@@ -397,6 +411,33 @@ static void processenvars(struct uiwins *wins, struct nmondstate *state)
 
 int main(int argc, char **argv)
 {
+	int opt_refresh = 2;
+	int opt_bw = 0;
+
+	int opt;
+	while ((opt = getopt(argc, argv, "hVbs:")) != -1) {
+		switch (opt) {
+			case 'h':
+				uiclhelp(VERSION);
+				return 0;
+			case 'V':
+				printf("nmond %s (%s)\n", VERSION, VERDATE);
+				return 0;
+			case 'b':
+				opt_bw = 1;
+				break;
+			case 's':
+				opt_refresh = atoi(optarg);
+				if(opt_refresh < MINIMUM_REFRESH_RATE) {
+					opt_refresh = MINIMUM_REFRESH_RATE;
+				}
+				break;
+			default:
+				uiclhint();
+				return 1;
+		}
+	}
+
 	// first thing, prepare to be interupted
 	setinterupthandlers();
 
@@ -435,7 +476,9 @@ int main(int argc, char **argv)
 
 	// initialize the app state
 	struct nmondstate currentstate = NMONDSTATE_INIT;
-	currentstate.color = has_colors();
+	currentstate.color = opt_bw ? 0 : has_colors();
+	currentstate.refresh = opt_refresh;
+	currentstate.refreshms = opt_refresh * 1000;
 	currentstate.timenow = time(NULL);
 	currentstate.user = getlogin();
 	currentstate.rowoffset = 0;
@@ -474,55 +517,64 @@ int main(int argc, char **argv)
 	int *cpulongvals = calloc(graphcols * 3, sizeof(int));
 	unsigned int *disklongvals = calloc(graphcols * 2, sizeof(unsigned int));
 	unsigned long *netlongvals = calloc(graphcols * 2, sizeof(unsigned long));
+	if(cpulongvals == NULL || disklongvals == NULL || netlongvals == NULL) {
+		endwin();
+		fprintf(stderr, "nmond: failed to allocate memory for graph data\n");
+		exit(1);
+	}
 
 	// TODO: do we want to move theses to setwinstate and create/destroy on show/hide?
 	// initialzie window data structures
+	int padcols = COLS;
+	if(padcols < MAXCOLS) {
+		padcols = MAXCOLS;
+	}
 	struct uiwins wins = UIWINS_INIT;
 	wins.welcome.height = 22;
 	wins.welcome.visible = true;
-	wins.welcome.win = newpad(wins.welcome.height, MAXCOLS);
+	wins.welcome.win = newpad(wins.welcome.height, padcols);
 	wins.help.height = 20;
-	wins.help.win = newpad(wins.help.height, MAXCOLS);
+	wins.help.win = newpad(wins.help.height, padcols);
 	wins.cpu.height = thisres.cpucount + 3;
-	wins.cpu.win = newpad(wins.cpu.height, MAXCOLS);
+	wins.cpu.win = newpad(wins.cpu.height, padcols);
 	wins.cpulong.height = 11;
-	wins.cpulong.win = newpad(wins.cpulong.height, MAXCOLS);
+	wins.cpulong.win = newpad(wins.cpulong.height, padcols);
 	wins.disks.height = 3;
-	wins.disks.win = newpad(wins.disks.height, MAXCOLS);
+	wins.disks.win = newpad(wins.disks.height, padcols);
 	wins.disklong.height = 11;
-	wins.disklong.win = newpad(wins.disklong.height, MAXCOLS);
+	wins.disklong.win = newpad(wins.disklong.height, padcols);
 	// wins.diskgroup.height = MAXROWS;
-	// wins.diskgroup.win = newpad(wins.diskgroup.height, MAXCOLS);
+	// wins.diskgroup.win = newpad(wins.diskgroup.height, padcols);
 	// wins.diskmap.height = 24;
-	// wins.diskmap.win = newpad(wins.diskmap.height, MAXCOLS);
+	// wins.diskmap.win = newpad(wins.diskmap.height, padcols);
 	wins.energy.height = 2;
-	wins.energy.win = newpad(wins.energy.height, MAXCOLS);
+	wins.energy.win = newpad(wins.energy.height, padcols);
 	// wins.filesys.height = MAXROWS;
-	// wins.filesys.win = newpad(wins.filesys.height, MAXCOLS);
+	// wins.filesys.win = newpad(wins.filesys.height, padcols);
 	wins.gpu.height = 2;
-	wins.gpu.win = newpad(wins.gpu.height, MAXCOLS);
+	wins.gpu.win = newpad(wins.gpu.height, padcols);
 	// wins.kernel.height = 5;
-	// wins.kernel.win = newpad(wins.kernel.height, MAXCOLS);
+	// wins.kernel.win = newpad(wins.kernel.height, padcols);
 	wins.memory.height = 3;
-	wins.memory.win = newpad(wins.memory.height, MAXCOLS);
+	wins.memory.win = newpad(wins.memory.height, padcols);
 	// wins.memlarge.height = 20;
-	// wins.memlarge.win = newpad(wins.memlarge.height, MAXCOLS);
+	// wins.memlarge.win = newpad(wins.memlarge.height, padcols);
 	// wins.memvirtual.height = 20;
-	// wins.memvirtual.win = newpad(wins.memvirtual.height, MAXCOLS);
+	// wins.memvirtual.win = newpad(wins.memvirtual.height, padcols);
 	// wins.neterrors.height = MAXROWS;
-	// wins.neterrors.win = newpad(wins.neterrors.height, MAXCOLS);
+	// wins.neterrors.win = newpad(wins.neterrors.height, padcols);
 	// wins.netfilesys.height = 25;
-	// wins.netfilesys.win = newpad(wins.netfilesys.height, MAXCOLS);
+	// wins.netfilesys.win = newpad(wins.netfilesys.height, padcols);
 	wins.network.height = 3;
-	wins.network.win = newpad(wins.network.height, MAXCOLS);
+	wins.network.win = newpad(wins.network.height, padcols);
 	wins.netlong.height = 11;
-	wins.netlong.win = newpad(wins.netlong.height, MAXCOLS);
+	wins.netlong.win = newpad(wins.netlong.height, padcols);
 	wins.top.height = LINES - 2;
-	wins.top.win = newpad(wins.top.height, MAXCOLS);
+	wins.top.win = newpad(wins.top.height, padcols);
 	wins.sys.height = 10;
-	wins.sys.win = newpad(wins.sys.height, MAXCOLS);
-	// wins.warn.height = 8;
-	// wins.warn.win = newpad(wins.warn.height, MAXCOLS);
+	wins.sys.win = newpad(wins.sys.height, padcols);
+	wins.warn.height = 8;
+	wins.warn.win = newpad(wins.warn.height, padcols);
 
 	// change settings based upon environment variables
 	processenvars(&wins, &currentstate);

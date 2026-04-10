@@ -17,7 +17,7 @@ CC = cc
 ARM = -target arm64-apple-macos11
 X86 = -target x86_64-apple-macos10.12
 
-CFLAGS = -O3 -Wall -D NDEBUG -Wall
+CFLAGS = -O3 -Wall -D NDEBUG
 LFLAGS = -l ncurses
 CFILES = nmond.c sysctlhelper.c sysinfo.c pidhash.c $(LANGFILES)
 AOFILE_ARM = ./bin/arm/nmond

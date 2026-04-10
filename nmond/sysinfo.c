@@ -174,7 +174,10 @@ void getsyskerninfo(struct syskern *kern)
 void getsysresinfo(struct sysres *inres)
 {
 	int error = 0;
-	int newcpucount = 4; // TODO: FIXME Below
+	int newcpucount = (int)intFromSysctlByName("hw.ncpu");
+	if(newcpucount <= 0) {
+		newcpucount = 1;
+	}
 
 	int mib[2];
 	mib[0] = CTL_VM;
@@ -183,7 +186,6 @@ void getsysresinfo(struct sysres *inres)
 	size_t length = sizeof(thisload);
 	error = sysctl(mib, 2, &thisload, &length, NULL, 0);
 	if(!error) {
-		newcpucount = (int)intFromSysctlByName("hw.ncpu");
 		inres->loadavg1 = thisload.ldavg[0] / thisload.fscale;
 		inres->loadavg5 = thisload.ldavg[1] / thisload.fscale;
 		inres->loadavg15 = thisload.ldavg[2] / thisload.fscale;
@@ -194,7 +196,8 @@ void getsysresinfo(struct sysres *inres)
 		inres->cpucount = newcpucount;
 		inres->cpus = (struct sysrescpu *)calloc(sizeof(struct sysrescpu), (size_t)inres->cpucount);
 		if(inres->cpus == NULL) {
-			// TODO: handle memory allocation failure
+			inres->cpucount = 0;
+			return;
 		}
 
 		for (int cpuno = 0; cpuno < inres->cpucount; ++cpuno) {
@@ -288,24 +291,26 @@ void getsysresinfo(struct sysres *inres)
 		}
 	}
 
-	//kern_return_t task_info_error;
+	kern_return_t task_info_error;
 	task_power_info_v2_data_t power_info_data_v2;
-	//mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
-	//task_info_error = task_info(mach_task_self(), TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
+	mach_msg_type_number_t tpi_count = TASK_POWER_INFO_V2_COUNT;
+	task_info_error = task_info(mach_task_self(), TASK_POWER_INFO_V2, (task_info_t)&power_info_data_v2, &tpi_count);
 
-	if(power_info_data_v2.cpu_energy.total_system > inres->energysystem) {
-		inres->energysystemlast = inres->energysystem;
-		inres->energysystem = power_info_data_v2.cpu_energy.total_system;
-	} else {
-		inres->energysystemlast = power_info_data_v2.cpu_energy.total_system;
-		inres->energysystem = power_info_data_v2.cpu_energy.total_system;
-	}
-	if(power_info_data_v2.cpu_energy.total_user > inres->energyuser) {
-		inres->energyuserlast = inres->energyuser;
-		inres->energyuser = power_info_data_v2.cpu_energy.total_user;
-	} else {
-		inres->energyuserlast = power_info_data_v2.cpu_energy.total_user;
-		inres->energyuser = power_info_data_v2.cpu_energy.total_user;
+	if(task_info_error == KERN_SUCCESS) {
+		if(power_info_data_v2.cpu_energy.total_system > inres->energysystem) {
+			inres->energysystemlast = inres->energysystem;
+			inres->energysystem = power_info_data_v2.cpu_energy.total_system;
+		} else {
+			inres->energysystemlast = power_info_data_v2.cpu_energy.total_system;
+			inres->energysystem = power_info_data_v2.cpu_energy.total_system;
+		}
+		if(power_info_data_v2.cpu_energy.total_user > inres->energyuser) {
+			inres->energyuserlast = inres->energyuser;
+			inres->energyuser = power_info_data_v2.cpu_energy.total_user;
+		} else {
+			inres->energyuserlast = power_info_data_v2.cpu_energy.total_user;
+			inres->energyuser = power_info_data_v2.cpu_energy.total_user;
+		}
 	}
 
 	vm_deallocate(mach_task_self(), (vm_address_t)hostinfo, count);
@@ -342,13 +347,12 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 	if(procsin == NULL) {
 		procsin = (struct sysproc **)malloc(sizeof(struct sysproc*) * (size_t)count);
 		if(procsin == NULL) {
-			// TODO: handle memory allocation failure
+			return NULL;
 		}
 	} else {
-		struct sysproc **procsold = procsin;
-		procsin = (struct sysproc **)realloc(procsold, sizeof(struct sysproc*) * (size_t)count);
-		if(!procsin) {
-			// TODO: handle error and memory leak
+		struct sysproc **procsnew = (struct sysproc **)realloc(procsin, sizeof(struct sysproc*) * (size_t)count);
+		if(procsnew != NULL) {
+			procsin = procsnew;
 		}
 	}
 
@@ -419,13 +423,16 @@ static struct sysproc **sysprocfromkinfoproc(struct kinfo_proc *processes, int c
 		procinfo->realuid = processes[i].kp_eproc.e_pcred.p_ruid;
 		// real username
 		struct passwd *realuser = getpwuid(procinfo->realuid);
-		// procinfo->realusername = realuser->pw_name;
-		strlcpy(procinfo->realusername, realuser->pw_name, sizeof(procinfo->realusername)+1);
+		if(realuser != NULL) {
+			strlcpy(procinfo->realusername, realuser->pw_name, SYSPROC_REAL_USER_NAME_LENGTH);
+		} else {
+			strlcpy(procinfo->realusername, "??", SYSPROC_REAL_USER_NAME_LENGTH);
+		}
 		// current credentials, effective user id
 		procinfo->effectiveuid = processes[i].kp_eproc.e_ucred.cr_uid;
-		// effectiver user, name
+		// effective user, name
 		struct passwd *effectiveuser = getpwuid(processes[i].kp_eproc.e_ucred.cr_uid);
-		procinfo->effectiveusername = effectiveuser->pw_name;
+		procinfo->effectiveusername = (effectiveuser != NULL) ? effectiveuser->pw_name : "??";
 		// parent process id
 		procinfo->parentpid = processes[i].kp_eproc.e_ppid;
 		// Process group identifier.
@@ -608,14 +615,11 @@ void getsysnetinfo(struct sysnet *net)
 	net->obytes = 0;
 
 	if_info = if_list;
-	int numberofifs = 0;
 	for (if_info = if_list; if_info != NULL; if_info = if_info->ifa_next) {
 		if((if_info->ifa_flags & IFF_UP) && (if_info->ifa_flags & IFF_RUNNING)) {
 			if(if_info->ifa_addr->sa_family == AF_LINK) {
 				struct if_data *ifdat = (struct if_data *)if_info->ifa_data;
 				if(ifdat) {
-					++numberofifs;
-
 					net->ipackets += ifdat->ifi_ipackets;
 					net->ierrors += ifdat->ifi_ierrors;
 					net->ibytes += ifdat->ifi_ibytes;

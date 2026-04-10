@@ -1,17 +1,77 @@
 .\" Manpage for nmond.
 .\" Contact https://github.com/stollcri/ to correct errors or typos.
-.TH man 1 "17 October 2015" "0.1" "nmond man page"
+.TH nmond 1 "2026-04-09" "0.2.0" "nmond man page"
 .SH NAME
-nmond \- Ncurses based System Performance Monitor
+nmond \- Ncurses based System Performance Monitor for Darwin
 .SH SYNOPSIS
-nmond
+.B nmond
 .SH DESCRIPTION
-Ncurses based System Performance Monitor for Darwin (Mac OS X)instead.
-.SH OPTIONS
-The nmond command does not take any options.
+.B nmond
+is an interactive, ncurses-based system performance monitor for Darwin (macOS).
+It displays CPU utilization, memory and swap usage, disk I/O, network traffic,
+GPU metrics, energy statistics, and top processes in a terminal interface.
+.PP
+Press
+.B h
+while running to see a list of interactive key commands.
+.SH INTERACTIVE KEYS
+.TP
+.B c / C
+CPU load / CPU long-term graph
+.TP
+.B d / D
+Disk I/O / Disk I/O long-term graph
+.TP
+.B e
+Energy statistics
+.TP
+.B g
+GPU metrics
+.TP
+.B h, H, ?
+Help screen
+.TP
+.B i
+System information (hardware and kernel)
+.TP
+.B m
+Memory and Swap
+.TP
+.B n / N
+Network / Network long-term graph
+.TP
+.B t / T
+Top processes by CPU / Top with command arguments
+.TP
+.B r / R
+Top processes by memory / Top by memory with command arguments
+.TP
+.B b
+Toggle black & white mode
+.TP
+.B + / \-
+Increase / decrease refresh rate
+.TP
+.B Up / Down
+Scroll display
+.TP
+.B q
+Quit
+.SH ENVIRONMENT
+.TP
+.B NMOND
+A string of key characters to activate panels on startup (e.g., NMOND="cdm").
+.TP
+.B NMON
+Compatibility alias for NMOND with key translation from the original nmon.
+.TP
+.B NMONDEBUG
+If set, enables debug mode.
 .SH SEE ALSO
-useradd(8), passwd(5), nuseradd.debian(8)
+.BR top (1),
+.BR vm_stat (1),
+.BR iostat (8)
 .SH BUGS
-No known bugs.
+Report bugs at https://github.com/stollcri/nmond/issues
 .SH AUTHOR
 Christopher Stoll (@stollcri)
