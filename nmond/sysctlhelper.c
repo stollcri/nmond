@@ -204,7 +204,7 @@ char *timeStringFromTimestamp(time_t timet, char *format)
 
 	char *result = malloc(STRING_SIZE);
 	if(result == NULL) {
-		// TODO: handle memory allocation failure
+		return NULL;
 	}
 
 	struct tm *ptm = localtime(&timet);
@@ -226,7 +226,7 @@ void processArguments(int pid, int sizelimit, char *resultLoc)
 	int error = 0;
 	char *arglist = NULL;
 
-	error = sysctl(mib, 4, NULL, &templength, NULL, 0);
+	error = sysctl(mib, 3, NULL, &templength, NULL, 0);
 	// allocate memory for the result
 	if(!error) {
 		arglist = malloc(templength);
